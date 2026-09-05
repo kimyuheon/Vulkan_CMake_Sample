@@ -63,6 +63,14 @@ CAD_API void CAD_SetGizmoTouchMode(bool enabled);
 // OSnap(끝점/중점/중심…) 허용범위를 터치용으로 확대 — 12px → 약 42px.
 // 손가락 접촉 크기(44pt)에 맞춘 값. 기즈모와 마찬가지로 앱 시작 시 한 번 호출.
 CAD_API void CAD_SetSnapTouchMode(bool enabled);
+
+// 치수 **문자**를 줌과 무관하게 화면상 같은 크기로 그릴지 (기본 false).
+// 모바일에서 치수는 도면 요소보다 "측정 도구" 에 가깝다 — 줌아웃하면 글자가 같이 작아져
+// 값을 못 읽는 게 문제였다. 켜면 글자가 항상 읽히는 크기로 남는다(선·화살표는 그대로).
+// 데스크톱은 끄는 게 맞다 — 도면 출력에선 월드 크기여야 한다.
+// 매 프레임 비용은 없다(플래그를 정점에 굽는다). 전환 시 기존 치수를 한 번 다시 만든다.
+CAD_API void CAD_SetDimensionTextScreenFixed(bool enabled);
+CAD_API bool CAD_GetDimensionTextScreenFixed(void);
 // 진행 중인 치수 도구의 점 개수. 비활성이면 -1.
 // 모바일 커서 UI 의 [선택] 버튼 문구/종료 판단에 쓴다 — 클라이언트가 클릭을 세면
 // 엔진이 클릭을 거부하는 경우와 어긋나므로 반드시 엔진 값을 본다.
