@@ -200,11 +200,15 @@ final class VulkanCADMetalView: UIView {
             // 핸들 위가 아니면 이동(pan) — 도면에서 가장 자주 쓰는 동작.
             oneFingerButton = engine.gizmoHitTest(x: x, y: y) ? MouseButton.left
                                                               : MouseButton.middle
+            lastDragPoint = pt
             engine.mouseDown(button: oneFingerButton, x: x, y: y, modifiers: 0)
         case .changed:
+            lastDragPoint = pt
             engine.mouseMove(x: x, y: y)
         case .ended, .cancelled, .failed:
-            engine.mouseUp(button: oneFingerButton, x: x, y: y, modifiers: 0)
+            // 둘째 손가락이 닿아 취소될 때 location 이 튈 수 있어 마지막 정상 좌표로 up.
+            engine.mouseUp(button: oneFingerButton,
+                           x: Double(lastDragPoint.x), y: Double(lastDragPoint.y), modifiers: 0)
         default:
             break
         }
@@ -229,17 +233,26 @@ final class VulkanCADMetalView: UIView {
     // .began 에서 정한 버튼을 드래그 끝까지 유지한다(1손가락 oneFingerButton 과 같은 방식).
     private var twoFingerButton: Int32 = MouseButton.right
 
+    // 여러 손가락 제스처의 location 은 **손가락들의 중점**이다. 손가락을 하나 먼저 떼면
+    // 그 순간 중점이 남은 손가락 쪽으로 순간 이동하고, .ended 는 그 튄 좌표로 온다.
+    // 이걸 그대로 mouseUp 에 넘기면 엔진이 마지막 이동으로 처리해 화면이 확 튄다.
+    // → 마지막으로 정상 드래그한 좌표를 기억해 두고 up 은 그 좌표로 보낸다.
+    private var lastDragPoint = CGPoint.zero
+
     private func sendDrag(_ g: UIPanGestureRecognizer, button: Int32) {
         guard let engine = engine else { return }
         let pt = enginePoint(g.location(in: self))
         switch g.state {
         case .began:
             twoFingerButton = button
+            lastDragPoint = pt
             engine.mouseDown(button: twoFingerButton, x: Double(pt.x), y: Double(pt.y), modifiers: 0)
         case .changed:
+            lastDragPoint = pt
             engine.mouseMove(x: Double(pt.x), y: Double(pt.y))
         case .ended, .cancelled, .failed:
-            engine.mouseUp(button: twoFingerButton, x: Double(pt.x), y: Double(pt.y), modifiers: 0)
+            engine.mouseUp(button: twoFingerButton,
+                           x: Double(lastDragPoint.x), y: Double(lastDragPoint.y), modifiers: 0)
         default:
             break
         }
@@ -247,14 +260,23 @@ final class VulkanCADMetalView: UIView {
 
     @objc private func handlePinch(_ g: UIPinchGestureRecognizer) {
         guard let engine = engine else { return }
-        // 핀치 scale 변화량 → wheel deltaY. 핀치 중심에서 줌 (cursor-centered).
-        let pt = enginePoint(g.location(in: self))
-        // scale 은 누적값이라 매 콜백 1.0 기준 증감으로 변환. 확대(>1) = 양수 휠.
-        let delta = Double(g.scale - 1.0) * 8.0   // 감도 계수 — 필요시 조정
-        if abs(delta) > 0.0001 {
-            engine.mouseWheel(x: Double(pt.x), y: Double(pt.y), deltaX: 0.0, deltaY: delta)
+        switch g.state {
+        case .began:
+            g.scale = 1.0
+        case .changed:
+            // 핀치 scale 변화량 → wheel deltaY. 핀치 중심에서 줌 (cursor-centered).
+            let pt = enginePoint(g.location(in: self))
+            // scale 은 누적값이라 매 콜백 1.0 기준 증감으로 변환. 확대(>1) = 양수 휠.
+            let delta = Double(g.scale - 1.0) * 8.0   // 감도 계수 — 필요시 조정
+            if abs(delta) > 0.0001 {
+                engine.mouseWheel(x: Double(pt.x), y: Double(pt.y), deltaX: 0.0, deltaY: delta)
+            }
+            g.scale = 1.0   // 매 콜백마다 리셋 → 증분만 전달
+        default:
+            // .ended 는 손가락 하나가 떨어진 뒤라 location(중점)이 남은 손가락으로 튀어 있다.
+            // 그 좌표로 커서 중심 줌을 하면 화면이 확 튀므로 마지막 증분은 버린다.
+            break
         }
-        g.scale = 1.0   // 매 콜백마다 리셋 → 증분만 전달
     }
 
     @objc private func handleTap(_ g: UITapGestureRecognizer) {
