@@ -9,7 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var isShuttingDown = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let runtimeDirectory = projectRootDirectory().appendingPathComponent("build")
+        // 런타임 에셋(models/ textures/ fonts/)은 sdk/ 바로 아래 — 라이브러리와 같은 층.
+        let runtimeDirectory = projectRootDirectory().appendingPathComponent("sdk")
         guard engine.setRuntimeAssetPath(runtimeDirectory.path) else {
             fputs("[swift_native_view_test] failed to set runtime asset path\n", stderr)
             NSApp.terminate(nil)
