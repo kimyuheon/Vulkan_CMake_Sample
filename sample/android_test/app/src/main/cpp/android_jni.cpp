@@ -37,6 +37,9 @@ JNI(jboolean, nativeSurfaceCreated)(JNIEnv* env, jobject, jobject surface, jint 
     // 손가락/가상 커서는 마우스만큼 정밀하지 않다 — 스냅·선 픽 반경을 3.5배(12→42px)로.
     // 이 호출이 빠지면 모바일에서도 데스크톱과 같은 12px 이라 스냅이 거의 안 잡힌다.
     if (ok) CAD_SetSnapTouchMode(true);
+    // 모바일에서 치수는 도면 요소보다 "측정 도구" 다 — 줌아웃해도 값이 읽혀야 한다.
+    // 켜면 치수 문자만 줌과 무관하게 화면상 같은 크기로 유지된다(선·화살표는 그대로).
+    if (ok) CAD_SetDimensionTextScreenFixed(true);
     LOGI("nativeSurfaceCreated %dx%d engine=%d", w, h, ok);
     return ok ? JNI_TRUE : JNI_FALSE;
 }
