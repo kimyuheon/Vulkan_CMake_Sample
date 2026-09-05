@@ -5,8 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-# ── Qt6 (Quick/Gui) ──
-find_package(Qt6 REQUIRED COMPONENTS Quick Gui)
+# ── Qt6 (Quick/Gui/Widgets) ──
+# Widgets 는 QFileDialog(파일 열기/저장) 용 — qt6-base 에 이미 들어 있어 런타임 패키지가 늘지 않는다.
+find_package(Qt6 REQUIRED COMPONENTS Quick Gui Widgets)
 qt_standard_project_setup(REQUIRES 6.4)
 
 # ── 엔진 공유 라이브러리 위치 ──
@@ -55,6 +56,7 @@ qt_add_qml_module(qml_host
 target_link_libraries(qml_host PRIVATE
     Qt6::Quick
     Qt6::Gui
+    Qt6::Widgets
     ${VULKANCAD_CORE_LIB}
 )
 
