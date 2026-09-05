@@ -35,8 +35,10 @@ Ubuntu 24.04의 Qt 패키지 예시:
 sudo apt install qt6-base-dev qt6-declarative-dev \
     qml6-module-qtquick qml6-module-qtquick-controls \
     qml6-module-qtquick-templates qml6-module-qtquick-layouts \
-    qml6-module-qtquick-window
+    qml6-module-qtquick-window qml6-module-qt-labs-platform
 ```
+
+`qt-labs-platform`은 풀다운 메뉴용입니다. Windows/macOS 공식 Qt 설치본에는 기본 포함이고, 데비안 계열만 패키지가 쪼개져 있어 따로 설치합니다.
 
 ## Qt Creator에서 실행
 

@@ -10,7 +10,9 @@
 
 #include "../../sdk/include/VulkanCAD_API.h"
 
-#include <QGuiApplication>
+// QFileDialog(파일 열기/저장)를 쓰므로 QGuiApplication 이 아니라 QApplication 이어야 한다.
+// QtQuick.Dialogs 는 배포처에 별도 QML 런타임 패키지를 요구해 쓰지 않는다.
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QCoreApplication>
 #include <QDir>
@@ -50,7 +52,7 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
 
     // ── 엔진 런타임 에셋 경로 지정 (CAD_CreateEngine 전에 호출해야 반영됨) ──
     QString assets;
