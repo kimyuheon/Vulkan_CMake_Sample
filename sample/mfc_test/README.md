@@ -27,7 +27,7 @@ CMainWnd (CFrameWnd, 코드 생성)
   ```
   cmake -B build && cmake --build build --config Debug --target VulkanCADCoreShared
   ```
-  (셰이더 `.spv` / 모델 / 폰트 / 텍스처도 `build/Debug/` 에 생성됨)
+  (모델 / 폰트 / 텍스처는 레포의 `sdk/` 에 들어 있다. 셰이더는 라이브러리에 내장)
 
 ## 빌드 & 실행
 
@@ -38,7 +38,7 @@ CMainWnd (CFrameWnd, 코드 생성)
   x64\Debug\VulkanCadMfc.exe
   ```
 
-빌드 후 **PostBuild** 가 `build/Debug` 의 `VulkanCADCore.dll` + `shaders/models/fonts/textures` 를
+빌드 후 **PostBuild** 가 `sdk/` 의 `VulkanCADCore.dll` + `models/fonts/textures` 를
 출력 폴더(`x64\Debug`)로 자동 복사한다. (엔진은 실행 폴더 기준 상대경로로 에셋 로드)
 
 ## 주의

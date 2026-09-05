@@ -56,7 +56,7 @@ void CRenderPane::AttachEngine()
 
 	// Asset loading independent of the working directory (F5 vs Ctrl+F5 vs double-click
 	// all differ): point the engine at the exe's own folder, where PostBuild copied
-	// shaders/models/fonts/textures. Must be set before CAD_CreateEngine.
+	// models/fonts/textures. Must be set before CAD_CreateEngine.
 	{
 		wchar_t exePathW[MAX_PATH] = {};
 		GetModuleFileNameW(nullptr, exePathW, MAX_PATH);

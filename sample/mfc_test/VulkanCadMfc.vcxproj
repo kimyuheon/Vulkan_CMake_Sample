@@ -63,7 +63,6 @@
       <Command>
         echo [mfc_test] copy DLL + assets from "$(EngineOut)"
         copy /Y "$(EngineOut)\VulkanCADCore.dll" "$(OutDir)" &gt;nul
-        if exist "$(EngineOut)\shaders"  xcopy /Y /E /I "$(EngineOut)\shaders"  "$(OutDir)shaders"  &gt;nul
         if exist "$(EngineOut)\models"   xcopy /Y /E /I "$(EngineOut)\models"   "$(OutDir)models"   &gt;nul
         if exist "$(EngineOut)\fonts"    xcopy /Y /E /I "$(EngineOut)\fonts"    "$(OutDir)fonts"    &gt;nul
         if exist "$(EngineOut)\textures" xcopy /Y /E /I "$(EngineOut)\textures" "$(OutDir)textures" &gt;nul

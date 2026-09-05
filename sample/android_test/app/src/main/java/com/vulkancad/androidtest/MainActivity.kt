@@ -15,7 +15,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import java.io.File
 
-// 상단 툴바(버튼) + Vulkan SurfaceView. 에셋(shaders 등)을 filesDir 로 추출한 뒤
+// 상단 툴바(버튼) + Vulkan SurfaceView. 에셋(모델/폰트/텍스처)을 filesDir 로 추출한 뒤
 // nativeSetAssetPath 로 엔진에 알려준다(엔진은 상대경로 fopen 사용).
 class MainActivity : Activity() {
 
@@ -333,9 +333,9 @@ class MainActivity : Activity() {
         contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
             ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
 
-    // assets/ 하위(shaders/models/fonts/textures)를 filesDir 로 재귀 복사.
+    // assets/ 하위(models/fonts/textures)를 filesDir 로 재귀 복사.
     private fun extractAssets() {
-        for (dir in listOf("shaders", "models", "fonts", "textures")) copyAssetDir(dir)
+        for (dir in listOf("models", "fonts", "textures")) copyAssetDir(dir)
     }
 
     private fun copyAssetDir(dir: String) {

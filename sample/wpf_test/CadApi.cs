@@ -5,7 +5,7 @@ namespace VulkanCadWpf
 {
     // VulkanCADCore.dll 의 extern "C" CAD_* 함수 P/Invoke 선언.
     // DLL 은 CMake 의 VulkanCADCoreShared 타겟(OUTPUT_NAME=VulkanCADCore) 산출물.
-    // 빌드 출력 폴더에 VulkanCADCore.dll + shaders/ 등 런타임 에셋이 있어야 함.
+    // 빌드 출력 폴더에 VulkanCADCore.dll + models/ textures/ fonts/ 가 있어야 함.
     internal static class CadApi
     {
         const string DLL = "VulkanCADCore.dll";

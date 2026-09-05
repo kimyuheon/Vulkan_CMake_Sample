@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Windows;
 using System.Windows.Media;
 
@@ -18,16 +17,19 @@ namespace VulkanCadWpf
 
         void OnLoaded(object sender, RoutedEventArgs e)
         {
-            // 런타임 에셋(shaders/models/textures/fonts) 경로 지정 — DLL 출력 폴더 기준.
+            // 런타임 에셋(models/textures/fonts) 경로 지정 — exe 폴더 기준.
+            // 셰이더는 라이브러리에 SPIR-V 로 내장돼 폴더가 아예 없다. CWD 는 실행 방식마다
+            // 달라지므로(F5 / Ctrl+F5 / 더블클릭) 조건 없이 항상 설정한다. 엔진 생성 전이어야 함.
             string assets = AppDomain.CurrentDomain.BaseDirectory;
-            if (Directory.Exists(Path.Combine(assets, "shaders")))
-                CadApi.CAD_SetRuntimeAssetPath(CadApi.Utf8(assets));
+            bool assetsOk = CadApi.CAD_SetRuntimeAssetPath(CadApi.Utf8(assets));
 
             // HwndHost 를 렌더 영역에 얹음 → BuildWindowCore 에서 엔진 생성.
             // 크기 동기화는 host.Tick() 안의 SyncSize() 가 실제 HWND 픽셀로 매 프레임 처리.
             RenderHost.Child = _host;
 
-            StatusText.Text = _host.EngineReady ? "엔진 준비됨" : "엔진 생성 실패 — DLL/에셋 확인";
+            StatusText.Text = !_host.EngineReady ? "엔진 생성 실패 — DLL/에셋 확인"
+                            : assetsOk           ? "엔진 준비됨"
+                                                 : "엔진 준비됨 (에셋 경로 실패 — 치수/문자 미동작)";
             InfoText.Text = _host.EngineReady ? "● 렌더링" : "";
 
             // 매 프레임 Tick (WPF 합성 타이밍)

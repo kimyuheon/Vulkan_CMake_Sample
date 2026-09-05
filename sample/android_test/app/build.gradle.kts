@@ -39,26 +39,24 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
 
-    // 엔진 에셋(데스크톱 빌드의 .spv/모델/폰트)을 assets 로 포함.
+    // 런타임 에셋(모델/폰트/텍스처)을 assets 로 포함.
     sourceSets["main"].assets.srcDir(layout.buildDirectory.dir("engineAssets"))
 }
 
-// 데스크톱 빌드 산출물의 런타임 에셋을 APK assets 로 복사.
-// (.spv 는 SPIR-V 라 플랫폼 독립 → 데스크톱에서 컴파일된 것 재사용)
-// 데스크톱 빌드 출력 위치는 OS/생성기별로 달라 후보를 탐색 (Windows VS=build/Debug,
-// macOS/Linux Ninja/Make=build). shaders 폴더가 있는 첫 후보를 사용.
+// 런타임 에셋을 APK assets 로 복사. 레포의 sdk/ 를 먼저 쓰고, 없으면 엔진 데스크톱
+// 빌드 출력을 찾는다 (Windows VS=build/Debug, macOS/Linux Ninja/Make=build).
+// 셰이더는 라이브러리에 SPIR-V 로 내장돼 있어 복사할 것이 없다.
 val copyEngineAssets by tasks.registering(Copy::class) {
     val engRoot = file("${rootDir}/../..")
-    val eng = listOf("build/Debug", "build", "cmake-build-debug", "build-mac/Debug")
+    val eng = listOf("sdk", "build/Debug", "build", "cmake-build-debug", "build-mac/Debug")
         .map { engRoot.resolve(it) }
-        .firstOrNull { it.resolve("shaders").exists() }
-        ?: engRoot.resolve("build/Debug")
+        .firstOrNull { it.resolve("fonts").exists() }
+        ?: engRoot.resolve("sdk")
     doFirst {
-        if (!eng.resolve("shaders").exists())
-            logger.warn("엔진 에셋(shaders)을 못 찾음: $eng — 데스크톱을 먼저 빌드하세요")
+        if (!eng.resolve("fonts").exists())
+            logger.warn("런타임 에셋(fonts)을 못 찾음: $eng — sdk/ 를 확인하세요")
     }
     into(layout.buildDirectory.dir("engineAssets"))
-    from("${eng}/shaders")  { into("shaders") }
     from("${eng}/models")   { into("models") }
     from("${eng}/fonts")    { into("fonts") }
     from("${eng}/textures") { into("textures") }
