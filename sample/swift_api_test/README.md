@@ -7,7 +7,7 @@ It includes two executables:
 - `VulkanCADSwiftApiTest`: lets the engine create its existing GLFW window.
 - `VulkanCADSwiftNativeViewTest`: creates an AppKit `NSWindow`/`NSView`, calls `CAD_AttachView()`, and lets the engine render into that native view.
 
-The sample calls `CAD_SetRuntimeAssetPath()` with the project `build/` folder before calling `CAD_CreateEngine()` so the engine can find `shaders/`, `models/`, `textures/`, and `fonts/`.
+The sample calls `CAD_SetRuntimeAssetPath()` before `CAD_CreateEngine()` so the engine can find `models/`, `textures/`, and `fonts/`. Shaders are compiled into the library, so there is no `shaders/` folder to ship.
 
 Build the shared core first from the project root:
 

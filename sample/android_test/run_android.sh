@@ -11,7 +11,7 @@
 #   ./run_android.sh Pixel_7      # AVD 이름 지정
 #   ./run_android.sh --list       # 사용 가능한 AVD 목록만 출력
 #
-# 전제: Android SDK/NDK/CMake 설치, 데스크톱 빌드로 shaders/*.spv 생성됨(../../build)
+# 전제: Android SDK/NDK/CMake 설치 (런타임 에셋은 레포의 sdk/ 에서 가져온다)
 
 set -e
 cd "$(dirname "$0")"

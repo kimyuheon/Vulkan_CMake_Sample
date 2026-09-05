@@ -23,18 +23,15 @@ CAD_OnMouse* / CAD_OnKeyDownVK   // 입력 (VK 코드는 내부에서 GLFW 로 �
 
 ## 빌드 & 실행
 
-1. C++ 엔진 DLL 먼저 빌드 (한 번):
-   ```
-   cmake --build build --config Debug --target VulkanCADCoreShared
-   ```
-   → `build/Debug/VulkanCADCore.dll` + `build/Debug/{shaders,models,textures,fonts}/`
+1. 준비물은 레포의 `sdk/` 에 다 있다 — `VulkanCADCore.dll` + `models/ textures/ fonts/`.
+   (셰이더는 라이브러리에 SPIR-V 로 내장돼 있어 별도 파일이 없다.)
 
 2. WPF 샘플 빌드 (post-build 이 DLL+에셋을 출력 폴더로 자동 복사):
    ```
    cd samples/wpf_test
    dotnet build -c Debug
    ```
-   - `VulkanCadWpf.csproj` 의 `CadCoreBuildDir` 가 `..\..\build\Debug` 를 가리킴. 경로 다르면 조정.
+   - `VulkanCadWpf.csproj` 의 `CadCoreBuildDir` 가 `..\..\sdk` 를 가리킴. 경로 다르면 조정.
 
 3. 실행:
    ```
@@ -46,7 +43,7 @@ CAD_OnMouse* / CAD_OnKeyDownVK   // 입력 (VK 코드는 내부에서 GLFW 로 �
 
 - **x64 고정**: 네이티브 DLL 이 x64 이므로 `PlatformTarget=x64`. AnyCPU 로 두면 BadImageFormat.
 - `vulkan-1.dll` 은 GPU 드라이버가 System32 에 설치 (재배포 불필요).
-- 런타임 에셋(`shaders/` 등)이 exe 옆에 없으면 엔진 생성 실패 → 상태바에 표시.
+- 런타임 에셋(`fonts/` 등)이 exe 옆에 없으면 치수·문자가 생성되지 않는다 → 상태바에 표시.
 - **Airspace**: HwndHost 자식 창이 WPF 컨텐츠 위에 떠서, 렌더 영역 위에 WPF 컨트롤을
   겹칠 수 없다(팝업/오버레이는 별도 처리 필요).
 

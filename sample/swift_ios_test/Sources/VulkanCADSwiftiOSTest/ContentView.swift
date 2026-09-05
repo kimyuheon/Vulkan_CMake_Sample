@@ -389,8 +389,8 @@ final class VulkanCADController: ObservableObject {
 
     func start(view: UIView) {
         metalView = view as? VulkanCADMetalView
-        // 런타임 에셋 위치 — 빌드 시 shaders/ models/ textures/ 가 .app 번들 내부 Resources 에
-        // 복사되어 있다고 가정. 없으면 엔진은 cwd 기반 fallback.
+        // 런타임 에셋 위치 — 빌드 시 models/ textures/ fonts/ 가 .app 번들 내부 Resources 에
+        // 복사되어 있다고 가정. 없으면 엔진은 cwd 기반 fallback. (셰이더는 라이브러리에 내장)
         let bundleResources = Bundle.main.resourcePath ?? ""
         _ = engine.setRuntimeAssetPath(bundleResources)
 

@@ -17,8 +17,8 @@
   <!--
     실행하려면 다음 파일들이 출력 폴더(bin\x64\Debug\net8.0-windows)에 있어야 함:
       - VulkanCADCore.dll          (C++ VulkanCADCoreShared 타겟 산출물)
-      - shaders/ models/ textures/ fonts/   (런타임 에셋)
-    아래 Target 이 C++ 빌드 출력(..\..\build\Debug)에서 자동 복사 시도.
+      - models/ textures/ fonts/   (런타임 에셋. 셰이더는 라이브러리에 내장 — 복사할 것 없음)
+    아래 Target 이 sdk/ 에서 자동 복사한다.
     경로가 다르면 CadCoreBuildDir 프로퍼티를 조정하거나 수동 복사.
   -->
   <PropertyGroup>
@@ -29,13 +29,11 @@
           Condition="Exists('$(CadCoreBuildDir)\VulkanCADCore.dll')">
     <ItemGroup>
       <CadDll       Include="$(CadCoreBuildDir)\VulkanCADCore.dll" />
-      <ShaderFiles  Include="$(CadCoreBuildDir)\shaders\**\*" />
       <ModelFiles   Include="$(CadCoreBuildDir)\models\**\*" />
       <TextureFiles Include="$(CadCoreBuildDir)\textures\**\*" />
       <FontFiles    Include="$(CadCoreBuildDir)\fonts\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(CadDll)"       DestinationFolder="$(OutDir)"                          SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(ShaderFiles)"  DestinationFolder="$(OutDir)shaders\%(RecursiveDir)"   SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(ModelFiles)"   DestinationFolder="$(OutDir)models\%(RecursiveDir)"    SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(TextureFiles)" DestinationFolder="$(OutDir)textures\%(RecursiveDir)"  SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(FontFiles)"    DestinationFolder="$(OutDir)fonts\%(RecursiveDir)"     SkipUnchangedFiles="true" />

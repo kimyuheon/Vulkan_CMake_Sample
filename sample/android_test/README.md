@@ -33,11 +33,8 @@ MainActivity.onCreate()          에셋 추출 → nativeSetAssetPath → 툴바
    - **NDK (Side by side)**, **CMake**, **Android Emulator**, SDK Platform (API 34+)
 2. **VulkanSdk** — 레포 부모 폴더에 `../VulkanSdk/{Win|Apple|Linux}` (glm/GLFW 헤더용).
    vulkan 헤더는 NDK 가 제공하므로 별도 불필요.
-3. **엔진 데스크톱 빌드 먼저** — 셰이더 `.spv` 를 얻기 위해. (SPIR-V 라 플랫폼 독립)
-   ```
-   cmake -B build && cmake --build build --config Debug   # → build/Debug/shaders/*.spv
-   ```
-   Gradle 이 `build/Debug`(Windows) 또는 `build`(macOS/Linux) 에서 shaders/models/fonts 를 자동 복사.
+3. **런타임 에셋** — 별도 준비가 필요 없다. Gradle 이 레포의 `sdk/` 에서 `models/ fonts/
+   textures/` 를 APK assets 로 자동 복사한다. 셰이더는 라이브러리에 내장돼 있다.
 
 ## 빌드 & 실행
 

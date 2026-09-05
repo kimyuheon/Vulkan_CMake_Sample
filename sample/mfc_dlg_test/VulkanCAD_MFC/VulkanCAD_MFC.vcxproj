@@ -103,7 +103,6 @@
       <Command>
         set ENG=$(ProjectDir)..\..\..\sdk
         copy /Y "%ENG%\VulkanCADCore.dll" "$(OutDir)" &gt;nul
-        if exist "%ENG%\shaders"  xcopy /Y /E /I "%ENG%\shaders"  "$(OutDir)shaders"  &gt;nul
         if exist "%ENG%\models"   xcopy /Y /E /I "%ENG%\models"   "$(OutDir)models"   &gt;nul
         if exist "%ENG%\fonts"    xcopy /Y /E /I "%ENG%\fonts"    "$(OutDir)fonts"    &gt;nul
         if exist "%ENG%\textures" xcopy /Y /E /I "%ENG%\textures" "$(OutDir)textures" &gt;nul

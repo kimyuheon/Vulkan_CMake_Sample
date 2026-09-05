@@ -3,10 +3,10 @@
 // QML 로 툴바/패널 UI 를 만들고, 3D 뷰 영역엔 엔진의 Vulkan 렌더를 네이티브 자식 창으로 얹는다.
 // WPF/MFC/iOS 호스트와 같은 C API 임베드 패턴 — 플랫폼 창/입력 코드만 Qt 로 다를 뿐.
 //
-// 엔진 에셋(shaders/.spv, models, fonts, textures)은 엔진 빌드 폴더에 생성되므로,
-// 실행 전 그 경로를 알려줘야 한다:
-//   - 환경변수 VULKANCAD_ASSETS=/path/to/engine/build  (권장)
-//   - 또는 첫 인자로 경로 전달:  ./VulkanCadQml /path/to/engine/build
+// 런타임 에셋(models, fonts, textures)은 레포의 sdk/ 에 있으므로,
+// CMake 가 그 경로를 컴파일에 박아 둔다. 다른 위치의 에셋을 쓰려면:
+//   - 환경변수 VULKANCAD_ASSETS=/path/to/sdk
+//   - 또는 첫 인자로 경로 전달:  ./VulkanCadQml /path/to/sdk
 
 #include "../../sdk/include/VulkanCAD_API.h"
 
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
         const QByteArray a = QDir(assets).absolutePath().toLocal8Bit();
         if (!CAD_SetRuntimeAssetPath(a.constData())) {
             qWarning("[qml] runtime asset path 설정 실패: %s\n"
-                     "      셰이더/모델을 못 찾으면 엔진 생성이 실패합니다.\n"
+                     "      모델/폰트를 못 찾으면 치수·문자 생성이 실패합니다.\n"
                      "      VULKANCAD_ASSETS 로 엔진 build 폴더를 지정하세요.", a.constData());
         }
     }
