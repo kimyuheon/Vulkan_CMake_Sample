@@ -4,7 +4,7 @@
 // QML 에서 Q_INVOKABLE 메서드로 CAD_Request* / CAD_Undo 등 C API 를 부른다.
 // (엔진 상태 변경은 전부 C API 경계를 지나가므로 QML 은 엔진 내부를 전혀 모른다.)
 
-#include "../../api/VulkanCAD_API.h"
+#include "../../sdk/include/VulkanCAD_API.h"
 
 #include <QObject>
 #include <QtQml/qqmlregistration.h>

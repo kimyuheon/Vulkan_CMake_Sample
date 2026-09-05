@@ -7,7 +7,7 @@
 #include <afxwin.h>
 #include <algorithm>
 
-#include "../../api/VulkanCAD_API.h"
+#include "../../sdk/include/VulkanCAD_API.h"
 
 // GLFW modifier 비트 (엔진이 기대하는 값)
 static int CurrentModifiers() {

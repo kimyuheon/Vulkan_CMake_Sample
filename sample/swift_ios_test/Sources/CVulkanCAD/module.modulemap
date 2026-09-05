@@ -1,5 +1,5 @@
 module CVulkanCAD [system] {
-    header "../../../../api/VulkanCAD_API.h"
+    header "../../../../sdk/include/VulkanCAD_API.h"
     link "VulkanCADCoreStatic"
     export *
 }

@@ -28,25 +28,25 @@ targets:
       - path: Sources/VulkanCADSwiftiOSTest
       # 엔진 에셋들을 .app 번들에 folder reference 로 복사 (디렉토리 구조 유지).
       # 엔진은 setRuntimeAssetPath(Bundle.main.resourcePath) 받고
-      # shaders/*.spv, models/*.obj 등 상대 경로로 fopen.
+      # models/*.obj 등 상대 경로로 fopen.
+      #
+      # ⚠️ shaders/ 는 없다. SPIR-V 는 라이브러리에 내장돼 있다(cmake/embed_shaders.cmake).
+      #    .spv 를 파일로 두면 spirv-cross 로 UBO 구조체·필드명까지 원문이 복원된다.
       #
       # 새 에셋 폴더 추가 시: 같은 3줄 패턴으로 한 줄만 늘리면 됨.
-      - path: ../../shaders
-        type: folder
-        buildPhase: resources
-      - path: ../../models
+      - path: ../../sdk/models
         type: folder
         buildPhase: resources
         optional: true
-      - path: ../../textures
+      - path: ../../sdk/textures
         type: folder
         buildPhase: resources
         optional: true
       # ⚠️ 폰트는 선택이 아니라 **필수**다. 치수/문자는 글리프 메시를 만들어야 하는데
       #    FirstApp::createDimension 이 `if (!textFont_.isLoaded()) return 0;` 로
       #    폰트가 없으면 치수를 아예 안 만든다(선도 숫자도 안 보임).
-      #    원본은 레포 밖 — 데스크톱 CMake 도 같은 곳에서 build/fonts 로 복사한다.
-      - path: ../../../imgui/misc/fonts
+      #    SDK 에 이미 담겨 있다(엔진 빌드가 넣어 준다).
+      - path: ../../sdk/fonts
         type: folder
         buildPhase: resources
     info:
@@ -64,20 +64,18 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vulkancad.iossample
         # C API 헤더 위치 (modulemap 이 가리키는 ../api 풀어줘야 됨)
         HEADER_SEARCH_PATHS:
-          - "$(SRCROOT)/../../api"
+          - "$(SRCROOT)/../../sdk/include"
           - "$(SRCROOT)/Sources/CVulkanCAD"
         SWIFT_INCLUDE_PATHS:
           - "$(SRCROOT)/Sources/CVulkanCAD"
         # CMake 가 만든 정적 라이브러리 + MoltenVK 정적 lib — SDK 별 분기.
-        #   시뮬레이터: build-ios-sim    + MoltenVK ios-arm64_x86_64-simulator 슬라이스
-        #   디바이스  : build-ios-device + MoltenVK ios-arm64 슬라이스
+        #   시뮬레이터: sdk/lib-ios-sim    + MoltenVK ios-arm64_x86_64-simulator 슬라이스
+        #   디바이스  : sdk/lib-ios-device + MoltenVK ios-arm64 슬라이스
         LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]:
-          - "$(SRCROOT)/../../build-ios-sim/Debug-iphonesimulator"
-          - "$(SRCROOT)/../../build-ios-sim/external/manifold/src/Debug-iphonesimulator"
+          - "$(SRCROOT)/../../sdk/lib-ios-sim"
           - "$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator"
         LIBRARY_SEARCH_PATHS[sdk=iphoneos*]:
-          - "$(SRCROOT)/../../build-ios-device/Debug-iphoneos"
-          - "$(SRCROOT)/../../build-ios-device/external/manifold/src/Debug-iphoneos"
+          - "$(SRCROOT)/../../sdk/lib-ios-device"
           - "$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64"
         # 링크 순서 주의: 의존하는 VulkanCADCoreStatic 을 먼저, 그다음 manifold(피의존).
         OTHER_LDFLAGS:

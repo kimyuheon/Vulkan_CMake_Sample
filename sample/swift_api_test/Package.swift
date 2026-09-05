@@ -7,7 +7,7 @@ let packageDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent
 let projectRoot = packageDirectory
     .deletingLastPathComponent()
     .deletingLastPathComponent()
-let buildDirectory = projectRoot.appendingPathComponent("sdk").appendingPathComponent("lib").path
+let buildDirectory = projectRoot.appendingPathComponent("sdk").path
 
 let package = Package(
     name: "VulkanCADSwiftApiTest",
