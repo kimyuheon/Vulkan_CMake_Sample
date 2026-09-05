@@ -1,0 +1,17 @@
+# Visual Studio / MSBuild 산출물 · 캐시
+x64/
+Win32/
+Debug/
+Release/
+.vs/
+ipch/
+*.aps
+*.vcxproj.user
+*.user
+*.obj
+*.pdb
+*.ilk
+*.res
+*.tlog
+*.log
+*.idb

@@ -1,0 +1,35 @@
+# ── 빌드 산출물 ──
+build/
+.build/
+bin/
+obj/
+Debug/
+Release/
+x64/
+*.user
+*.suo
+.vs/
+CMakeCache.txt
+CMakeFiles/
+
+# ── Android ──
+.gradle/
+.cxx/
+local.properties
+app/build/
+
+# ── Xcode ──
+DerivedData/
+build_xcode/
+build-ios-sim/
+build-ios-device/
+*.xcuserdatad
+xcuserdata/
+ModuleCache.noindex/
+*.pcm
+
+# ── macOS ──
+.DS_Store
+
+# ⚠️ sdk/ 는 커밋한다 — 이 레포는 엔진 소스 없이 빌드돼야 하므로
+#    라이브러리와 런타임 에셋이 레포 안에 있어야 한다. (.gitignore 에 넣지 말 것)
