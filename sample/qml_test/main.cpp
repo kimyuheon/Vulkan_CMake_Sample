@@ -8,7 +8,7 @@
 //   - 환경변수 VULKANCAD_ASSETS=/path/to/engine/build  (권장)
 //   - 또는 첫 인자로 경로 전달:  ./VulkanCadQml /path/to/engine/build
 
-#include "../../api/VulkanCAD_API.h"
+#include "../../sdk/include/VulkanCAD_API.h"
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>

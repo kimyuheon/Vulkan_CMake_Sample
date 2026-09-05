@@ -1,7 +1,7 @@
 #include "vulkan_viewport.h"
 
 // 엔진 C API — extern "C" 경계로 Windows/Linux/macOS에서 같은 코드를 사용한다.
-#include "../../api/VulkanCAD_API.h"
+#include "../../sdk/include/VulkanCAD_API.h"
 
 #include <QWindow>
 #include <QTimer>

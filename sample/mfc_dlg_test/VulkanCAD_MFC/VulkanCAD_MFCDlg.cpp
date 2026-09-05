@@ -8,7 +8,7 @@
 #include "VulkanCAD_MFCDlg.h"
 #include "afxdialogex.h"
 
-#include "../../../api/VulkanCAD_API.h"
+#include "../../../sdk/include/VulkanCAD_API.h"
 
 #include <string>
 

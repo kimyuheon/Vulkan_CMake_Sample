@@ -14,7 +14,6 @@
 		616F982DA9591D5AE489E6E8 /* models in Resources */ = {isa = PBXBuildFile; fileRef = 2CD40DEC4A67A98991CA9AB2 /* models */; };
 		63833AB06A0ED6105EF66CAD /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D46E00F8242E58F496654B0F /* QuartzCore.framework */; };
 		6808FC7385156DF3DEDC8F39 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C8D9F9F82DA118419C0CDB5 /* Metal.framework */; };
-		7B011B9C4E55EF11AAD53C5C /* shaders in Resources */ = {isa = PBXBuildFile; fileRef = 499669F1536B1D08C5528AEC /* shaders */; };
 		8B2FCC163B93CD789C308E5E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */; };
 		8D3BC11374CA1CA984657499 /* textures in Resources */ = {isa = PBXBuildFile; fileRef = 5CB36480FB34CA02A5A9DDD4 /* textures */; };
 		A8986A91111F751793A3AB4D /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DFF8B3C20B860620BABFADA /* IOSurface.framework */; };
@@ -26,10 +25,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2CD40DEC4A67A98991CA9AB2 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; name = models; path = ../../models; sourceTree = SOURCE_ROOT; };
+		2CD40DEC4A67A98991CA9AB2 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; name = models; path = ../../sdk/models; sourceTree = SOURCE_ROOT; };
 		436FFAC8CE6FD6070CFC1D8E /* VulkanCADEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADEngine.swift; sourceTree = "<group>"; };
-		499669F1536B1D08C5528AEC /* shaders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = shaders; path = ../../shaders; sourceTree = SOURCE_ROOT; };
-		5CB36480FB34CA02A5A9DDD4 /* textures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = textures; path = ../../textures; sourceTree = SOURCE_ROOT; };
+		5CB36480FB34CA02A5A9DDD4 /* textures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = textures; path = ../../sdk/textures; sourceTree = SOURCE_ROOT; };
 		8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		8C8D9F9F82DA118419C0CDB5 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		8DFF8B3C20B860620BABFADA /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
@@ -42,7 +40,7 @@
 		C993F2241329D73D5D398129 /* VulkanCADMetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADMetalView.swift; sourceTree = "<group>"; };
 		D46E00F8242E58F496654B0F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		DA05E1C7B577DD8E334F7CBE /* VulkanCADViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADViewRepresentable.swift; sourceTree = "<group>"; };
-		EE5F47F52BA04457BB1935A0 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../../../imgui/misc/fonts; sourceTree = SOURCE_ROOT; };
+		EE5F47F52BA04457BB1935A0 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../../sdk/fonts; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,7 +100,6 @@
 			children = (
 				EE5F47F52BA04457BB1935A0 /* fonts */,
 				2CD40DEC4A67A98991CA9AB2 /* models */,
-				499669F1536B1D08C5528AEC /* shaders */,
 				5CB36480FB34CA02A5A9DDD4 /* textures */,
 				8CCEA42428D97EF0DB493A90 /* VulkanCADSwiftiOSTest */,
 				60E339B10DC3B7C08EDD69A6 /* Frameworks */,
@@ -172,7 +169,6 @@
 			files = (
 				AE49CA76C39F6E45FFF5A8CC /* fonts in Resources */,
 				616F982DA9591D5AE489E6E8 /* models in Resources */,
-				7B011B9C4E55EF11AAD53C5C /* shaders in Resources */,
 				8D3BC11374CA1CA984657499 /* textures in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -203,7 +199,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_TEAM = YHBZ4NW3P3;
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../api",
+					"$(SRCROOT)/../../sdk/include",
 					"$(SRCROOT)/Sources/CVulkanCAD",
 				);
 				INFOPLIST_FILE = Info.plist;
@@ -213,13 +209,11 @@
 					"@executable_path/Frameworks",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
-					"$(SRCROOT)/../../build-ios-device/Debug-iphoneos",
-					"$(SRCROOT)/../../build-ios-device/external/manifold/src/Debug-iphoneos",
+					"$(SRCROOT)/../../sdk/lib-ios-device",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
-					"$(SRCROOT)/../../build-ios-sim/Debug-iphonesimulator",
-					"$(SRCROOT)/../../build-ios-sim/external/manifold/src/Debug-iphonesimulator",
+					"$(SRCROOT)/../../sdk/lib-ios-sim",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
 				);
 				OTHER_LDFLAGS = (
@@ -367,7 +361,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_TEAM = YHBZ4NW3P3;
 				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../api",
+					"$(SRCROOT)/../../sdk/include",
 					"$(SRCROOT)/Sources/CVulkanCAD",
 				);
 				INFOPLIST_FILE = Info.plist;
@@ -377,13 +371,11 @@
 					"@executable_path/Frameworks",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
-					"$(SRCROOT)/../../build-ios-device/Debug-iphoneos",
-					"$(SRCROOT)/../../build-ios-device/external/manifold/src/Debug-iphoneos",
+					"$(SRCROOT)/../../sdk/lib-ios-device",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
-					"$(SRCROOT)/../../build-ios-sim/Debug-iphonesimulator",
-					"$(SRCROOT)/../../build-ios-sim/external/manifold/src/Debug-iphonesimulator",
+					"$(SRCROOT)/../../sdk/lib-ios-sim",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
 				);
 				OTHER_LDFLAGS = (
