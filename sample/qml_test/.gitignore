@@ -1,0 +1,3 @@
+# CMake / Qt 빌드 산출물
+build/
+*.user

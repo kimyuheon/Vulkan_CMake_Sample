@@ -1,0 +1,11 @@
+# Visual Studio / MSBuild 산출물
+x64/
+Debug/
+Release/
+.vs/
+*.user
+*.aps
+ipch/
+*.obj
+*.pdb
+*.ilk

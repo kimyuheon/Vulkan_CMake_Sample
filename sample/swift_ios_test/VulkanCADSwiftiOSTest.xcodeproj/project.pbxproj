@@ -1,0 +1,427 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01EC03993777D8BF8CB0DC85 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41C0823CA289F7DEBB70400 /* ContentView.swift */; };
+		32F7C3FF700D67B79D77DD42 /* VulkanCADApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A77A7C9B4F63E006F36827 /* VulkanCADApp.swift */; };
+		4688016984FBDEFA2B4A2699 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8F9EA42600A218246839107 /* UIKit.framework */; };
+		5168E3FA213FC5F1C4DE54E8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */; };
+		616F982DA9591D5AE489E6E8 /* models in Resources */ = {isa = PBXBuildFile; fileRef = 2CD40DEC4A67A98991CA9AB2 /* models */; };
+		63833AB06A0ED6105EF66CAD /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D46E00F8242E58F496654B0F /* QuartzCore.framework */; };
+		6808FC7385156DF3DEDC8F39 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C8D9F9F82DA118419C0CDB5 /* Metal.framework */; };
+		7B011B9C4E55EF11AAD53C5C /* shaders in Resources */ = {isa = PBXBuildFile; fileRef = 499669F1536B1D08C5528AEC /* shaders */; };
+		8B2FCC163B93CD789C308E5E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */; };
+		8D3BC11374CA1CA984657499 /* textures in Resources */ = {isa = PBXBuildFile; fileRef = 5CB36480FB34CA02A5A9DDD4 /* textures */; };
+		A8986A91111F751793A3AB4D /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DFF8B3C20B860620BABFADA /* IOSurface.framework */; };
+		AE49CA76C39F6E45FFF5A8CC /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = EE5F47F52BA04457BB1935A0 /* fonts */; };
+		D1D1D2F920B6F458AAF7F92E /* VulkanCADViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA05E1C7B577DD8E334F7CBE /* VulkanCADViewRepresentable.swift */; };
+		E3FB72A13E7F3192CAA4D3E2 /* VulkanCADMobileBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CCCDC45A52961EBCBD8F76 /* VulkanCADMobileBridge.swift */; };
+		E4760A15DD948FFC5F878614 /* VulkanCADMetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C993F2241329D73D5D398129 /* VulkanCADMetalView.swift */; };
+		FCC853ECC04D0D9494A6E6C2 /* VulkanCADEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436FFAC8CE6FD6070CFC1D8E /* VulkanCADEngine.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		2CD40DEC4A67A98991CA9AB2 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; name = models; path = ../../models; sourceTree = SOURCE_ROOT; };
+		436FFAC8CE6FD6070CFC1D8E /* VulkanCADEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADEngine.swift; sourceTree = "<group>"; };
+		499669F1536B1D08C5528AEC /* shaders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = shaders; path = ../../shaders; sourceTree = SOURCE_ROOT; };
+		5CB36480FB34CA02A5A9DDD4 /* textures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = textures; path = ../../textures; sourceTree = SOURCE_ROOT; };
+		8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		8C8D9F9F82DA118419C0CDB5 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		8DFF8B3C20B860620BABFADA /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
+		97A60E215C3FB285B001989B /* VulkanCADSwiftiOSTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VulkanCADSwiftiOSTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B8F9EA42600A218246839107 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		B9CCCDC45A52961EBCBD8F76 /* VulkanCADMobileBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADMobileBridge.swift; sourceTree = "<group>"; };
+		BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		C41C0823CA289F7DEBB70400 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		C5A77A7C9B4F63E006F36827 /* VulkanCADApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADApp.swift; sourceTree = "<group>"; };
+		C993F2241329D73D5D398129 /* VulkanCADMetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADMetalView.swift; sourceTree = "<group>"; };
+		D46E00F8242E58F496654B0F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		DA05E1C7B577DD8E334F7CBE /* VulkanCADViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADViewRepresentable.swift; sourceTree = "<group>"; };
+		EE5F47F52BA04457BB1935A0 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../../../imgui/misc/fonts; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		69D692A3EE799D93F8582CD4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6808FC7385156DF3DEDC8F39 /* Metal.framework in Frameworks */,
+				63833AB06A0ED6105EF66CAD /* QuartzCore.framework in Frameworks */,
+				5168E3FA213FC5F1C4DE54E8 /* Foundation.framework in Frameworks */,
+				4688016984FBDEFA2B4A2699 /* UIKit.framework in Frameworks */,
+				A8986A91111F751793A3AB4D /* IOSurface.framework in Frameworks */,
+				8B2FCC163B93CD789C308E5E /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		04D8890DA44CA876D938119C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				97A60E215C3FB285B001989B /* VulkanCADSwiftiOSTest.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		60E339B10DC3B7C08EDD69A6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */,
+				8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */,
+				8DFF8B3C20B860620BABFADA /* IOSurface.framework */,
+				8C8D9F9F82DA118419C0CDB5 /* Metal.framework */,
+				D46E00F8242E58F496654B0F /* QuartzCore.framework */,
+				B8F9EA42600A218246839107 /* UIKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		8CCEA42428D97EF0DB493A90 /* VulkanCADSwiftiOSTest */ = {
+			isa = PBXGroup;
+			children = (
+				C41C0823CA289F7DEBB70400 /* ContentView.swift */,
+				C5A77A7C9B4F63E006F36827 /* VulkanCADApp.swift */,
+				436FFAC8CE6FD6070CFC1D8E /* VulkanCADEngine.swift */,
+				C993F2241329D73D5D398129 /* VulkanCADMetalView.swift */,
+				B9CCCDC45A52961EBCBD8F76 /* VulkanCADMobileBridge.swift */,
+				DA05E1C7B577DD8E334F7CBE /* VulkanCADViewRepresentable.swift */,
+			);
+			name = VulkanCADSwiftiOSTest;
+			path = Sources/VulkanCADSwiftiOSTest;
+			sourceTree = "<group>";
+		};
+		E9568A0171C01A606D970137 = {
+			isa = PBXGroup;
+			children = (
+				EE5F47F52BA04457BB1935A0 /* fonts */,
+				2CD40DEC4A67A98991CA9AB2 /* models */,
+				499669F1536B1D08C5528AEC /* shaders */,
+				5CB36480FB34CA02A5A9DDD4 /* textures */,
+				8CCEA42428D97EF0DB493A90 /* VulkanCADSwiftiOSTest */,
+				60E339B10DC3B7C08EDD69A6 /* Frameworks */,
+				04D8890DA44CA876D938119C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		506B1CF8BAACE7B3F51E1071 /* VulkanCADSwiftiOSTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E9FF344C56A6C82876E184BF /* Build configuration list for PBXNativeTarget "VulkanCADSwiftiOSTest" */;
+			buildPhases = (
+				0CBFC705B8B9672630DBE5E9 /* Sources */,
+				B8E9F1A5FA253A63A7214935 /* Resources */,
+				69D692A3EE799D93F8582CD4 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VulkanCADSwiftiOSTest;
+			packageProductDependencies = (
+			);
+			productName = VulkanCADSwiftiOSTest;
+			productReference = 97A60E215C3FB285B001989B /* VulkanCADSwiftiOSTest.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B5B1805C0BE6F4680F692805 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					506B1CF8BAACE7B3F51E1071 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 20FD91CAFE21B012C424B907 /* Build configuration list for PBXProject "VulkanCADSwiftiOSTest" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E9568A0171C01A606D970137;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 04D8890DA44CA876D938119C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				506B1CF8BAACE7B3F51E1071 /* VulkanCADSwiftiOSTest */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B8E9F1A5FA253A63A7214935 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AE49CA76C39F6E45FFF5A8CC /* fonts in Resources */,
+				616F982DA9591D5AE489E6E8 /* models in Resources */,
+				7B011B9C4E55EF11AAD53C5C /* shaders in Resources */,
+				8D3BC11374CA1CA984657499 /* textures in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0CBFC705B8B9672630DBE5E9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01EC03993777D8BF8CB0DC85 /* ContentView.swift in Sources */,
+				32F7C3FF700D67B79D77DD42 /* VulkanCADApp.swift in Sources */,
+				FCC853ECC04D0D9494A6E6C2 /* VulkanCADEngine.swift in Sources */,
+				E4760A15DD948FFC5F878614 /* VulkanCADMetalView.swift in Sources */,
+				E3FB72A13E7F3192CAA4D3E2 /* VulkanCADMobileBridge.swift in Sources */,
+				D1D1D2F920B6F458AAF7F92E /* VulkanCADViewRepresentable.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		7BDDF31C35906B33C325A4A3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = YHBZ4NW3P3;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../api",
+					"$(SRCROOT)/Sources/CVulkanCAD",
+				);
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(SRCROOT)/../../build-ios-device/Debug-iphoneos",
+					"$(SRCROOT)/../../build-ios-device/external/manifold/src/Debug-iphoneos",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(SRCROOT)/../../build-ios-sim/Debug-iphonesimulator",
+					"$(SRCROOT)/../../build-ios-sim/external/manifold/src/Debug-iphonesimulator",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+				);
+				OTHER_LDFLAGS = (
+					"-lVulkanCADCoreStatic",
+					"-lmanifold",
+					"-lMoltenVK",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = "-Xcc -I$(SRCROOT)/Sources/CVulkanCAD";
+				PRODUCT_BUNDLE_IDENTIFIER = com.vulkancad.iossample;
+				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Sources/CVulkanCAD";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A8CEFC4C296814FC84B5B41F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		AA08E89BB4EE9142B30B42B7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		D5B1667A7629205C47483BC6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = YHBZ4NW3P3;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../api",
+					"$(SRCROOT)/Sources/CVulkanCAD",
+				);
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(SRCROOT)/../../build-ios-device/Debug-iphoneos",
+					"$(SRCROOT)/../../build-ios-device/external/manifold/src/Debug-iphoneos",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(SRCROOT)/../../build-ios-sim/Debug-iphonesimulator",
+					"$(SRCROOT)/../../build-ios-sim/external/manifold/src/Debug-iphonesimulator",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+				);
+				OTHER_LDFLAGS = (
+					"-lVulkanCADCoreStatic",
+					"-lmanifold",
+					"-lMoltenVK",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = "-Xcc -I$(SRCROOT)/Sources/CVulkanCAD";
+				PRODUCT_BUNDLE_IDENTIFIER = com.vulkancad.iossample;
+				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Sources/CVulkanCAD";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		20FD91CAFE21B012C424B907 /* Build configuration list for PBXProject "VulkanCADSwiftiOSTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA08E89BB4EE9142B30B42B7 /* Debug */,
+				A8CEFC4C296814FC84B5B41F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E9FF344C56A6C82876E184BF /* Build configuration list for PBXNativeTarget "VulkanCADSwiftiOSTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D5B1667A7629205C47483BC6 /* Debug */,
+				7BDDF31C35906B33C325A4A3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B5B1805C0BE6F4680F692805 /* Project object */;
+}

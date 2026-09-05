@@ -1,0 +1,98 @@
+name: VulkanCADSwiftiOSTest
+options:
+  bundleIdPrefix: com.vulkancad
+  deploymentTarget:
+    iOS: "15.0"
+  developmentLanguage: en
+  xcodeVersion: "15.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+    # arm64 만 (M1+ 시뮬레이터 / 모든 iOS 디바이스)
+    ONLY_ACTIVE_ARCH: "YES"
+    EXCLUDED_ARCHS[sdk=iphonesimulator*]: "x86_64"
+    # 자동 코드 사인 — 시뮬레이터는 무시, 디바이스는 Xcode 가 팀으로 사인.
+    # ⚠️ Xcode 의 Signing & Capabilities 탭에서 본인 Apple ID 팀을 한 번 선택해야 함.
+    #    (또는 아래 DEVELOPMENT_TEAM 주석 풀고 본인 Team ID 입력)
+    CODE_SIGN_STYLE: Automatic
+    # DEVELOPMENT_TEAM: "XXXXXXXXXX"
+
+targets:
+  VulkanCADSwiftiOSTest:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Sources/VulkanCADSwiftiOSTest
+      # 엔진 에셋들을 .app 번들에 folder reference 로 복사 (디렉토리 구조 유지).
+      # 엔진은 setRuntimeAssetPath(Bundle.main.resourcePath) 받고
+      # shaders/*.spv, models/*.obj 등 상대 경로로 fopen.
+      #
+      # 새 에셋 폴더 추가 시: 같은 3줄 패턴으로 한 줄만 늘리면 됨.
+      - path: ../../shaders
+        type: folder
+        buildPhase: resources
+      - path: ../../models
+        type: folder
+        buildPhase: resources
+        optional: true
+      - path: ../../textures
+        type: folder
+        buildPhase: resources
+        optional: true
+      # ⚠️ 폰트는 선택이 아니라 **필수**다. 치수/문자는 글리프 메시를 만들어야 하는데
+      #    FirstApp::createDimension 이 `if (!textFont_.isLoaded()) return 0;` 로
+      #    폰트가 없으면 치수를 아예 안 만든다(선도 숫자도 안 보임).
+      #    원본은 레포 밖 — 데스크톱 CMake 도 같은 곳에서 build/fonts 로 복사한다.
+      - path: ../../../imgui/misc/fonts
+        type: folder
+        buildPhase: resources
+    info:
+      path: Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIRequiresFullScreen: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vulkancad.iossample
+        # C API 헤더 위치 (modulemap 이 가리키는 ../api 풀어줘야 됨)
+        HEADER_SEARCH_PATHS:
+          - "$(SRCROOT)/../../api"
+          - "$(SRCROOT)/Sources/CVulkanCAD"
+        SWIFT_INCLUDE_PATHS:
+          - "$(SRCROOT)/Sources/CVulkanCAD"
+        # CMake 가 만든 정적 라이브러리 + MoltenVK 정적 lib — SDK 별 분기.
+        #   시뮬레이터: build-ios-sim    + MoltenVK ios-arm64_x86_64-simulator 슬라이스
+        #   디바이스  : build-ios-device + MoltenVK ios-arm64 슬라이스
+        LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]:
+          - "$(SRCROOT)/../../build-ios-sim/Debug-iphonesimulator"
+          - "$(SRCROOT)/../../build-ios-sim/external/manifold/src/Debug-iphonesimulator"
+          - "$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator"
+        LIBRARY_SEARCH_PATHS[sdk=iphoneos*]:
+          - "$(SRCROOT)/../../build-ios-device/Debug-iphoneos"
+          - "$(SRCROOT)/../../build-ios-device/external/manifold/src/Debug-iphoneos"
+          - "$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64"
+        # 링크 순서 주의: 의존하는 VulkanCADCoreStatic 을 먼저, 그다음 manifold(피의존).
+        OTHER_LDFLAGS:
+          - "-lVulkanCADCoreStatic"
+          - "-lmanifold"
+          - "-lMoltenVK"
+          - "-lc++"
+        # MoltenVK 가 의존하는 시스템 프레임워크들
+        OTHER_SWIFT_FLAGS:
+          - "-Xcc"
+          - "-I$(SRCROOT)/Sources/CVulkanCAD"
+    dependencies:
+      - sdk: Metal.framework
+      - sdk: QuartzCore.framework
+      - sdk: Foundation.framework
+      - sdk: UIKit.framework
+      - sdk: IOSurface.framework
+      - sdk: CoreGraphics.framework
