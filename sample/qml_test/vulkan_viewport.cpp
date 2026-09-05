@@ -76,7 +76,19 @@ void VulkanViewport::itemChange(ItemChange change, const ItemChangeData& value) 
             // window 이동 시에도 자식 창 위치를 다시 맞춰야 함.
             connect(value.window, &QQuickWindow::xChanged, this, &VulkanViewport::syncGeometry);
             connect(value.window, &QQuickWindow::yChanged, this, &VulkanViewport::syncGeometry);
-            createEngineWindow();
+            // 닫기를 **미리** 받으려고 호스트 창에도 필터를 건다. 아래 ItemSceneChange(window==null)
+            // 는 QQuickWindow 가 이미 헐린 뒤에 오고, 자식인 nativeWindow_ 의 X 창도 그때 같이
+            // 사라진다. 그 사이 16ms 틱이 한 번 더 들어가면 죽은 서피스로 acquire 를 걸어
+            // "failed to acquire swap chain image!" 가 뜬다(종료 때만 나던 그 한 줄).
+            // isExposed() 가드로는 못 막는다 — 파괴 전에 expose 이벤트가 온다는 보장이 없다.
+            // (QQuickWindow::closing 시그널은 QQuickCloseEvent 가 전방 선언뿐이라 connect 가
+            //  메타타입 검사에서 막힌다. QEvent::Close 를 직접 보는 게 같은 시점이고 더 싸다.)
+            value.window->installEventFilter(this);
+            // 엔진 생성 조건(크기·노출)은 이 시점엔 아직 갖춰지지 않는다 —
+            // tryCreateEngineWindow 주석 참고. 갖춰질 때까지 프레임마다 다시 본다.
+            connect(value.window, &QQuickWindow::afterAnimating,
+                    this, &VulkanViewport::tryCreateEngineWindow);
+            tryCreateEngineWindow();
         } else {
             destroyEngineWindow();
         }
@@ -87,28 +99,59 @@ void VulkanViewport::itemChange(ItemChange change, const ItemChangeData& value) 
 void VulkanViewport::geometryChange(const QRectF& newGeom, const QRectF& oldGeom) {
     QQuickItem::geometryChange(newGeom, oldGeom);
     syncGeometry();
+    tryCreateEngineWindow();   // 레이아웃이 처음 크기를 준 프레임이 생성 시점일 수 있다
+}
+
+// 엔진을 붙이기 전에 두 조건이 **모두** 만족돼야 한다.
+//
+//   1) Item 이 실제 크기를 가질 것 — ItemSceneChange 는 QML 레이아웃(RowLayout)이 돌기
+//      전에 오므로 그 시점의 width()/height() 는 0 이다.
+//   2) 호스트 창이 노출(map)돼 있을 것 — 매핑 전 창은 surface extent 가 0 이다.
+//
+// 예전엔 ItemSceneChange 에서 바로 만들었다. 그러면 1x1 짜리 미매핑 창에 스왑체인이 잡히고,
+// 곧이어 레이아웃이 실제 크기를 주면서 스왑체인을 다시 만든다. X11 의 실제 리사이즈는
+// 비동기라 그 사이에 낀 Tick 이 옛 extent 로 acquire 를 시도해
+// "failed to acquire swap chain image!" 로 깨진다 — 타이밍에 따라 되기도 하고 안 되기도 하는
+// 경주였다. 조건이 갖춰질 때까지 미루면 스왑체인을 처음부터 한 번만, 맞는 크기로 만든다.
+void VulkanViewport::tryCreateEngineWindow() {
+    if (engineCreated_) return;
+    QQuickWindow* host = window();
+    if (!host || !host->isExposed()) return;
+    if (width() < 1 || height() < 1) return;
+
+    createEngineWindow();
+
+    if (engineCreated_)   // 매 프레임 도는 슬롯이라 성공하면 감시를 끊는다.
+        disconnect(host, &QQuickWindow::afterAnimating,
+                   this, &VulkanViewport::tryCreateEngineWindow);
 }
 
 void VulkanViewport::createEngineWindow() {
     if (engineCreated_ || !window()) return;
 
+    const QPointF topLeft = mapToScene(QPointF(0, 0));
+    const int w = int(width());
+    const int h = int(height());
+
     // 네이티브 자식 창 — QQuickWindow를 부모로. winId() 호출이 OS 창 생성을 강제한다.
+    // 지오메트리는 create() **전** 에 정한다: X11 창이 처음부터 최종 크기로 태어나야
+    // 엔진이 surface capabilities 를 물었을 때 맞는 extent 가 나온다.
     nativeWindow_ = new QWindow(window());
     nativeWindow_->setFlags(Qt::FramelessWindowHint);
+    nativeWindow_->setGeometry(int(topLeft.x()), int(topLeft.y()), w, h);
     nativeWindow_->create();                       // 네이티브 핸들 실체화
     const WId nativeId = nativeWindow_->winId();    // HWND / X11 XID / NSView
-    nativeWindow_->setGeometry(0, 0, 1, 1);
     nativeWindow_->show();
 
-    syncGeometry();
-
-    const int pw = int(width()  * devicePixelRatio_);
-    const int ph = int(height() * devicePixelRatio_);
+    // 엔진엔 물리 픽셀 크기 전달 (Vulkan swapchain extent 와 일치).
+    const int pw = int(w * devicePixelRatio_);
+    const int ph = int(h * devicePixelRatio_);
 
     // C API 임베드 시퀀스 (WPF/MFC/iOS 와 동일 패턴):
     //   AttachView(XID) → CreateEngine → 이후 매 프레임 Tick.
-    CAD_AttachView(reinterpret_cast<void*>(static_cast<uintptr_t>(nativeId)),
-                   pw > 0 ? pw : 1, ph > 0 ? ph : 1);
+    lastPixelW_ = pw;   // 이후 syncGeometry 가 같은 크기로 재차 Resize 하지 않도록 기록
+    lastPixelH_ = ph;
+    CAD_AttachView(reinterpret_cast<void*>(static_cast<uintptr_t>(nativeId)), pw, ph);
     if (!CAD_CreateEngine()) {
         qWarning("[qml] CAD_CreateEngine failed");
         destroyEngineWindow();
@@ -138,6 +181,7 @@ void VulkanViewport::destroyEngineWindow() {
         CAD_DestroyEngine();
         engineCreated_ = false;
     }
+    tickFailed_ = false;
     if (nativeWindow_) {
         nativeWindow_->removeEventFilter(this);
         nativeWindow_->deleteLater();
@@ -160,15 +204,46 @@ void VulkanViewport::syncGeometry() {
 
     if (engineCreated_) {
         // 엔진엔 물리 픽셀 크기 전달 (Vulkan swapchain extent 와 일치).
-        CAD_ResizeView(int(w * devicePixelRatio_), int(h * devicePixelRatio_));
+        // 크기가 그대로면 부르지 않는다 — CAD_ResizeView 는 같은 값이어도 스왑체인을
+        // 다시 만들고, 창 이동(xChanged/yChanged)만으로도 이 함수가 불리기 때문에
+        // 그냥 두면 드래그하는 내내 스왑체인을 새로 만들게 된다.
+        const int pw = int(w * devicePixelRatio_);
+        const int ph = int(h * devicePixelRatio_);
+        if (pw != lastPixelW_ || ph != lastPixelH_) {
+            lastPixelW_ = pw;
+            lastPixelH_ = ph;
+            CAD_ResizeView(pw, ph);
+        }
     }
 }
 
 void VulkanViewport::tick() {
-    if (engineCreated_) CAD_Tick();
+    if (!engineCreated_) return;
+
+    // 창이 최소화됐거나 아직 매핑되기 전이면 surface extent 가 0 이라 acquire 가 실패한다.
+    // 그릴 수 없는 프레임은 엔진에 넘기지 않고 건너뛴다.
+    if (!nativeWindow_->isExposed()) return;
+
+    if (!CAD_Tick()) {
+        // 리사이즈 도중 한두 프레임 실패하는 건 다음 프레임에 복구된다 —
+        // 타이머를 멈추면 오히려 화면이 영영 죽으므로 계속 돌리되 로그만 한 번 낸다.
+        if (!tickFailed_) {
+            tickFailed_ = true;
+            qWarning("[qml] CAD_Tick 실패 — 다음 프레임에 복구를 시도합니다.");
+        }
+    } else {
+        tickFailed_ = false;   // 복구되면 다음 실패를 다시 알린다
+    }
 }
 
 bool VulkanViewport::eventFilter(QObject* watched, QEvent* event) {
+    // 호스트 창이 닫히는 순간 — 창이 실제로 헐리기 **전**이다. 여기서 정리해야 타이머가
+    // 죽은 서피스를 보지 않는다. 이벤트는 먹지 않고(false) 그대로 흘려보낸다.
+    if (watched == window() && event->type() == QEvent::Close) {
+        destroyEngineWindow();
+        return false;
+    }
+
     if (watched != nativeWindow_ || !engineCreated_)
         return QQuickItem::eventFilter(watched, event);
 

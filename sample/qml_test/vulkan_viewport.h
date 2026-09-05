@@ -36,6 +36,7 @@ protected:
 private slots:
     void tick();                // QTimer → CAD_Tick
     void syncGeometry();        // Item 씬 좌표 → 자식 창 위치/크기
+    void tryCreateEngineWindow();  // 크기·노출이 갖춰졌으면 엔진 생성 (한 번만 성공)
 
 private:
     void createEngineWindow();  // 네이티브 창 + 엔진 attach + create
@@ -44,5 +45,8 @@ private:
     QWindow* nativeWindow_{nullptr};  // 엔진이 렌더하는 네이티브 자식 창
     QTimer*  tickTimer_{nullptr};
     bool     engineCreated_{false};
+    bool     tickFailed_{false};      // CAD_Tick 실패 로그를 한 번만 내기 위한 래치
+    int      lastPixelW_{0};          // 엔진에 마지막으로 알린 물리 픽셀 크기 —
+    int      lastPixelH_{0};          // 크기가 실제로 바뀔 때만 CAD_ResizeView 를 부른다
     double   devicePixelRatio_{1.0};
 };
