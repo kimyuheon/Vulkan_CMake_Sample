@@ -413,6 +413,18 @@ CAD_API bool     CAD_SetPolylinePoints(uint32_t id, const float* xyz, uint32_t c
 //    그건 이 API 위에 얹을 별도 레이어다 — 함수 모양은 그때도 바뀌지 않는다.
 // 갱신은 GPU 스톨 없이 host-visible 버퍼 memcpy 로 처리된다(매 프레임 호출해도 안전).
 CAD_API uint32_t CAD_CreatePointCloud(void);
+// Particle presets: 0 fire, 1 smoke, 2 sparks. Inserted stopped.
+// unitsPerMeter = 1 for metre drawings, 1000 for millimetre drawings.
+// Call on the engine thread, outside CAD_Tick (same rule as CAD_CreateBox).
+CAD_API uint32_t CAD_CreateParticleEmitter(int preset, float x, float y, float z, float unitsPerMeter);
+// Load a VulkanCAD v1 JSON preset (not Unity/Unreal/Effekseer), create stopped.
+// UTF-8 path. Invalid/unsupported file returns 0; never modifies the source file.
+CAD_API uint32_t CAD_CreateParticleEmitterFromPreset(const char* path, float x, float y, float z, float unitsPerMeter);
+// state: 0 pause (preserves particles), 1 play/resume, 2 reset/stop.
+CAD_API bool CAD_SetParticlePlayback(uint32_t id, int state);
+// Load an Effekseer .efkefc/.efk with referenced resources. Inserted stopped.
+// CAD_SetParticlePlayback also controls these objects. Files embed in .lot.
+CAD_API uint32_t CAD_CreateExternalEffect(const char* path,float x,float y,float z,float unitsPerMeter);
 CAD_API bool     CAD_UpdatePointCloud(uint32_t id,
                                       const float* xyz,
                                       const unsigned char* rgba,
@@ -428,7 +440,8 @@ CAD_API bool CAD_GetSelectedObjectId(uint32_t index, uint32_t* id);
 // 전체 객체 ID 열거 — outIds 에 최대 cap 개 채우고 총 개수 반환. cap=0/outIds=NULL → 개수만 질의.
 // (2단계: 먼저 개수 질의 → 버퍼 할당 → 다시 호출)
 CAD_API uint32_t CAD_GetObjectIds(uint32_t* outIds, uint32_t cap);
-// 종류: 0=Mesh 1=Line 2=Polyline 3=Circle 4=Arc 5=Text 6=Dimension, 없으면 -1.
+// 종류: 0=Mesh 1=Line 2=Polyline 3=Circle 4=Arc 5=Text 6=Dimension
+//       7=PointCloud 8=ParticleEmitter, 없으면 -1.
 CAD_API int      CAD_GetObjectKind(uint32_t id);
 CAD_API bool     CAD_ObjectExists(uint32_t id);
 // 이름 — 씬 안에서 **유일**해야 한다. 중복이면 false (이름은 사람과 외부 API 가
