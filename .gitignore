@@ -38,3 +38,7 @@ ModuleCache.noindex/
 #       Releases 에서 받아 아래 폴더에 풀어야 한다 — README 참조.
 sdk/lib-ios-sim/
 sdk/lib-ios-device/
+
+# 엔진 models/ 를 통째로 복사하다 딸려온 대형 샘플 모델(51MB).
+# 샘플을 돌리는 데 필요 없고 레포만 무거워진다.
+sdk/models/Sponza/
