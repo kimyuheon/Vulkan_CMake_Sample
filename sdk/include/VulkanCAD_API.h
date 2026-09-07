@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // VulkanCAD C API boundary rules:
 // - Expose only C-friendly types: bool, int, uint32_t, float, double, const char*, void* handles.
@@ -102,6 +102,188 @@ CAD_API void CAD_RequestCyclePolygonSides(void);
  * 반환: 알 수 없는 이름이면 false. 값 입력으로 소비된 경우도 true.
  */
 CAD_API bool CAD_ExecuteCommand(const char* name);
+
+/* ── 명령 등록 (플러그인) ─────────────────────────────────
+ *
+ * 플러그인이 **콘솔 명령을 추가**한다. 명령행이 이 엔진의 모든 기능 진입점이라,
+ * 이것만 있으면 플러그인이 "기능" 이 된다. ObjectARX 의 acedRegCmds 자리.
+ *
+ *   등록 후  명령행에 wall → 콜백 호출
+ *              CAD_ExecuteCommand("wall") 도 같은 경로
+ *
+ * name   조회 키. 대소문자를 안 가린다(한글 이름도 된다).
+ * title  메뉴·툴바에 들어갈 표시 이름. NULL 이면 name 을 쓴다.
+ * fn     콜백. **C 함수 포인터**라 C++/C#/Python 어디서든 같은 모양으로 쓴다.
+ * user   그대로 돌려받는다(플러그인 인스턴스 포인터 등).
+ * owner  플러그인 ID. 언로드할 때 이 값으로 묶어 한꺼번에 지운다. 0 = 소유자 없음.
+ *
+ * 실패 조건: 빈 이름 · fn 이 NULL · 이미 등록된 이름.
+ * ⚠️ 엔진 기본 명령(line/circle …)과 같은 이름은 등록도지만 불리지 않는다 —
+ *    기본 명령이 먼저 조회된다(플러그인이 기본 동작을 가로채는 것을 막는다).
+ * ⚠️ 콜백은 **엔진과 같은 스레드**에서 불린다 — 안에서 CAD_* 를 부릅니다.
+ *    콜백이 던진 예외는 엔진이 잡아 삼킨다(프레임 루프가 죽지 않게).
+ */
+typedef void (*CAD_CommandFn)(void* user);
+CAD_API bool CAD_RegisterCommand(const char* name, const char* title,
+                                 CAD_CommandFn fn, void* user, unsigned int owner);
+CAD_API bool CAD_UnregisterCommand(const char* name);
+/* 그 플러그인이 등록한 명령을 전부 제거. 반환 = 지운 개수. owner 0 은 아무것도 안 지운다.
+ * 언로드 경로에서 반드시 부른다 — 안 지우면 사라진 DLL 의 함수를 부르게 된다. */
+CAD_API unsigned int CAD_UnregisterCommandsByOwner(unsigned int owner);
+/* 등록된 명령 수 / i 번째 이름·표시이름 — 메뉴·리본을 그릴 때 호스트가 읽는다.
+ * buf 가 NULL 이거나 짧으면 필요한 길이(널문자 포함)를 반환한다. */
+CAD_API unsigned int CAD_GetRegisteredCommandCount(void);
+CAD_API int CAD_GetRegisteredCommandName(unsigned int index, char* buf, int bufLen);
+CAD_API int CAD_GetRegisteredCommandTitle(unsigned int index, char* buf, int bufLen);
+
+/* ── UI 등록 (플러그인) ───────────────────────────────────
+ *
+ * 플러그인은 UI 를 **직접 그리지 않는다.** (이름, 위치, 명령) 만 올리면 엔진이 그린다.
+ * 그래서 ImGui 버전에 묶이지 않고, C#/Python 플러그인도 같은 방식을 쓰며,
+ * **호스트 임베드(MFC/WPF)에서도 산다** — 호스트가 이 목록을 읽어 자기 메뉴로 그리면 된다.
+ *
+ * kind: 0=메뉴항목 1=구분선 2=툴바버튼 3=리본버튼 4=패널
+ * path: 위치. 구분자는 '/'.
+ *         메뉴 "건축" · "건축/가져오기"   툴바/리본 "건축/벽체"
+ *         패널은 도킹 위치를 여기 넣는다("left"/"right"/"bottom").
+ * command: 누르면 실행할 명령 이름. 명령행과 **같은 입구**로 들어간다.
+ *          구분선·패널은 NULL 가능. 그 외엓 비어 둘 수 없다 —
+ *          눌러도 아무 일이 안 생기는 항목은 등록 단계에서 막는다.
+ * icon: 짧은 글자/이모지. 지금은 글자로 보여주고 나중에 아이콘으로 바꾼다. NULL 가능.
+ * owner: 플러그인 ID. 언로드 시 이 값으로 묶어 한꺼번에 지운다.
+ *
+ * 반환 = 항목 id (0 이면 실패). 이 id 로 개별 제거한다.
+ * ⚠️ 패널은 **존재만** 등록된다 — 내용은 플러그인이 ImGui 후크로 그려야 하고,
+ *    그건 단독 실행 전용이다(호스트 임베드엔 ImGui 컨텍스트가 없다).
+ */
+CAD_API unsigned int CAD_AddUiItem(int kind, const char* path, const char* title,
+                                   const char* command, const char* icon, unsigned int owner);
+CAD_API bool CAD_RemoveUiItem(unsigned int id);
+CAD_API unsigned int CAD_RemoveUiItemsByOwner(unsigned int owner);
+/* 호스트가 메뉴·툴바를 직접 그릴 때 읽는다. index 는 등록 순서 = 화면 나열 순서. */
+CAD_API unsigned int CAD_GetUiItemCount(void);
+CAD_API unsigned int CAD_GetUiItemId(unsigned int index);
+CAD_API int CAD_GetUiItemKind(unsigned int index);        /* 실패 시 -1 */
+CAD_API int CAD_GetUiItemPath(unsigned int index, char* buf, int bufLen);
+CAD_API int CAD_GetUiItemTitle(unsigned int index, char* buf, int bufLen);
+CAD_API int CAD_GetUiItemCommand(unsigned int index, char* buf, int bufLen);
+CAD_API int CAD_GetUiItemIcon(unsigned int index, char* buf, int bufLen);
+
+/* ── 플러그인 로더 ────────────────────────────────────────
+ *
+ * 엔진은 시작할 때 실행 폴더의 plugins/ 를 자동으로 훑는다. 폴더가 없으면 그냥 넘어간다.
+ * 아래는 호스트가 다른 폴더를 더 올리거나, 쓰는 중에 하나를 내릴 때 쓴다.
+ *
+ * 플러그인은 plugin/lot_plugin_sdk.h 의 심볼 셋을 내보내야 한다:
+ *   CAD_PluginAbiVersion / CAD_PluginLoad / CAD_PluginUnload
+ * ABI 번호가 다르면 아예 올리지 않는다 — 엔진과 같은 컴파일러·런타임으로 빌드해야 한다.
+ *
+ * 언로드하면 그 플러그인이 올린 명령과 UI 항목이 **엔진이 알아서** 같이 지워진다.
+ */
+CAD_API unsigned int CAD_LoadPlugins(const char* dir);   /* 반환 = 성공한 개수 */
+CAD_API bool CAD_UnloadPlugin(unsigned int id);
+CAD_API unsigned int CAD_GetPluginCount(void);
+CAD_API unsigned int CAD_GetPluginId(unsigned int index);
+CAD_API int CAD_GetPluginName(unsigned int index, char* buf, int bufLen);
+
+/* ── 플러그인 엔티티 ───────────────────────────────────────────────────
+ *
+ * 새 객체 종류를 만들지 않는다. 플러그인이 **형상(메시)을 공급**하고, 객체에 **딱지**를 붙인다.
+ * 객체는 평범한 메시라 그리기·픽킹·저장이 전부 그대로 동작하고, 플러그인이 없는 곳에서
+ * 열어도 형상은 보인다. 딱지는 보존돼 나중에 플러그인이 있으면 도로 살아난다.
+ *
+ *   id = CAD_CreateMesh(xyz, nv, idx, ni, NULL);          // 형상
+ *   CAD_SetPluginTag(id, "ArchBuilder", "wall", json);   // 딱지
+ *   ... 값이 바뀌면 → CAD_ReplaceMesh(id, ...)           // 재생성
+ *
+ * .lot 을 열어 딱지 붙은 객체가 복원되면 CAD_SetOnPluginEntityLoaded 콜백으로 알려준다.
+ * 플러그인은 owner 가 자기 이름이면 data 를 읽어 살아 있는 엔티티로 넘겨받는다.
+ *
+ * 사용자가 그립·불리언·밀당·분해로 메시를 직접 고치면 정의와 형상이 어긋나므로 엔진이
+ * 먼저 묻고, "계속" 이면 딱지를 뗀다(그냥 메시가 된다). 호스트 임베드는 ImGui 가 없어
+ * CAD_SetOnConfirm 으로 대신 물어야 한다 — 안 달면 안전한 쪽(취소)으로 간다.
+ *
+ * xyz = 3*vertexCount, indices = 3*triangleCount. normals 는 NULL 가능(삼각형별 flat).
+ */
+CAD_API uint32_t CAD_CreateMesh(const float* xyz, unsigned int vertexCount,
+                                const unsigned int* indices, unsigned int indexCount,
+                                const float* normals);
+CAD_API bool CAD_ReplaceMesh(uint32_t id, const float* xyz, unsigned int vertexCount,
+                             const unsigned int* indices, unsigned int indexCount,
+                             const float* normals);
+CAD_API bool CAD_SetPluginTag(uint32_t id, const char* owner, const char* type, const char* data);
+CAD_API bool CAD_ClearPluginTag(uint32_t id);
+CAD_API bool CAD_HasPluginTag(uint32_t id);
+CAD_API int  CAD_GetPluginTagOwner(uint32_t id, char* buf, int bufLen);
+CAD_API int  CAD_GetPluginTagType (uint32_t id, char* buf, int bufLen);
+CAD_API int  CAD_GetPluginTagData (uint32_t id, char* buf, int bufLen);
+CAD_API void CAD_SetOnPluginEntityLoaded(void (*cb)(uint32_t id, const char* owner,
+                                                     const char* type, const char* data));
+/* 반환 true = 계속. 호스트 임베드(MFC/WPF)는 반드시 달 것 — 없으면 취소로 간다. */
+CAD_API void CAD_SetOnConfirm(bool (*cb)(const char* text));
+
+/* ── 엔티티 속성 (특성창) ──────────────────────────────────────────────
+ *
+ * 플러그인은 특성창을 직접 그리지 않는다. "두께는 0.05~2.0 실수" 라고 **말만** 하고
+ * 엔진이 슬라이더를 그린다. ImGui 버전에 안 묶이고, 호스트 임베드에서도 산다.
+ *
+ *   CAD_AddEntityProperty("HelloPlugin", "wall", "thick", "두께", 0, 0.05f, 2.0f, id);
+ *
+ * ⭐ 값은 딱지 data 에 **JSON 오브젝트**로 들어 있어야 한다. 엔진이 그 JSON 을 읽고 쓴다.
+ *    그래서 플러그인이 없어도 값이 보인다(그때는 읽기 전용 — 형상을 다시 만들 코드가 없다).
+ *
+ * kind: 0=실수 1=정수 2=참거짓 3=문자(읽기전용)
+ * minV/maxV: min>=max 면 범위 없음. 실패: 빈 이름 · 같은 (owner,type,key) 중복.
+ *
+ * 사용자가 값을 바꾸면 엔진이 딱지 JSON 을 갱신하고 CAD_SetOnPluginEntityChanged 를 부른다.
+ * 플러그인은 거기서 CAD_ReplaceMesh 로 형상을 다시 만든다.
+ */
+CAD_API bool CAD_AddEntityProperty(const char* owner, const char* type, const char* key,
+                                   const char* label, int kind, float minV, float maxV,
+                                   unsigned int pluginId);
+CAD_API unsigned int CAD_RemoveEntityPropertiesByOwner(unsigned int pluginId);
+CAD_API void CAD_SetOnPluginEntityChanged(void (*cb)(uint32_t id, const char* owner,
+                                                      const char* type, const char* data));
+
+/* ── 엔진 이벤트 구독 ──────────────────────────────────────────────────
+ *
+ * ⚠️ 위 CAD_SetOnXxx 계열은 **한 칸짜리**다 — 플러그인이 걸면 호스트 것을 덮어쓴다.
+ *    플러그인은 여러 개가 동시에 올라오므로 이쪽(목록)으로 구독한다. 둘 다 발화한다.
+ *
+ * kinds 는 비트 OR: 1=객체생성 2=객체삭제 4=선택변경 8=문서변경
+ *   생성/삭제 → id = 그 객체. 선택변경 → id = 0. 문서변경 → id = dirty ? 1 : 0.
+ *
+ * 반환 = 핸들(0 이면 실패). 언로드 때는 엔진이 pluginId 로 묶어 알아서 지운다.
+ * 콜백은 엔진과 같은 스레드에서 프레임 끝에 불린다 — 안에서 CAD_* 를 불러도 된다.
+ */
+typedef void (*CAD_EventFn)(int kind, uint32_t id, void* user);
+CAD_API unsigned int CAD_AddEventListener(int kinds, CAD_EventFn fn, void* user, unsigned int pluginId);
+CAD_API bool CAD_RemoveEventListener(unsigned int handle);
+
+/* ── 플러그인 패널 (ImGui 직접 그리기) ─────────────────────────────────
+ *
+ * 패널은 CAD_AddUiItem(kind 4) 로 등록하면 엔진이 창을 만들고, 그 **안을 플러그인이**
+ * ImGui 로 그린다. 메뉴·툴바·리본과 달리 이것만 플러그인이 ImGui 를 직접 부른다.
+ *
+ * ⚠️ 그래서 제약이 붙는다:
+ *    · 플러그인이 엔진과 **같은 ImGui 버전**을 컴파일해 넣어야 한다
+ *    · 아래 두 함수로 컨텍스트와 할당자를 받아 ImGui::SetCurrentContext /
+ *      ImGui::SetAllocatorFunctions 를 먼저 불러야 한다 — DLL 경계를 넘으면
+ *      ImGui 전역과 힙이 공유되지 않는다(ImGui 문서의 그 항목)
+ *    · **호스트 임베드(MFC/WPF)에선 안 뜬다** — 거기엔 ImGui 컨텍스트가 없다
+ *      (CAD_GetImGuiContext 가 NULL 을 돌려준다)
+ *
+ * 값 편집만 필요하면 CAD_AddEntityProperty(특성창) 가 이 제약을 전부 피한다.
+ * 그래서 패널은 "그래프·미리보기처럼 정말 직접 그려야 하는 것" 에만 쓰는 게 좋다.
+ *
+ *   void drawPanel(unsigned id, const char* title) { ImGui::Text("..."); }
+ *   ImGui::SetCurrentContext((ImGuiContext*)CAD_GetImGuiContext());
+ *   CAD_GetImGuiAllocators(&a, &f, &u); ImGui::SetAllocatorFunctions(a, f, u);
+ *   CAD_SetOnDrawPanel(&drawPanel);
+ */
+CAD_API void* CAD_GetImGuiContext(void);   /* ImGuiContext* — 호스트 임베드에선 NULL */
+CAD_API void  CAD_GetImGuiAllocators(void** allocFn, void** freeFn, void** userData);
+CAD_API void  CAD_SetOnDrawPanel(void (*cb)(unsigned int panelId, const char* title));
 
 /* ── 알림(콜백) ───────────────────────────────────────────────────────────
  *
@@ -561,7 +743,7 @@ CAD_API bool CAD_ExportObj(const char* path, bool selectedOnly);
 // CAD_SaveAs  : .lot(프로젝트) · .stl · .dxf · .obj · .glb/.gltf
 //               .lot 은 씬 전체(선·솔리드·로봇·문서 상태)를 담는 네이티브 형식이고,
 //               나머지는 내보내기다. selectedOnly=true 면 선택 객체만.
-//               ⚠️ 점군은 아직 .lot 에 안 담긴다 — 저장해도 스캔은 빠진다.
+//               점군도 .lot 에 담긴다(2026-09 부터). 다만 파일이 커진다 — 점당 21.3B.
 // CAD_OpenFile: .lot · .obj · .stl · .dxf · .ply(점군) · .gltf/.glb
 //               **현재 문서에 추가**한다(새 탭을 만들지 않음). 새 탭으로 열려면
 //               CAD_OpenDocument 를 쓴다.
