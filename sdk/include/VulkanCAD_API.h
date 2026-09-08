@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 // VulkanCAD C API boundary rules:
 // - Expose only C-friendly types: bool, int, uint32_t, float, double, const char*, void* handles.
@@ -744,7 +744,7 @@ CAD_API bool CAD_ExportObj(const char* path, bool selectedOnly);
 //               .lot 은 씬 전체(선·솔리드·로봇·문서 상태)를 담는 네이티브 형식이고,
 //               나머지는 내보내기다. selectedOnly=true 면 선택 객체만.
 //               점군도 .lot 에 담긴다(2026-09 부터). 다만 파일이 커진다 — 점당 21.3B.
-// CAD_OpenFile: .lot · .obj · .stl · .dxf · .ply(점군) · .gltf/.glb
+// CAD_OpenFile: .lot · .obj · .stl · .dxf · .ply(점군) · .gltf/.glb · .fbx (static meshes)
 //               **현재 문서에 추가**한다(새 탭을 만들지 않음). 새 탭으로 열려면
 //               CAD_OpenDocument 를 쓴다.
 //
