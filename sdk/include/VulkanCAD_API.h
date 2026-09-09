@@ -629,6 +629,9 @@ CAD_API bool     CAD_ObjectExists(uint32_t id);
 // 이름 — 씬 안에서 **유일**해야 한다. 중복이면 false (이름은 사람과 외부 API 가
 // 부품을 가리키는 유일한 수단이라, 겹치면 어느 쪽인지 알 수 없다). 빈 이름은 허용.
 CAD_API bool     CAD_SetObjectName(uint32_t id, const char* utf8);
+// Viewport visibility; hidden objects remain in the document but cannot be picked/snapped.
+CAD_API bool     CAD_SetObjectVisible(uint32_t id, bool visible);
+CAD_API bool     CAD_IsObjectVisible(uint32_t id); // false for missing IDs
 CAD_API int      CAD_GetObjectName(uint32_t id, char* outUtf8, int cap);   // 길이 반환, -1=실패
 CAD_API uint32_t CAD_FindObjectByName(const char* utf8);                   // 0 = 없음
 CAD_API bool     CAD_GetColor(uint32_t id, float* r, float* g, float* b);
@@ -751,6 +754,17 @@ CAD_API bool CAD_ExportObj(const char* path, bool selectedOnly);
 // 둘 다 실패 시 false 를 반환하고 사유는 CAD_GetStatusMessage 로 읽는다.
 CAD_API bool CAD_SaveAs(const char* pathUtf8, bool selectedOnly);
 CAD_API bool CAD_OpenFile(const char* pathUtf8);
+
+// Static mesh component selection, main thread. Mode: 0 object, 1 face, 2 edge.
+// Pick ray is in world coordinates. Face output contains triangle numbers (not corners).
+// GetSelectedFaceTriangles returns required count; writes up to capacity if out != NULL.
+CAD_API bool CAD_SetSubobjectSelectionMode(int mode);
+CAD_API int CAD_GetSubobjectSelectionMode(void);
+CAD_API bool CAD_PickSubobject(float ox, float oy, float oz, float dx, float dy, float dz);
+CAD_API uint32_t CAD_GetSubobjectSelectionId(void);
+CAD_API uint32_t CAD_GetSelectedFaceTriangles(uint32_t* out, uint32_t capacity);
+// endpoints6 = {ax,ay,az,bx,by,bz}, world coordinates. False if no selected edge.
+CAD_API bool CAD_GetSelectedEdge(float* endpoints6);
 
 // ── 편집 명령 ───────────────────────────────────────────────────────────
 // 전부 **현재 선택**에 적용되고 각각 undo 1스텝으로 들어간다. 화면 클릭이 필요 없는
