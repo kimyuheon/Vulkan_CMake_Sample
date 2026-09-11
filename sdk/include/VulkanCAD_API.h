@@ -632,6 +632,47 @@ CAD_API bool     CAD_SetObjectName(uint32_t id, const char* utf8);
 // Viewport visibility; hidden objects remain in the document but cannot be picked/snapped.
 CAD_API bool     CAD_SetObjectVisible(uint32_t id, bool visible);
 CAD_API bool     CAD_IsObjectVisible(uint32_t id); // false for missing IDs
+// Document layers. 0 is the always-visible, unlocked default layer.
+CAD_API uint32_t CAD_CreateLayer(const char* name);
+// RGB in [0,1]. Layer 0 has fixed white ByLayer color.
+CAD_API bool CAD_SetLayerColor(uint32_t id,float r,float g,float b);
+CAD_API bool CAD_GetLayerColor(uint32_t id,float* r,float* g,float* b);
+CAD_API bool CAD_SetObjectColorByLayer(uint32_t id,bool enabled);
+CAD_API int CAD_GetObjectColorByLayer(uint32_t id); // 0=individual, 1=ByLayer, -1=missing
+CAD_API uint32_t CAD_SetSelectedColorByLayer(bool enabled);
+CAD_API bool CAD_GetObjectEffectiveColor(uint32_t id,float* r,float* g,float* b);
+CAD_API uint32_t CAD_GetLayerIds(uint32_t* out, uint32_t capacity); // required count, includes 0
+CAD_API int CAD_GetLayerName(uint32_t id, char* out, int capacity);
+CAD_API bool CAD_RenameLayer(uint32_t id, const char* name);
+CAD_API bool CAD_SetLayerVisible(uint32_t id, bool visible);
+CAD_API bool CAD_IsLayerVisible(uint32_t id);
+CAD_API bool CAD_SetLayerLocked(uint32_t id, bool locked);
+CAD_API bool CAD_IsLayerLocked(uint32_t id);
+
+// ── 선종류 (파선·숨은선·중심선…) ──
+// AutoCAD .lin 규칙: 무늬 요소 양수=선, 음수=빈칸, 0=점. 단위는 도면 단위(m).
+// id 0 = Continuous(실선, 항상 있음). 표준 8종은 id 1..8 로 고정:
+//   1 Dashed  2 Hidden  3 Center  4 Phantom  5 Dot  6 DashDot  7 Divide  8 Border
+// 사용자 정의는 100 부터. 객체 값 CAD_LINETYPE_BYLAYER = 도면층 것을 따른다(기본).
+// 선·폴리선·원·호에만 보인다 — 메시·문자·치수는 항상 실선.
+#define CAD_LINETYPE_BYLAYER 0xFFFFFFFFu
+// 사용자 선종류 추가. 요소 1..8개, 선(양수 또는 점)이 하나는 있어야 한다. 실패 0.
+CAD_API uint32_t CAD_CreateLinetype(const char* name, const float* pattern, int count, const char* description);
+CAD_API uint32_t CAD_GetLinetypeIds(uint32_t* out, uint32_t capacity);        // 필요한 개수, 0(Continuous) 포함
+CAD_API int      CAD_GetLinetypeName(uint32_t id, char* out, int capacity);   // 이름 길이, 없으면 -1
+CAD_API int      CAD_GetLinetypePattern(uint32_t id, float* out, int capacity); // 요소 수, 없으면 -1
+CAD_API bool     CAD_SetObjectLinetype(uint32_t objectId, uint32_t linetypeId);  // CAD_LINETYPE_BYLAYER 허용
+CAD_API bool     CAD_GetObjectLinetype(uint32_t objectId, uint32_t* out);
+CAD_API bool     CAD_SetObjectLinetypeScale(uint32_t objectId, float scale);     // 객체별 축척(CELTSCALE)
+CAD_API bool     CAD_GetObjectLinetypeScale(uint32_t objectId, float* out);
+CAD_API uint32_t CAD_SetSelectedLinetype(uint32_t linetypeId);                  // 바뀐 객체 수
+CAD_API bool     CAD_SetLayerLinetype(uint32_t layerId, uint32_t linetypeId);   // 도면층 0 은 실선 고정
+CAD_API bool     CAD_GetLayerLinetype(uint32_t layerId, uint32_t* out);
+CAD_API bool     CAD_SetLinetypeScale(float scale);                              // 전역 LTSCALE
+CAD_API float    CAD_GetLinetypeScale(void);
+CAD_API bool CAD_SetObjectLayer(uint32_t objectId, uint32_t layerId);
+CAD_API int CAD_GetObjectLayer(uint32_t objectId); // -1 for missing objects
+CAD_API uint32_t CAD_AssignSelectedToLayer(uint32_t layerId);
 CAD_API int      CAD_GetObjectName(uint32_t id, char* outUtf8, int cap);   // 길이 반환, -1=실패
 CAD_API uint32_t CAD_FindObjectByName(const char* utf8);                   // 0 = 없음
 CAD_API bool     CAD_GetColor(uint32_t id, float* r, float* g, float* b);
