@@ -260,6 +260,143 @@ final class VulkanCADEngine {
         CAD_RequestColorSelected(color.x, color.y, color.z)
     }
 
+    // ── 편집 / 선택 ──
+    func undo() { guard isCreated else { return }; CAD_Undo() }
+    func redo() { guard isCreated else { return }; CAD_Redo() }
+    var canUndo: Bool { isCreated && CAD_CanUndo() }
+    var canRedo: Bool { isCreated && CAD_CanRedo() }
+    func selectAll()      { guard isCreated else { return }; CAD_RequestSelectAll() }
+    func clearSelection() { guard isCreated else { return }; CAD_ClearSelection() }
+    func deleteSelected() { guard isCreated else { return }; CAD_RequestDeleteSelected() }
+    func clearAll()       { guard isCreated else { return }; CAD_RequestClearAll() }
+    var selectedCount: Int { isCreated ? Int(CAD_GetSelectedCount()) : 0 }
+
+    // ── 솔리드 편집 (인자만으로 결정되는 것들 — 클릭이 필요한 도구는 execute 로) ──
+    func booleanUnion()        { guard isCreated else { return }; CAD_BooleanUnion(false) }
+    func booleanIntersection() { guard isCreated else { return }; CAD_BooleanIntersection(false) }
+    func loft()                { guard isCreated else { return }; _ = CAD_Loft() }
+    func shell(thickness: Float = 0) { guard isCreated else { return }; _ = CAD_Shell(thickness) }
+    func edgeFillet(distance: Float = 0)  { guard isCreated else { return }; _ = CAD_EdgeFillet(distance) }
+    func edgeChamfer(distance: Float = 0) { guard isCreated else { return }; _ = CAD_EdgeChamfer(distance) }
+    func explode(keepOriginal: Bool = false) { guard isCreated else { return }; _ = CAD_Explode(keepOriginal) }
+
+    // ── 뷰 ──
+    // viewType: 0=Front 1=Top 2=Right 3=Isometric 4=Left 5=Bottom 6=Back
+    enum ViewType: Int32 { case front = 0, top, right, isometric, left, bottom, back }
+    func zoomExtents()   { guard isCreated else { return }; CAD_RequestZoomExtents() }
+    func focusSelected() { guard isCreated else { return }; CAD_RequestFocusSelected() }
+    func setView(_ view: ViewType) { guard isCreated else { return }; CAD_RequestSetView(view.rawValue) }
+    func toggleProjection()      { guard isCreated else { return }; CAD_RequestToggleProjection() }
+    func setProjection(ortho: Bool) { guard isCreated else { return }; CAD_RequestSetProjection(ortho) }
+    // layout: 0=Single 1=Dual 2=Triple 3=Quad
+    func setViewportLayout(_ layout: Int32) { guard isCreated else { return }; CAD_SetViewportLayout(layout) }
+    var viewportLayout: Int32 { isCreated ? CAD_GetViewportLayout() : 0 }
+    // style: 0=Shaded 1=ShadedEdge 2=Wireframe 3=WireframeEdge 4=HiddenLine
+    func setVisualStyle(_ style: Int32) { guard isCreated else { return }; CAD_SetVisualStyle(style) }
+    func setGridEnabled(_ enabled: Bool) { guard isCreated else { return }; CAD_SetGridEnabled(enabled) }
+
+    // ── 문서 / 파일 ──
+    // 확장자로 포맷이 갈린다. 대화상자는 호스트(NSOpenPanel/NSSavePanel)가 띄운다.
+    @discardableResult
+    func newDocument(title: String = "제목 없음") -> Int32 {
+        guard isCreated else { return -1 }
+        return CAD_NewDocument(title)
+    }
+    /// 새 탭으로 연다. 반환 = 문서 인덱스, 실패 -1.
+    @discardableResult
+    func openDocument(path: String) -> Int32 {
+        guard isCreated else { return -1 }
+        return CAD_OpenDocument(path)
+    }
+    /// 현재 문서에 **추가**한다(가져오기).
+    @discardableResult
+    func openFile(path: String) -> Bool {
+        guard isCreated else { return false }
+        return CAD_OpenFile(path)
+    }
+    @discardableResult
+    func saveAs(path: String, selectedOnly: Bool) -> Bool {
+        guard isCreated else { return false }
+        return CAD_SaveAs(path, selectedOnly)
+    }
+    var activeDocumentTitle: String {
+        guard isCreated else { return "" }
+        let index = CAD_GetActiveDocument()
+        return readString { CAD_GetDocumentTitle(index, $0, $1) }
+    }
+    var isActiveDocumentDirty: Bool {
+        guard isCreated else { return false }
+        return CAD_IsDocumentDirty(CAD_GetActiveDocument())
+    }
+
+    // ── 상태 문구 ──
+    /// 상시 안내(지금 뭘 해야 하는지). onPrompt 콜백과 같은 값 — 초기 표시용.
+    var statusMessage: String {
+        guard isCreated else { return "" }
+        return readString { CAD_GetStatusMessage($0, $1) }
+    }
+    /// 일회성 안내(방금 왜 안 됐는지). 없으면 빈 문자열 — 매 틱 폴링해도 싸다.
+    var transientMessage: String {
+        guard isCreated else { return "" }
+        return readString { CAD_GetTransientMessage($0, $1) }
+    }
+
+    // ── 플러그인이 등록한 UI 항목 ──
+    // 플러그인은 (이름, 위치, 명령)만 올리고 그리는 건 호스트 몫이다. 메뉴·리본·툴바를
+    // 만들 때 이 목록을 읽어 자기 위젯으로 붙이면 플러그인이 임베드 앱에서도 산다.
+    struct UiItem {
+        enum Kind: Int32 { case menuItem = 0, separator, toolButton, ribbonButton, panel }
+        let id: UInt32
+        let kind: Kind
+        let path: String      // "건축" 또는 "건축/벽체" — '/' 로 위치를 나눈다
+        let title: String
+        let command: String   // 누르면 execute 할 명령 (구분선·패널은 빈 문자열)
+        let icon: String      // 짧은 글자/이모지, 없으면 빈 문자열
+    }
+    func uiItems() -> [UiItem] {
+        guard isCreated else { return [] }
+        return (0..<CAD_GetUiItemCount()).compactMap { i in
+            guard let kind = UiItem.Kind(rawValue: CAD_GetUiItemKind(i)) else { return nil }
+            return UiItem(
+                id: CAD_GetUiItemId(i),
+                kind: kind,
+                path: readString { CAD_GetUiItemPath(i, $0, $1) },
+                title: readString { CAD_GetUiItemTitle(i, $0, $1) },
+                command: readString { CAD_GetUiItemCommand(i, $0, $1) },
+                icon: readString { CAD_GetUiItemIcon(i, $0, $1) })
+        }
+    }
+    /// 플러그인이 등록한 콘솔 명령 (이름, 표시 이름).
+    func registeredCommands() -> [(name: String, title: String)] {
+        guard isCreated else { return [] }
+        return (0..<CAD_GetRegisteredCommandCount()).map { i in
+            (readString { CAD_GetRegisteredCommandName(i, $0, $1) },
+             readString { CAD_GetRegisteredCommandTitle(i, $0, $1) })
+        }
+    }
+    /// 폴더의 플러그인을 올린다. 반환 = 성공한 개수.
+    func loadPlugins(directory: String) -> UInt32 {
+        guard isCreated else { return 0 }
+        return CAD_LoadPlugins(directory)
+    }
+
+    @MainActor
+    func onDocumentDirty(_ handler: ((Bool) -> Void)?) {
+        VulkanCADEngineCallbacks.documentDirty = handler
+        CAD_SetOnDocumentDirty(handler == nil ? nil : { dirty in
+            MainActor.assumeIsolated { VulkanCADEngineCallbacks.documentDirty?(dirty) }
+        })
+    }
+
+    /// C API 의 "(buf, bufLen) → 길이" 문자열 조회 관례를 Swift String 으로.
+    /// 엔진 문구는 전부 짧아서 고정 버퍼면 충분하다(넘치면 엔진이 잘라 준다).
+    private func readString(_ read: (UnsafeMutablePointer<CChar>?, Int32) -> Int32) -> String {
+        var buf = [CChar](repeating: 0, count: 1024)
+        let n = buf.withUnsafeMutableBufferPointer { read($0.baseAddress, Int32($0.count)) }
+        guard n > 0 else { return "" }
+        return String(cString: buf)
+    }
+
     func mouseDown(button: Int32, x: Double, y: Double, modifiers: Int32) {
         guard isCreated else { return }
         CAD_OnMouseDown(button, x, y, modifiers)
@@ -322,4 +459,5 @@ enum VulkanCADEngineCallbacks {
     static var objectCreated: ((UInt32) -> Void)?
     static var objectDeleted: ((UInt32) -> Void)?
     static var prompt: ((String) -> Void)?
+    static var documentDirty: ((Bool) -> Void)?
 }
