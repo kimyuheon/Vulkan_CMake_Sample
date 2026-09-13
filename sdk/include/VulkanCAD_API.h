@@ -467,6 +467,15 @@ CAD_API bool     CAD_SetObjectProperty(uint32_t id, const char* key, const char*
 /* 직전 CAD_SetObjectProperty 실패 이유(UTF-8). 성공 뒤엔 빈 문자열. */
 CAD_API int      CAD_GetLastError(char* outUtf8, int cap);
 
+/* 트랜잭션 — 여러 편집(생성·속성·삭제·이동…)을 되돌리기 **한 단계** 로 묶는다.
+ * Begin … End 사이의 CAD_Create·Set·Delete·SetObjectProperty 는 실행은 즉시 되고, End 에서 한 묶음으로
+ * undo 스택에 오른다(Ctrl+Z 한 번). Rollback 은 묶음을 되돌리고 버린다(미리보기 거절). 중첩 가능(깊이 셈).
+ * 열린 동안 CAD_Undo/Redo 는 false. name 은 UI 의 되돌리기 이름. */
+CAD_API void     CAD_BeginTransaction(const char* name);
+CAD_API bool     CAD_EndTransaction(void);
+CAD_API bool     CAD_RollbackTransaction(void);
+CAD_API int      CAD_TransactionDepth(void);
+
 CAD_API uint32_t CAD_CreateLine(float x1, float y1, float z1,
                                 float x2, float y2, float z2);
 CAD_API uint32_t CAD_CreateCircle(float cx, float cy, float cz,
