@@ -411,6 +411,8 @@ properties.nonuniform=(축마다 다름)
 properties.uniform_scale.tip=한 값을 X/Y/Z 에 동시에 적용 (끌기 · 더블클릭=입력)
 properties.color=색상
 properties.by_layer_color=ByLayer · 레이어 패널에서 개별 색상으로 전환하세요.
+properties.opacity=불투명도
+properties.layer_opacity=도면층 불투명도
 properties.linetype=선종류
 properties.linetype.tip=ByLayer = 레이어 패널의 선종류를 따른다
 properties.scale_format=축척 %.2f
@@ -604,6 +606,9 @@ layer.unlock.tip=잠김 · 클릭하여 편집 허용
 layer.lock_edit.tip=클릭하여 선택과 편집 잠금
 layer.default_linetype.tip=기본 레이어는 실선입니다.
 layer.linetype.tip=레이어 선종류 · ByLayer 객체에 적용
+layer.opacity_short=불투명
+layer.default_opacity.tip=기본 레이어는 불투명입니다.
+layer.opacity.tip=레이어 불투명도 · 이 레이어 객체 전부에 곱해짐(끌어서 조절)
 layer.locked_help=잠김 · 이동한 객체는 선택 해제됩니다.
 layer.hidden_help=숨김 · 객체 이동 시 화면에서 숨겨집니다.
 layer.rename=이름 변경
