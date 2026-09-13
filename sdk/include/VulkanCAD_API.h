@@ -695,6 +695,13 @@ CAD_API bool CAD_SetObjectColorByLayer(uint32_t id,bool enabled);
 CAD_API int CAD_GetObjectColorByLayer(uint32_t id); // 0=individual, 1=ByLayer, -1=missing
 CAD_API uint32_t CAD_SetSelectedColorByLayer(bool enabled);
 CAD_API bool CAD_GetObjectEffectiveColor(uint32_t id,float* r,float* g,float* b);
+/* 불투명도 0..1 (1 = 불투명). 객체 것 × 도면층 것이 화면에 쓰인다 — 메시(채움)에만, 선·문자는 그대로.
+   객체 것은 되돌리기 1단계. 이름 기반 속성 "opacity" 와 같은 값. Get 은 없으면 -1. */
+CAD_API bool  CAD_SetObjectOpacity(uint32_t id, float opacity);
+CAD_API float CAD_GetObjectOpacity(uint32_t id);
+CAD_API bool  CAD_SetLayerOpacity(uint32_t id, float opacity);
+CAD_API float CAD_GetLayerOpacity(uint32_t id);
+CAD_API uint32_t CAD_SetSelectedOpacity(float opacity);   /* 선택 전부, 되돌리기 1단계 → 바뀐 수 */
 CAD_API uint32_t CAD_GetLayerIds(uint32_t* out, uint32_t capacity); // required count, includes 0
 CAD_API int CAD_GetLayerName(uint32_t id, char* out, int capacity);
 CAD_API bool CAD_RenameLayer(uint32_t id, const char* name);
