@@ -495,6 +495,9 @@ CAD_API bool     CAD_PushPullSelectedFace(float distance);
 /* 볼륨(CT/MR: .nrrd/.nhdr/.nii/.nii.gz) → 등가면 메시 객체. iso 는 값 문턱(NaN 이면 범위 중간, CT 뼈 ≈ 300, 피부 ≈ -300),
  * step 은 복셀 건너뛰기(1=전부, 2=삼각형 1/4). 보통 mesh 객체(이름 "파일@iso")를 만들고 선택까지. 반환 id, 실패 0 + CAD_GetLastError. */
 CAD_API uint32_t CAD_CreateVolumeMesh(const char* path, float iso, int step);
+/* 의료 분할(라벨 볼륨: 정수 라벨 0..N 의 .nii/.nrrd, TotalSegmentator 등) → 라벨마다 색 메시 객체(해부 이름, 도면층 "분할:<파일>").
+ * step 0=자동. 반환 = 만든 객체 수, 실패 0 + CAD_GetLastError. 트랜잭션 한 단계. */
+CAD_API uint32_t CAD_CreateLabelMeshes(const char* path, int step);
 
 CAD_API uint32_t CAD_CreateLine(float x1, float y1, float z1,
                                 float x2, float y2, float z2);
