@@ -445,6 +445,13 @@ CAD_API void     CAD_TextEditCancel(void);               // 원복 + 종료
 CAD_API bool     CAD_SetTextContent(uint32_t id, const char* utf8);  // 비대화형 변경(undo)
 CAD_API int      CAD_GetTextContent(uint32_t id, char* outUtf8, int cap);  // 길이 반환, -1=실패
 
+/* 객체 하나를 JSON 한 줄로 — 종류·이름·레이어·색·변환·경계 + 종류별 기하.
+ * (line: start/end/length, polyline: points/closed, circle: center/radius/normal, arc: +startDeg/endDeg,
+ *  text: text/height/font, dimension: dimType/p1/p2/value, mesh: vertices/triangles/light)
+ * 단위 mm, 좌표 월드. 키 이름은 lot_object_json.h 한 곳에서 정하며 AI 선택 문맥·씬 요약과 같다.
+ * 반환 = 길이(널 제외), 없는 id/실패 = -1. outUtf8=NULL 이면 길이만(2회 호출 규약). */
+CAD_API int      CAD_GetObjectJson(uint32_t id, char* outUtf8, int cap);
+
 CAD_API uint32_t CAD_CreateLine(float x1, float y1, float z1,
                                 float x2, float y2, float z2);
 CAD_API uint32_t CAD_CreateCircle(float cx, float cy, float cz,
