@@ -452,6 +452,21 @@ CAD_API int      CAD_GetTextContent(uint32_t id, char* outUtf8, int cap);  // �
  * 반환 = 길이(널 제외), 없는 id/실패 = -1. outUtf8=NULL 이면 길이만(2회 호출 규약). */
 CAD_API int      CAD_GetObjectJson(uint32_t id, char* outUtf8, int cap);
 
+/* 이름으로 속성 하나 읽기·쓰기 — 키는 CAD_GetObjectJson 의 키와 같다.
+ *   공통    name, color, colorByLayer, visible, layer(이름|id), linetype(이름|id|"bylayer"), linetypeScale,
+ *           position, rotation[x,y,z,w], scale
+ *   line    start, end          polyline  points, closed        circle  center, radius
+ *   arc     center, radius, startDeg, endDeg                     text    text, height, font
+ *   dimension p1, p2, p3, dimLinePoint, precision                mesh    intensity(조명)
+ * Get: 값의 JSON 텍스트(예: 50.0 / [1,2,3] / "이름"), 반환=길이, 없으면 -1.
+ * Set: valueJson 은 JSON(따옴표 없는 글자는 문자열로 받음). 좌표·길이는 월드 mm. 딸린 모델을 다시 만들고
+ *      undo 한 단계로 남긴다. 실패(없는 키·형식 오류·잠긴 도면층) 면 false — 이유는 CAD_GetStatusMessage 가 아니라
+ *      CAD_GetLastError 로. */
+CAD_API int      CAD_GetObjectProperty(uint32_t id, const char* key, char* outUtf8, int cap);
+CAD_API bool     CAD_SetObjectProperty(uint32_t id, const char* key, const char* valueJson);
+/* 직전 CAD_SetObjectProperty 실패 이유(UTF-8). 성공 뒤엔 빈 문자열. */
+CAD_API int      CAD_GetLastError(char* outUtf8, int cap);
+
 CAD_API uint32_t CAD_CreateLine(float x1, float y1, float z1,
                                 float x2, float y2, float z2);
 CAD_API uint32_t CAD_CreateCircle(float cx, float cy, float cz,
