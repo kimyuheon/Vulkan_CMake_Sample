@@ -484,6 +484,13 @@ CAD_API uint32_t CAD_QueryObjects(const char* filterJson, uint32_t* outIds, uint
 /* 씬 요약 JSON — {"count","selected","units":"mm","bounds","kinds":{종류:수},"layers":[…],"objects":[요약…],"more"}.
  * objects 는 앞에서 maxObjects 개(0 이면 50). 객체 상세는 CAD_GetObjectJson. 반환=길이, 실패 -1. */
 CAD_API int      CAD_GetSceneJson(char* outUtf8, int cap, int maxObjects);
+/* 선택 문맥 JSON — 사람이 화면에서 고른 것. AI 요청마다 자동으로 붙는 것과 같은 문자열.
+ * {"mode":"object|face|edge","view":"top|…","count":N,"objects":[CAD_GetObjectJson 과 같은 객체…],"more":n,
+ *  "face":{"id","normal","center","area","triangles"},"edge":{"id","a","b","length"}}  반환=길이, 실패 -1. */
+CAD_API int      CAD_GetSelectionContext(char* outUtf8, int cap);
+/* 선택한 면(면 선택 모드에서 클릭한 면)을 법선 방향으로 distance(mm, 양수=바깥) 밀어 새 메시로 — undo 1단계.
+ * 면 선택이 없으면 false. */
+CAD_API bool     CAD_PushPullSelectedFace(float distance);
 
 CAD_API uint32_t CAD_CreateLine(float x1, float y1, float z1,
                                 float x2, float y2, float z2);
