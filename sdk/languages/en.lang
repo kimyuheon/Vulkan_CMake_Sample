@@ -685,6 +685,8 @@ nav.goal_checked=Goal for checked (one point)
 nav.tune_scope_label=Sliders apply to:
 nav.tune_checked=all checked
 nav.tune_selected=selected row only
+nav.rays_short=Lidar
+nav.rays_short.tip=Toggle this agent's lidar rays
 nav.stop_all=Stop All
 nav.goal_help=● = goal set · a goal click applies to every checked agent
 nav.controls=Controls
