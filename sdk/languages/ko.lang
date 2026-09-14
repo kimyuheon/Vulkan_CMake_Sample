@@ -682,7 +682,9 @@ nav.goal=목적지
 nav.driving_compact=주행중
 nav.start_checked=체크된 것 출발
 nav.goal_checked=체크된 것 목적지 (한 곳)
-nav.tune_scope=속도·사거리·반경은 고른 줄 + 체크된 것에 적용 (안 골랐으면 체크된 것 전부)
+nav.tune_scope_label=슬라이더 적용:
+nav.tune_checked=체크된 전부
+nav.tune_selected=고른 줄만
 nav.stop_all=전부 정지
 nav.goal_help=● = 목적지 지정됨 · 목적지 클릭은 체크된 것 전부에 적용
 nav.controls=조절
