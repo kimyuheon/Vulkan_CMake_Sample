@@ -478,9 +478,13 @@ CAD_API int      CAD_TransactionDepth(void);
 
 /* 질의 — 필터 JSON 으로 객체 id 목록. 키는 전부 선택(AND):
  *   {"kind":"circle"|["circle","arc"], "layer":"이름"|id, "name":"기둥*"(글롭), "selected":true, "visible":true,
- *    "within":{"min":[x,y,z],"max":[x,y,z]}(상자 안), "intersects":{min,max}(겹침), "near":{"point":[x,y,z],"radius":r}, "limit":N}
+ *    "within":{"min":[x,y,z],"max":[x,y,z]}(상자 안), "intersects":{min,max}(겹침), "near":{"point":[x,y,z],"radius":r},
+ *    "pick":"largest"|"smallest"(통과한 것 중 하나), "limit":N}
  * 반환 = 전체 개수(outIds=NULL/cap=0 이면 개수만 — 2회 호출 규약). 틀린 필터면 0 + CAD_GetLastError. */
 CAD_API uint32_t CAD_QueryObjects(const char* filterJson, uint32_t* outIds, uint32_t cap);
+/* 질의 결과를 선택으로 — 같은 필터 문법. additive=false 면 기존 선택을 비운다. 반환=고른 수, 틀린 필터면 0 + CAD_GetLastError.
+ * AI 의 edit_selected op="select" 와 같은 통로. */
+CAD_API uint32_t CAD_SelectByQuery(const char* filterJson, bool additive);
 /* 씬 요약 JSON — {"count","selected","units":"mm","bounds","kinds":{종류:수},"layers":[…],"objects":[요약…],"more"}.
  * objects 는 앞에서 maxObjects 개(0 이면 50). 객체 상세는 CAD_GetObjectJson. 반환=길이, 실패 -1. */
 CAD_API int      CAD_GetSceneJson(char* outUtf8, int cap, int maxObjects);
