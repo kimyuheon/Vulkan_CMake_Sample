@@ -681,8 +681,9 @@ nav.to_vehicle=→차
 nav.goal=목적지
 nav.driving_compact=주행중
 nav.start_checked=체크된 것 출발
+nav.goal_checked=체크된 것 목적지 (한 곳)
 nav.stop_all=전부 정지
-nav.goal_help=● = 목적지 지정됨 · 버튼을 다시 누르면 재지정
+nav.goal_help=● = 목적지 지정됨 · 목적지 클릭은 체크된 것 전부에 적용
 nav.controls=조절
 nav.inflate_radius=부풀림 반경 %.1f
 nav.speed=속도 %.2f /초
