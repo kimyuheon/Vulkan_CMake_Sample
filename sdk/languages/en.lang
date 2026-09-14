@@ -687,6 +687,8 @@ nav.tune_checked=all checked
 nav.tune_selected=selected row only
 nav.rays_short=Lidar
 nav.rays_short.tip=Toggle this agent's lidar rays
+nav.facing_short=Facing
+nav.facing_short.tip=Rotate which way the model's nose points, 90° per click · applies to every copy of the model
 nav.stop_all=Stop All
 nav.goal_help=● = goal set · a goal click applies to every checked agent
 nav.controls=Controls
