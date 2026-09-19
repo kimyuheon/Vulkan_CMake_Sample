@@ -490,7 +490,7 @@ dimension.aligned.tip=Point 1 → Point 2 → dimension-line position (DIMALIGNE
 dimension.linear=Linear (Horizontal/Vertical Projection)
 dimension.linear.tip=Point 1 → Point 2 → dimension-line position (DIMLINEAR)
 dimension.angular=Angular
-dimension.angular.tip=Vertex → point on side 1 → point on side 2 → arc position (DIMANGULAR)
+dimension.angular.tip=Line 1 → line 2 → arc position. Vertex = intersection of the two lines (DIMANGULAR)
 dimension.radius=Radius (R)
 dimension.radius.tip=Circle center → point on circle → value position (DIMRADIUS)
 dimension.diameter=Diameter (Ø)
