@@ -46,6 +46,49 @@ CAD_API void CAD_OnMouseWheel(double x, double y, double deltaX, double deltaY);
 CAD_API void CAD_OnKeyDown(int key, int modifiers);
 CAD_API void CAD_OnKeyUp(int key, int modifiers);
 
+/* ── 외부 UI 오버레이 ────────────────────────────────────────────────
+ *
+ * 엔진이 이미 시작한 swapchain render pass 안에서 외부 UI가 draw command를
+ * 기록할 수 있게 빌린 Vulkan 컨텍스트를 전달한다. 모든 handle은 엔진 소유다.
+ * 콜백은 handle을 파괴하거나 queue submit / present를 호출하면 안 된다.
+ *
+ * 콜백 반환값은 CAD_OVERLAY_CAPTURE_* 비트다. 이전 프레임 반환값을 다음 입력
+ * 라우팅에 사용해, UI가 처리하는 포인터/키보드 입력이 CAD 뷰로 새지 않게 한다.
+ */
+typedef struct CAD_OverlayFrameInfo {
+    uint32_t structSize;
+    uint64_t physicalDevice;
+    uint64_t device;
+    uint64_t graphicsQueue;
+    uint64_t renderPass;
+    uint64_t commandBuffer;
+    uint32_t graphicsQueueFamily;
+    uint32_t frameIndex;
+    uint32_t frameCount;
+    uint32_t framebufferWidth;
+    uint32_t framebufferHeight;
+    int windowWidth;
+    int windowHeight;
+    float dpiScale;
+    double pointerX;
+    double pointerY;
+    uint32_t pointerButtons;
+    int modifiers;
+} CAD_OverlayFrameInfo;
+
+enum {
+    CAD_OVERLAY_CAPTURE_POINTER = 1u << 0,
+    CAD_OVERLAY_CAPTURE_KEYBOARD = 1u << 1
+};
+
+typedef uint32_t (*CAD_OverlayRenderFn)(
+    const CAD_OverlayFrameInfo* frame,
+    void* user);
+
+CAD_API void CAD_SetOverlayRenderCallback(
+    CAD_OverlayRenderFn callback,
+    void* user);
+
 // ── Win32 호스트(MFC 등) 편의용 키 입력 ──
 // 엔진 단축키는 GLFW 키코드 기준인데 Win32 는 VK_* 코드를 준다. WM_KEYDOWN/WM_KEYUP 의
 // nChar(VK 코드)를 그대로 넘기면 내부에서 GLFW 키코드로 변환 + Ctrl/Shift/Alt 수정자를
@@ -60,8 +103,9 @@ CAD_API void CAD_OnKeyUpVK(int vkCode);
 CAD_API int  CAD_GizmoHitTest(double x, double y);
 // 기즈모 핸들 hit 허용범위를 터치용으로 확대 (앱 시작 시 한 번 호출).
 CAD_API void CAD_SetGizmoTouchMode(bool enabled);
-// OSnap(끝점/중점/중심…) 허용범위를 터치용으로 확대 — 12px → 약 42px.
-// 손가락 접촉 크기(44pt)에 맞춘 값. 기즈모와 마찬가지로 앱 시작 시 한 번 호출.
+// OSnap(끝점/중점/중심…) 허용범위를 터치용으로 확대 — 12px → 18px (가상 커서 기준).
+// **선택 픽 반경도 같이 커진다** — 선·폴리선·치수(치수선/보조선/화살표/값 문자) 탭 10px → 30px.
+// 선택 탭은 손가락이 직접 짚으므로 3배 레티나 10pt 에 맞춘 값. 앱 시작 시 한 번 호출.
 CAD_API void CAD_SetSnapTouchMode(bool enabled);
 
 // 치수 **문자**를 줌과 무관하게 화면상 같은 크기로 그릴지 (기본 false).
