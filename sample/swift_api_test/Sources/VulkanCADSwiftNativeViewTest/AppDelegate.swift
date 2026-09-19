@@ -43,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
     private var visualStyle: Int32 = 0
     private var lastTransient = ""
     private var pluginMenuItems: [NSMenuItem] = []
+    private var tickCount = 0
 
     // MARK: - 시작 / 종료
 
@@ -80,26 +81,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
             strips[def.id] = makeStrip(def)
         }
 
-        // 가운데 줄: [왼쪽 도킹 영역][뷰][오른쪽 도킹 영역] — 영역이 비면 스스로 숨어 폭 0
-        let centerRow = NSStackView(views: [leftArea, view, rightArea])
-        centerRow.orientation = .horizontal
-        centerRow.alignment = .height
-        centerRow.spacing = 0
-        centerRow.setContentHuggingPriority(.defaultLow, for: .vertical)
-
-        let root = NSStackView(views: [ribbon, centerRow, commandBar])
-        root.orientation = .vertical
-        root.alignment = .width
-        root.spacing = 0
-        root.translatesAutoresizingMaskIntoConstraints = false
-
+        // 배치는 NSStackView 대신 명시적 제약으로 짠다.
+        //   세로: [리본(높이 120|0)] [가운데 줄] [명령행(30)]
+        //   가로: [왼쪽 도킹 영역(46×n)] [뷰] [오른쪽 도킹 영역(46×n)]
+        // 스택 뷰의 "숨긴 뷰를 계층에서 뺐다 넣는" 동작이 도구모음 자리를 남기는 현상을 만들 수 있어
+        // 그 경로를 아예 없앴다. 도킹 영역은 숨기지 않고 폭 0 이 된다.
         let container = NSView(frame: NSRect(x: 0, y: 0, width: 1400, height: 880))
-        container.addSubview(root)
+        for v in [ribbon!, leftArea!, view, rightArea!, commandBar!] as [NSView] {
+            v.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(v)
+        }
         NSLayoutConstraint.activate([
-            root.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            root.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            root.topAnchor.constraint(equalTo: container.topAnchor),
-            root.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            ribbon.topAnchor.constraint(equalTo: container.topAnchor),
+            ribbon.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            ribbon.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+
+            commandBar.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            commandBar.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            commandBar.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+
+            leftArea.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            leftArea.topAnchor.constraint(equalTo: ribbon.bottomAnchor),
+            leftArea.bottomAnchor.constraint(equalTo: commandBar.topAnchor),
+
+            rightArea.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            rightArea.topAnchor.constraint(equalTo: ribbon.bottomAnchor),
+            rightArea.bottomAnchor.constraint(equalTo: commandBar.topAnchor),
+
+            view.leadingAnchor.constraint(equalTo: leftArea.trailingAnchor),
+            view.trailingAnchor.constraint(equalTo: rightArea.leadingAnchor),
+            view.topAnchor.constraint(equalTo: ribbon.bottomAnchor),
+            view.bottomAnchor.constraint(equalTo: commandBar.topAnchor),
         ])
 
         let window = NSWindow(
@@ -153,6 +165,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
             shutdownEngine()
             NSApp.terminate(nil)
             return
+        }
+        // 환경변수 VULKANCAD_LAYOUT_DUMP=1 로 띄우면 2.5초 뒤 레이아웃 진단을 콘솔에 찍는다(자동 검증용).
+        tickCount += 1
+        if tickCount == 150, ProcessInfo.processInfo.environment["VULKANCAD_LAYOUT_DUMP"] != nil {
+            showLayoutDiagnostics()
         }
         // 일회성 안내("각도: 선을 클릭하세요" 등)는 콜백이 없어 폴링한다 — 바뀔 때만 UI 를 건드린다.
         let transient = engine.transientMessage
@@ -290,11 +307,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
         return area(of: strip) != nil
     }
 
-    /// 띠를 그쪽 영역 끝에 붙인다(이미 보이면 옮긴다).
-    func showToolbar(_ id: String, side: DockSide) {
+    /// 띠를 그쪽 영역에 붙인다(이미 보이면 옮긴다). index 가 있으면 그 자리에, 없으면 끝에.
+    func showToolbar(_ id: String, side: DockSide, at index: Int? = nil) {
         guard let strip = strips[id] else { return }
         area(of: strip)?.remove(strip)
-        (side == .left ? leftArea : rightArea).add(strip)
+        (side == .left ? leftArea : rightArea).add(strip, at: index)
         saveToolbarLayout()
     }
 
@@ -366,8 +383,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
     }
 
     // ToolbarDockDelegate — 손잡이 끌기 / 우클릭 메뉴
-    func toolbarStrip(_ strip: ToolbarStripView, requestDock side: DockSide) {
-        showToolbar(strip.definition.id, side: side)
+    func toolbarStrip(_ strip: ToolbarStripView, requestDock side: DockSide, at index: Int?) {
+        showToolbar(strip.definition.id, side: side, at: index)
     }
 
     func toolbarStripRequestHide(_ strip: ToolbarStripView) {
@@ -434,7 +451,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
     }
 
     func toggleRibbon() {
-        ribbon.isHidden.toggle()     // NSStackView 가 숨긴 뷰를 레이아웃에서 빼 준다
+        ribbon.setCollapsed(!ribbon.isHidden)
     }
 
     func showCommandLineHelp() {
@@ -462,6 +479,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
         }
         let lines = cmds.map { $0.title.isEmpty || $0.title == $0.name ? $0.name : "\($0.name) — \($0.title)" }
         alert("플러그인 명령 \(cmds.count)개", detail: lines.joined(separator: "\n"))
+    }
+
+    /// 표시 이상(회색 띠, 도구모음 안 보임 등) 신고용 — 실제 프레임을 모아 클립보드에 넣고 보여 준다.
+    func showLayoutDiagnostics() {
+        func r(_ rect: NSRect) -> String {
+            "(\(Int(rect.origin.x)),\(Int(rect.origin.y)) \(Int(rect.width))×\(Int(rect.height)))"
+        }
+        func strip(_ s: ToolbarStripView) -> String {
+            "\(s.definition.id)\(s.isHidden ? "[hidden]" : "")\(s.superview == nil ? "[no-superview]" : "")\(r(s.frame))"
+        }
+        var lines: [String] = []
+        if let w = window, let c = w.contentView {
+            lines.append("window.content \(r(c.bounds))  scale=\(w.backingScaleFactor)  liveResize=\(c.inLiveResize)")
+        }
+        lines.append("ribbon \(ribbon.isHidden ? "[hidden]" : "") \(r(ribbon.frame))")
+        for (name, area) in [("left", leftArea!), ("right", rightArea!)] {
+            lines.append("\(name)Area \(area.isHidden ? "[hidden]" : "")\(area.superview == nil ? "[detached]" : "") \(r(area.frame))")
+            area.strips.forEach { lines.append("    \(strip($0))") }
+        }
+        let unplaced = strips.values.filter { area(of: $0) == nil }.map { $0.definition.id }.sorted()
+        lines.append("숨은 도구모음: \(unplaced)")
+        if let v = hostView {
+            lines.append("vulkanView \(r(v.frame))  layer=\(v.layer.map { String(describing: type(of: $0)) } ?? "nil")")
+            if let ml = v.layer as? CAMetalLayer {
+                lines.append("    layer.frame \(r(ml.frame))  drawable=\(Int(ml.drawableSize.width))×\(Int(ml.drawableSize.height))  scale=\(ml.contentsScale)")
+            }
+        }
+        lines.append("commandBar \(r(commandBar.frame))")
+        lines.append("defaults left=\(UserDefaults.standard.stringArray(forKey: Self.layoutLeftKey) ?? []) right=\(UserDefaults.standard.stringArray(forKey: Self.layoutRightKey) ?? [])")
+        let text = lines.joined(separator: "\n")
+        print("[layout]\n\(text)")
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        alert("레이아웃 진단 (클립보드에 복사됨)", detail: text)
     }
 
     func loadPluginsDialog() {
