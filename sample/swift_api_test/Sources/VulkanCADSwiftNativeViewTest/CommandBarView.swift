@@ -23,10 +23,15 @@ final class CommandBarView: NSView, NSTextFieldDelegate {
     override init(frame: NSRect) {
         super.init(frame: frame)
         wantsLayer = true
-        layer?.backgroundColor = NSColor(white: 0.12, alpha: 1).cgColor
         setup()
     }
     required init?(coder: NSCoder) { fatalError() }
+
+    // 배경은 updateLayer 에서 (layer 가 재생성돼도 유지되도록).
+    override var wantsUpdateLayer: Bool { true }
+    override func updateLayer() {
+        layer?.backgroundColor = NSColor(white: 0.12, alpha: 1).cgColor
+    }
 
     func setPrompt(_ text: String) {
         prompt = text

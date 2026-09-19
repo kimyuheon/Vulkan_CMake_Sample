@@ -95,10 +95,36 @@ final class VulkanCADView: NSView {
         bounds.width >= 2.0 && bounds.height >= 2.0
     }
 
+    /// 마지막으로 엔진에 보낸 픽셀 크기. 매 틱 실제 크기와 대조해 어긋나 있으면 다시 보낸다.
+    private var lastSentPixelSize = CGSize.zero
+
+    /// 크기 변경을 엔진에 전달한다. 매 프레임(틱) 앞에서 불린다.
+    ///
+    /// resizePending 플래그만 믿지 않고 **실제 픽셀 크기와 마지막 전송값, 그리고 Metal 레이어의
+    /// drawableSize** 를 매번 대조한다. 어떤 경로로든(레이아웃 지연, 화면 이동, 놓친 알림) 한 번
+    /// 어긋나면 엔진이 이전 크기로 그려 옆에 빈 띠가 남는데, 이렇게 하면 다음 틱에 스스로 맞춰진다.
+    /// 비교만 하는 거라 비용은 없다.
     func flushPendingResize() {
-        guard resizePending, hasRenderableSize else { return }
-        resizePending = false
-        engine?.resize(to: bounds.size)
+        guard hasRenderableSize, engine?.isCreated ?? false else { return }
+        let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 1.0
+        let pixel = CGSize(width: (bounds.width * scale).rounded(), height: (bounds.height * scale).rounded())
+        let layerMismatch = (layer as? CAMetalLayer).map { $0.drawableSize != pixel } ?? false
+        if resizePending || pixel != lastSentPixelSize || layerMismatch {
+            resizePending = false
+            lastSentPixelSize = pixel
+            engine?.resize(to: bounds.size)
+        }
+        restoreLayerPosition()
+    }
+
+    /// 엔진의 macOS 호스트 창 코드가 크기를 맞출 때 `layer.frame = view.bounds` 로 써 버려,
+    /// 뷰가 (138,30) 에 있어도 레이어는 부모의 (0,0) 으로 밀린다. 그러면 화면이 왼쪽 도구모음 폭만큼
+    /// 왼쪽·아래로 어긋나 오른쪽에 그 폭의 빈 띠가 생기고 명령행 왼쪽이 레이어에 덮인다.
+    /// 레이어 백킹 뷰의 레이어 위치는 AppKit 소유라 뷰 프레임과 같아야 한다 — 어긋나 있으면 되돌린다.
+    /// (엔진 쪽도 같이 고쳤지만, 구버전 dylib 과 붙어도 안전하도록 호스트에서 한 번 더 지킨다.)
+    private func restoreLayerPosition() {
+        guard let layer, layer.frame != frame else { return }
+        layer.frame = frame
     }
 
     override func mouseDown(with event: NSEvent) {

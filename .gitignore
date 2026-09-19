@@ -50,3 +50,6 @@ sdk/plugins/
 # 설치 파일(.deb 등)은 레포에 들어갈 것이 아니다. models/ 에 받아 두면 SDK 배포 단계가
 # models/ 를 통째로 복사하면서 샘플 레포까지 따라간다 — 실제로 184MB 짜리가 3벌 생겼다.
 *.deb
+
+# Claude Code 개인 설정
+.claude/settings.local.json

@@ -225,6 +225,7 @@ final class ToolCatalog {
             api("help_cmdline", "명령행 사용법",           "keyboard",              "하단 명령행에 치는 법") { $0.showCommandLineHelp() },
             api("help_cmds",    "플러그인 명령 보기",      "list.bullet",           "플러그인이 등록한 명령 목록") { $0.showRegisteredCommands() },
             api("help_plugins", "플러그인 폴더 불러오기…", "puzzlepiece.extension", "폴더의 플러그인을 올리고 메뉴·리본에 붙인다") { $0.loadPluginsDialog() },
+            api("help_layout",  "레이아웃 진단 (클립보드로 복사)", "ruler", "창·리본·도구모음·뷰의 실제 프레임을 덤프한다 — 표시 이상 신고용") { $0.showLayoutDiagnostics() },
         ]
 
         // ── 리본 탭 (엔진 툴바의 기본 / 2D / 3D 를 탭으로) ──

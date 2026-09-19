@@ -7,7 +7,8 @@ enum DockSide: String {
 @MainActor
 protocol ToolbarDockDelegate: AnyObject {
     /// 손잡이를 끌어 놓았거나 메뉴에서 골랐다 — 이 띠를 그쪽에 붙여 달라.
-    func toolbarStrip(_ strip: ToolbarStripView, requestDock side: DockSide)
+    /// index 가 있으면 그 자리에 끼우고(드래그로 순서 바꾸기), nil 이면 끝에 붙인다.
+    func toolbarStrip(_ strip: ToolbarStripView, requestDock side: DockSide, at index: Int?)
     func toolbarStripRequestHide(_ strip: ToolbarStripView)
     /// 우클릭 메뉴 아랫부분 — 전체 도구모음 켜고 끄기 목록 등을 델리게이트가 채운다.
     func toolbarStripExtraMenuItems(_ strip: ToolbarStripView) -> [NSMenuItem]
@@ -30,12 +31,19 @@ final class ToolbarStripView: NSView {
         self.definition = definition
         super.init(frame: .zero)
         wantsLayer = true
-        layer?.backgroundColor = NSColor(white: 0.14, alpha: 1).cgColor
-        layer?.borderColor = NSColor(white: 0.08, alpha: 1).cgColor
-        layer?.borderWidth = 0.5
         setup(target: target, action: action)
     }
     required init?(coder: NSCoder) { fatalError() }
+
+    // 배경·테두리는 updateLayer 에서 매번 다시 칠한다.
+    // 띠가 도킹 영역 사이를 오가며 창에서 잠시 빠질 때 AppKit 이 backing layer 를 새로 만들 수 있고,
+    // 그러면 init 에서 layer 에 직접 넣은 색은 사라져 창 배경(회색)이 그대로 비친다.
+    override var wantsUpdateLayer: Bool { true }
+    override func updateLayer() {
+        layer?.backgroundColor = NSColor(white: 0.14, alpha: 1).cgColor
+        layer?.borderColor = NSColor(white: 0.08, alpha: 1).cgColor
+        layer?.borderWidth = 0.5
+    }
 
     private func setup(target: AnyObject, action: Selector) {
         translatesAutoresizingMaskIntoConstraints = false
@@ -62,7 +70,13 @@ final class ToolbarStripView: NSView {
         stack.edgeInsets = NSEdgeInsets(top: 3, left: 0, bottom: 8, right: 0)
         stack.translatesAutoresizingMaskIntoConstraints = false
         definition.tools.forEach { stack.addArrangedSubview(makeButton($0, target: target, action: action)) }
-        scroll.documentView = stack
+
+        // NSScrollView 의 문서 뷰는 좌표 원점이 **왼쪽 아래**라 내용이 짧으면 바닥에 붙는다.
+        // 뒤집힌(flipped) 컨테이너에 스택을 넣어 위에서부터 쌓이게 한다.
+        let doc = FlippedView()
+        doc.translatesAutoresizingMaskIntoConstraints = false
+        doc.addSubview(stack)
+        scroll.documentView = doc
 
         NSLayoutConstraint.activate([
             grip.topAnchor.constraint(equalTo: topAnchor),
@@ -75,21 +89,26 @@ final class ToolbarStripView: NSView {
             scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
             scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
 
-            stack.topAnchor.constraint(equalTo: scroll.contentView.topAnchor),
-            stack.leadingAnchor.constraint(equalTo: scroll.contentView.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: scroll.contentView.trailingAnchor),
+            doc.topAnchor.constraint(equalTo: scroll.contentView.topAnchor),
+            doc.leadingAnchor.constraint(equalTo: scroll.contentView.leadingAnchor),
+            doc.trailingAnchor.constraint(equalTo: scroll.contentView.trailingAnchor),
+            // 문서 높이는 스택 높이와 창 높이 중 큰 쪽 — 짧으면 채우고, 길면 스크롤
+            doc.heightAnchor.constraint(greaterThanOrEqualTo: scroll.contentView.heightAnchor),
+            doc.heightAnchor.constraint(greaterThanOrEqualTo: stack.heightAnchor),
+
+            stack.topAnchor.constraint(equalTo: doc.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: doc.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: doc.trailingAnchor),
         ])
     }
 
-    /// 아이콘만 있는 작은 버튼. 이름과 설명은 툴팁으로, 색은 계열별로.
+    /// 아이콘만 있는 작은 버튼. 이름과 설명은 툴팁으로, 색은 계열별로. 호버는 배경색만(크기 불변).
     private func makeButton(_ tool: CADTool, target: AnyObject, action: Selector) -> NSButton {
-        let btn = NSButton(image: NSImage(), target: target, action: action)
+        let btn = HoverButton(image: NSImage(), target: target, action: action)
         ToolIcons.apply(tool, to: btn, pointSize: 16)
         btn.identifier = NSUserInterfaceItemIdentifier(tool.id)
         btn.imagePosition = .imageOnly
         btn.imageScaling = .scaleProportionallyDown
-        btn.bezelStyle = .regularSquare
-        btn.showsBorderOnlyWhileMouseInside = true
         btn.toolTip = "\(tool.title) — \(tool.tip)"
         btn.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -101,10 +120,33 @@ final class ToolbarStripView: NSView {
 
     // MARK: - 손잡이가 부르는 것들
 
+    /// 놓은 지점으로 (쪽, 순서)를 정한다. 그쪽 영역의 띠들 가운데 커서보다 오른쪽에 있는 첫 띠 앞에 끼운다.
     fileprivate func gripDropped(atWindowPoint p: NSPoint) {
         guard let content = window?.contentView else { return }
         let local = content.convert(p, from: nil)
-        delegate?.toolbarStrip(self, requestDock: local.x > content.bounds.midX ? .right : .left)
+        let side: DockSide = local.x > content.bounds.midX ? .right : .left
+        var index: Int? = nil
+        if let area = content.subviews.compactMap({ $0 as? DockAreaView }).first(where: { $0.side == side }) {
+            let others = area.strips.filter { $0 !== self }
+            let inArea = area.convert(p, from: nil)
+            index = others.firstIndex { inArea.x < $0.frame.midX } ?? others.count
+        }
+        delegate?.toolbarStrip(self, requestDock: side, at: index)
+    }
+
+    /// 드래그 중 마우스를 따라다니는 반투명 복사본 (창 콘텐츠 뷰 맨 위에 얹는다).
+    fileprivate func makeDragGhost() -> NSImageView? {
+        guard let rep = bitmapImageRepForCachingDisplay(in: bounds) else { return nil }
+        cacheDisplay(in: bounds, to: rep)
+        let image = NSImage(size: bounds.size)
+        image.addRepresentation(rep)
+        let ghost = NSImageView(image: image)
+        ghost.frame = NSRect(origin: .zero, size: bounds.size)
+        ghost.alphaValue = 0.65
+        ghost.wantsLayer = true
+        ghost.layer?.shadowOpacity = 0.6
+        ghost.layer?.shadowRadius = 8
+        return ghost
     }
 
     fileprivate func showContextMenu(with event: NSEvent) {
@@ -122,17 +164,27 @@ final class ToolbarStripView: NSView {
         NSMenu.popUpContextMenu(menu, with: event, for: grip)
     }
 
-    @objc private func dockLeft()  { delegate?.toolbarStrip(self, requestDock: .left) }
-    @objc private func dockRight() { delegate?.toolbarStrip(self, requestDock: .right) }
+    @objc private func dockLeft()  { delegate?.toolbarStrip(self, requestDock: .left, at: nil) }
+    @objc private func dockRight() { delegate?.toolbarStrip(self, requestDock: .right, at: nil) }
     @objc private func hideSelf()  { delegate?.toolbarStripRequestHide(self) }
 }
 
-/// 창 왼쪽/오른쪽의 도킹 영역. 띠를 가로로 나란히 담고, 비면 스스로 숨는다
-/// (부모 NSStackView 가 숨은 뷰를 레이아웃에서 빼 주므로 폭이 0 이 된다).
+/// 좌표 원점을 왼쪽 위로 두는 빈 컨테이너 (스크롤 문서 뷰가 위에서부터 쌓이게 하려고).
+@MainActor
+final class FlippedView: NSView {
+    override var isFlipped: Bool { true }
+}
+
+/// 창 왼쪽/오른쪽의 도킹 영역. 띠를 가로로 나란히 담는다.
+///
+/// 폭은 **항상 띠 개수 × 46 으로 직접 계산해 제약 상수로 박는다.** 비면 0.
+/// isHidden 으로 숨기지 않는 이유: 부모가 NSStackView 면 숨은 뷰를 뷰 계층에서 뺐다가 다시 넣는데,
+/// 그 과정에서 자리가 남거나 순서가 어긋나는 현상이 보고됐다. 폭 0 은 그런 경로가 없다.
 @MainActor
 final class DockAreaView: NSView {
     let side: DockSide
     private let row = NSStackView()
+    private var widthConstraint: NSLayoutConstraint!
 
     var strips: [ToolbarStripView] {
         row.arrangedSubviews.compactMap { $0 as? ToolbarStripView }
@@ -147,26 +199,36 @@ final class DockAreaView: NSView {
         row.spacing = 0
         row.translatesAutoresizingMaskIntoConstraints = false
         addSubview(row)
+        widthConstraint = widthAnchor.constraint(equalToConstant: 0)
         NSLayoutConstraint.activate([
+            widthConstraint,
             row.leadingAnchor.constraint(equalTo: leadingAnchor),
             row.trailingAnchor.constraint(equalTo: trailingAnchor),
             row.topAnchor.constraint(equalTo: topAnchor),
             row.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
-        isHidden = true
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    func add(_ strip: ToolbarStripView) {
-        row.addArrangedSubview(strip)
-        isHidden = false
+    func add(_ strip: ToolbarStripView, at index: Int? = nil) {
+        // 어디에 붙어 있었든 먼저 완전히 떼어 낸다 — 두 곳에 동시에 속하는 일이 없도록
+        (strip.superview as? NSStackView)?.removeArrangedSubview(strip)
+        strip.removeFromSuperview()
+        let count = row.arrangedSubviews.count
+        row.insertArrangedSubview(strip, at: min(max(index ?? count, 0), count))
+        updateWidth()
     }
 
     func remove(_ strip: ToolbarStripView) {
-        guard strip.superview === row else { return }
-        row.removeArrangedSubview(strip)
-        strip.removeFromSuperview()
-        isHidden = strips.isEmpty
+        if row.arrangedSubviews.contains(where: { $0 === strip }) {
+            row.removeArrangedSubview(strip)
+        }
+        if strip.superview === row { strip.removeFromSuperview() }
+        updateWidth()
+    }
+
+    private func updateWidth() {
+        widthConstraint.constant = CGFloat(strips.count) * ToolbarStripView.width
     }
 }
 
@@ -193,18 +255,38 @@ private final class ToolbarGripView: NSView {
         addCursorRect(bounds, cursor: .openHand)
     }
 
+    private var ghost: NSImageView?
+    private var ghostOffset = NSPoint.zero
+
     override func mouseDown(with event: NSEvent) {
         dragStart = event.locationInWindow
         NSCursor.closedHand.push()
     }
 
+    override func mouseDragged(with event: NSEvent) {
+        guard let start = dragStart, let owner, let content = window?.contentView else { return }
+        let p = event.locationInWindow
+        // 6pt 이상 움직여야 드래그로 본다 (클릭과 구분)
+        if ghost == nil {
+            guard hypot(p.x - start.x, p.y - start.y) > 6 else { return }
+            guard let g = owner.makeDragGhost() else { return }
+            let stripOriginInWindow = owner.convert(NSPoint.zero, to: nil)
+            ghostOffset = NSPoint(x: start.x - stripOriginInWindow.x, y: start.y - stripOriginInWindow.y)
+            content.addSubview(g, positioned: .above, relativeTo: nil)
+            ghost = g
+            owner.alphaValue = 0.35   // 원래 자리는 흐리게
+        }
+        let origin = content.convert(NSPoint(x: p.x - ghostOffset.x, y: p.y - ghostOffset.y), from: nil)
+        ghost?.frame.origin = origin
+    }
+
     override func mouseUp(with event: NSEvent) {
         NSCursor.pop()
         defer { dragStart = nil }
-        guard let start = dragStart else { return }
-        // 살짝 움직인 건 클릭으로 본다 — 창 폭의 1/4 이상 끌었을 때만 도킹 요청
-        let moved = abs(event.locationInWindow.x - start.x)
-        guard let width = window?.contentView?.bounds.width, moved > width * 0.25 else { return }
+        owner?.alphaValue = 1.0
+        guard ghost != nil else { return }      // 드래그가 아니었으면 클릭 — 아무것도 안 함
+        ghost?.removeFromSuperview()
+        ghost = nil
         owner?.gripDropped(atWindowPoint: event.locationInWindow)
     }
 
