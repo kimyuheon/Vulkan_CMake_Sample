@@ -220,6 +220,7 @@
 					"-lVulkanCADCoreStatic",
 					"-lmanifold",
 					"-lMoltenVK",
+					"-liconv",
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "-Xcc -I$(SRCROOT)/Sources/CVulkanCAD";
@@ -382,6 +383,7 @@
 					"-lVulkanCADCoreStatic",
 					"-lmanifold",
 					"-lMoltenVK",
+					"-liconv",
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "-Xcc -I$(SRCROOT)/Sources/CVulkanCAD";

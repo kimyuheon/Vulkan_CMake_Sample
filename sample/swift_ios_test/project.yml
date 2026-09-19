@@ -78,10 +78,13 @@ targets:
           - "$(SRCROOT)/../../sdk/lib-ios-device"
           - "$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64"
         # 링크 순서 주의: 의존하는 VulkanCADCoreStatic 을 먼저, 그다음 manifold(피의존).
+        # iconv: 엔진의 DXF 코드페이지 변환(dxf/lot_dxf_codepage — CP949 등 → UTF-8)이 libiconv 를 쓴다.
+        #   정적 라이브러리는 의존성을 못 실어 나르므로 앱이 직접 링크해야 한다(빠지면 Undefined symbol: _iconv).
         OTHER_LDFLAGS:
           - "-lVulkanCADCoreStatic"
           - "-lmanifold"
           - "-lMoltenVK"
+          - "-liconv"
           - "-lc++"
         # MoltenVK 가 의존하는 시스템 프레임워크들
         OTHER_SWIFT_FLAGS:
