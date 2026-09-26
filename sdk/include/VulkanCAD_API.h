@@ -539,6 +539,28 @@ CAD_API int      CAD_GetSelectionContext(char* outUtf8, int cap);
 /* 선택한 면(면 선택 모드에서 클릭한 면)을 법선 방향으로 distance(mm, 양수=바깥) 밀어 새 메시로 — undo 1단계.
  * 면 선택이 없으면 false. */
 CAD_API bool     CAD_PushPullSelectedFace(float distance);
+/* 선택한 평면의 볼록 면에 distance(mm) 폭의 안쪽 링을 만든다. distance=0 이면 자동 폭.
+ * 면 선택이 없거나 오목/다중 경계 면이면 false. undo 1단계. */
+CAD_API bool     CAD_InsetSelectedFace(float distance);
+
+/* ── 외부 연결(link) — 태그 추적 스크립트·로봇·머리 추적 같은 바깥 프로세스가 붙는 TCP 문 ───────────────────
+ * 127.0.0.1:port 에서 듣고, 줄 하나 = JSON 객체 하나("\n" 구분). 처리는 엔진 메인 스레드(다음 tick)에서.
+ *   {"type":"pose","id":"기둥A"|12,"x":..,"y":..,"yaw":90,"mode":"clamp"|"twin"}
+ *       id 는 객체 이름 또는 번호. (x,y) = 객체의 **월드 경계 중심**(원점 아님), 단위 = 도면 단위(mm). z 는 그대로.
+ *       yaw 는 도, 0 = +Y, 시계 방향 양수(내비 규약). 생략하면 향 유지.
+ *       mode 생략 시 CAD_LinkStart 의 clamp. clamp = 벽(다른 메시)에 막히면 벽 앞에 선다(도면이 진실),
+ *       twin = 그대로 비춘다(현실이 진실). 직전 위치와의 속도가 몸 크기의 0.3배/초를 넘으면 걷기 애니가 켜지고,
+ *       0.5초 동안 소식이 없으면 꺼진다.
+ *   {"type":"ping"}  →  엔진이 {"type":"pong"} 을 되돌린다.
+ * 명령행 `link [on|off|port N|clamp|twin]` 과 같은 것. 파이썬 예: tools/tag_tracker.py(AprilTag), tools/fake_pose.py.
+ * 로컬 전용 — 원격·토큰은 없다. */
+CAD_API bool     CAD_LinkStart(int port, bool clamp);       /* port 0 = 빈 포트를 고름(CAD_LinkPort 로 확인). 실패 false + CAD_GetLastError */
+CAD_API void     CAD_LinkStop(void);
+CAD_API int      CAD_LinkPort(void);                         /* 0 = 닫힘 */
+CAD_API bool     CAD_LinkSend(const char* jsonLine);         /* 붙은 클라이언트 전부에 한 줄(끝에 "\n" 붙임). 접속 없으면 false */
+/* 소켓 없이 호스트가 직접 위치를 넣는다(iOS ARKit·자체 추적기). pose 메시지와 같은 규약. yawDeg 에 NaN 을 주면 향 유지.
+ * 반환 = 적용됨. outBlocked 는 clamp 로 벽에 막혔는가(NULL 가능). */
+CAD_API bool     CAD_ApplyExternalPose(uint32_t id, float x, float y, float yawDeg, bool clamp, bool* outBlocked);
 
 /* 볼륨(CT/MR: .nrrd/.nhdr/.nii/.nii.gz) → 등가면 메시 객체. iso 는 값 문턱(NaN 이면 범위 중간, CT 뼈 ≈ 300, 피부 ≈ -300),
  * step 은 복셀 건너뛰기(1=전부, 2=삼각형 1/4). 보통 mesh 객체(이름 "파일@iso")를 만들고 선택까지. 반환 id, 실패 0 + CAD_GetLastError. */
@@ -552,6 +574,67 @@ CAD_API uint32_t CAD_CreateLine(float x1, float y1, float z1,
 CAD_API uint32_t CAD_CreateCircle(float cx, float cy, float cz,
                                   float radius,
                                   float normalX, float normalY, float normalZ);
+
+/* ── 2D 스케치 구동 제약 ─────────────────────────────────────────────
+ * 화면에 그리는 CAD_CreateDimension(측정/주석)과 별개로 실제 선·원을 움직인다.
+ * point: 선 0=시작, 1=끝 / 원 0=중심. value 단위는 월드 mm.
+ * 단항 제약(수평/수직/반지름/직경)은 entityB=0, pointB=0.
+ */
+enum {
+    CAD_SKETCH_COINCIDENT = 0,
+    CAD_SKETCH_HORIZONTAL = 1,
+    CAD_SKETCH_VERTICAL   = 2,
+    CAD_SKETCH_CONCENTRIC = 3,
+    CAD_SKETCH_DISTANCE   = 4,
+    CAD_SKETCH_RADIUS     = 5,
+    CAD_SKETCH_DIAMETER   = 6,
+    CAD_SKETCH_PARALLEL      = 7,   /* 선 A·B */
+    CAD_SKETCH_PERPENDICULAR = 8,   /* 선 A·B */
+    CAD_SKETCH_EQUAL         = 9,   /* 선 두 개 = 같은 길이, 원 두 개 = 같은 반지름 */
+    CAD_SKETCH_FIXED         = 10,  /* pointA 0/1 = 그 점만, CAD_SKETCH_WHOLE_ENTITY = 객체 전체 */
+    CAD_SKETCH_ANGLE         = 11,  /* 선 A 에서 B 로 재는 부호 있는 각, value 단위 도(°) */
+    CAD_SKETCH_TANGENT       = 12,  /* 선–원 또는 원–원(외접/내접은 지금 모양에서 자동) */
+    CAD_SKETCH_DISTANCE_X    = 13,  /* 점 A→B 가로 거리(부호 있음, A 평면 right 축). 선 점 2 = 중점 */
+    CAD_SKETCH_DISTANCE_Y    = 14   /* 점 A→B 세로 거리(부호 있음, A 평면 up 축) */
+};
+#define CAD_SKETCH_WHOLE_ENTITY 255
+/* 구속 상태 — CAD_GetSketchDiagnosis 의 outStatus */
+enum {
+    CAD_SKETCH_UNDER     = 0,   /* 과소 구속: 자유도 남음 */
+    CAD_SKETCH_WELL      = 1,   /* 완전 구속 */
+    CAD_SKETCH_REDUNDANT = 2,   /* 과잉: 풀리지만 같은 조건이 겹침 */
+    CAD_SKETCH_CONFLICT  = 3,   /* 충돌: 동시에 만족 불가 */
+    CAD_SKETCH_INVALID   = 4    /* 잘못된 참조 */
+};
+typedef struct CAD_SketchConstraintInfo {
+    uint32_t id;
+    int type;
+    uint32_t entityA;
+    int pointA;
+    uint32_t entityB;
+    int pointB;
+    float value;
+    bool driving;
+    bool enabled;
+} CAD_SketchConstraintInfo;
+CAD_API uint32_t CAD_AddSketchConstraint(int type,
+                                         uint32_t entityA, int pointA,
+                                         uint32_t entityB, int pointB,
+                                         float value);
+CAD_API bool CAD_SetSketchConstraintValue(uint32_t constraintId, float value);
+CAD_API bool CAD_RemoveSketchConstraint(uint32_t constraintId);
+CAD_API bool CAD_SolveSketchConstraints(void);
+CAD_API uint32_t CAD_GetSketchConstraintCount(void);
+/* 반환=필요한 전체 개수. outIds/capacity가 작으면 앞부분만 복사한다. */
+CAD_API uint32_t CAD_GetSketchConstraintIds(uint32_t* outIds, uint32_t capacity);
+CAD_API bool CAD_GetSketchConstraintInfo(uint32_t constraintId, CAD_SketchConstraintInfo* outInfo);
+/* 이 선·원과 제약으로 이어진 묶음의 자유도·구속 상태. 형상은 바꾸지 않는다.
+ * outProblemIds 에는 충돌(또는 중복) 제약 id — 반환 = 필요한 전체 개수, capacity 만큼만 복사. 실패 시 -1. */
+CAD_API int CAD_GetSketchDiagnosis(uint32_t entityId, int* outDof, int* outStatus,
+                                   uint32_t* outProblemIds, uint32_t capacity);
+/* 마지막 제약 추가·값 편집이 충돌로 실패했을 때 부딪친 제약 id 들. 반환 = 전체 개수. */
+CAD_API uint32_t CAD_GetLastSketchConflict(uint32_t* outIds, uint32_t capacity);
+
 CAD_API uint32_t CAD_CreatePolygon(float cx, float cy, float cz,
                                    float radius,
                                    int sides,
@@ -792,6 +875,104 @@ CAD_API bool     CAD_GetBoundsWorld(uint32_t id,
                                     float* maxX, float* maxY, float* maxZ);
 CAD_API bool     CAD_GetCenterWorld(uint32_t id, float* x, float* y, float* z);
 
+// 자체 Mini B-Rep 정보. featureType: 0=Box, 1=Cylinder, 2=Extrude.
+// volume/surfaceArea는 객체의 현재 축척·회전을 반영한 월드 값이다.
+// 임포트 메시나 아직 B-Rep으로 복원하지 않은 Boolean 결과는 false.
+// 원통 차집합 결과의 타공 편집 가능 여부는 CAD_GetBooleanCylinderCutCount로 조회한다.
+typedef struct CAD_BRepInfo {
+    int32_t featureType;
+    uint32_t vertexCount;
+    uint32_t edgeCount;
+    uint32_t faceCount;
+    double volume;
+    double surfaceArea;
+} CAD_BRepInfo;
+CAD_API bool     CAD_GetBRepInfo(uint32_t id, CAD_BRepInfo* outInfo);
+
+// B-Rep 생성 파라미터. 사용하지 않는 필드는 0이다.
+// dimensions는 객체 transform.scale과 별개인 로컬 원본 치수다.
+typedef struct CAD_BRepParameters {
+    int32_t featureType;
+    float dimensionsX;
+    float dimensionsY;
+    float dimensionsZ;
+    float radius;
+    float height;
+    float directionX;
+    float directionY;
+    float directionZ;
+} CAD_BRepParameters;
+CAD_API bool     CAD_GetBRepParameters(uint32_t id, CAD_BRepParameters* outParams);
+CAD_API bool     CAD_SetBRepBoxDimensions(uint32_t id, float x, float y, float z);
+CAD_API bool     CAD_SetBRepCylinderDimensions(uint32_t id, float radius, float height);
+CAD_API bool     CAD_SetBRepExtrudeHeight(uint32_t id, float height);
+// 안정적인 B-Rep face id 조회. surfaceType: 0=Plane, 1=Cylinder. 원점/법선은 월드 좌표.
+typedef struct CAD_BRepFaceInfo {
+    uint32_t faceId;
+    int32_t surfaceType;
+    float originX, originY, originZ;
+    float normalX, normalY, normalZ;
+} CAD_BRepFaceInfo;
+CAD_API bool     CAD_GetBRepFaceInfo(uint32_t id, uint32_t faceId, CAD_BRepFaceInfo* outInfo);
+// 지정 면을 바깥쪽으로 이동한다. 박스 평면은 반대편 면을 고정하고,
+// 원통 옆면(surfaceType=1)은 반지름을 변경하며, 돌출체 옆면은 프로파일 변을 평행 이동한다.
+// distance는 월드 단위다.
+CAD_API bool     CAD_PushPullBRepFace(uint32_t id, uint32_t faceId, float distance);
+// Extrude 솔리드에 편집 가능한 포켓/관통 컷을 추가한다.
+// profileXYZ는 객체 로컬 좌표의 폐프로파일(pointCount*3)이며 캡과 평행한 평면에 둔다.
+// 엔진이 아래 기준면으로 투영한다. throughAll=true이면 depth를 무시한다.
+// 외곽에 닿거나 다른 컷과 겹치는 프로파일은 false를 반환한다.
+enum { CAD_MAX_BREP_PROFILE_POINTS = 2048 };
+CAD_API bool     CAD_CutExtrudeBRep(uint32_t id,
+                                    const float* profileXYZ,
+                                    uint32_t pointCount,
+                                    float depth,
+                                    bool throughAll);
+// 기존 닫힌 2D 스케치를 프로파일로 사용한다. 스케치의 월드 변환을 대상 솔리드의
+// 로컬 좌표로 자동 변환하므로 화면에서 그린 사각형·원·폴리선을 바로 사용할 수 있다.
+CAD_API bool     CAD_CutExtrudeFromSketch(uint32_t id,
+                                          uint32_t sketchId,
+                                          float depth,
+                                          bool throughAll);
+typedef struct CAD_BRepCutInfo {
+    uint32_t cutIndex;
+    uint32_t pointCount;
+    float depth;
+    bool throughAll;
+} CAD_BRepCutInfo;
+CAD_API uint32_t CAD_GetBRepCutCount(uint32_t id);
+CAD_API bool     CAD_GetBRepCutInfo(uint32_t id, uint32_t cutIndex, CAD_BRepCutInfo* outInfo);
+// 필요한 점 개수를 반환한다. outXYZ가 null이거나 capacity가 작으면 복사하지 않는다.
+CAD_API uint32_t CAD_GetBRepCutProfile(uint32_t id, uint32_t cutIndex,
+                                       float* outXYZ, uint32_t capacity);
+// 기존 컷의 프로파일과 관통/포켓 깊이를 교체한다. cutIndex는 GetBRepCutInfo의 값이다.
+// profileXYZ는 대상 솔리드의 객체 로컬 좌표이며, 임포트한 폐폴리라인 좌표도 사용할 수 있다.
+CAD_API bool     CAD_SetBRepCut(uint32_t id, uint32_t cutIndex,
+                                const float* profileXYZ, uint32_t pointCount,
+                                float depth, bool throughAll);
+// 닫힌 엔진 스케치(직접 그린 형상 또는 DXF 등에서 변환한 형상)로 기존 컷을 교체한다.
+CAD_API bool     CAD_SetBRepCutFromSketch(uint32_t id, uint32_t cutIndex,
+                                          uint32_t sketchId,
+                                          float depth, bool throughAll);
+// 일반 Boolean 차집합이 B-Rep 기준체와 원통 커터로 만들어졌으면 타공 기록을 보존한다.
+// 중심·방향은 결과 객체 로컬 좌표, radius/height는 같은 좌표계의 수치다.
+typedef struct CAD_BooleanCylinderCutInfo {
+    uint32_t cutIndex;
+    float centerX, centerY, centerZ;
+    float axisX, axisY, axisZ;
+    float radius;
+    float height;
+} CAD_BooleanCylinderCutInfo;
+CAD_API uint32_t CAD_GetBooleanCylinderCutCount(uint32_t id);
+CAD_API bool     CAD_GetBooleanCylinderCutInfo(uint32_t id, uint32_t cutIndex,
+                                               CAD_BooleanCylinderCutInfo* outInfo);
+CAD_API bool     CAD_SetBooleanCylinderCut(uint32_t id, uint32_t cutIndex,
+                                           float centerX, float centerY, float centerZ,
+                                           float axisX, float axisY, float axisZ,
+                                           float radius, float height);
+// B-Rep 정의로 렌더 메시 캐시를 강제 재생성한다. 곡면 분할은 3~512로 제한된다.
+CAD_API bool     CAD_RebuildBRepMesh(uint32_t id, uint32_t curvedSegments);
+
 /* ── 측정 ─────────────────────────────────────────────────────────────────
  *
  * 호스트 상태바에 "길이 3,600" / "면적 12.5" 를 띄우려면 필요하다.
@@ -913,6 +1094,8 @@ CAD_API int CAD_GetSubobjectSelectionMode(void);
 CAD_API bool CAD_PickSubobject(float ox, float oy, float oz, float dx, float dy, float dz);
 CAD_API uint32_t CAD_GetSubobjectSelectionId(void);
 CAD_API uint32_t CAD_GetSelectedFaceTriangles(uint32_t* out, uint32_t capacity);
+// 현재 선택 면이 B-Rep 면이면 안정적인 face id, 아니면 -1.
+CAD_API int32_t CAD_GetSelectedBRepFaceId(void);
 // endpoints6 = {ax,ay,az,bx,by,bz}, world coordinates. False if no selected edge.
 CAD_API bool CAD_GetSelectedEdge(float* endpoints6);
 
@@ -1016,6 +1199,106 @@ CAD_API void CAD_BooleanIntersection(bool keepOriginals);
 CAD_API void CAD_BooleanDifference(const uint32_t* baseIds, uint32_t baseCount,
                                    const uint32_t* subtractIds, uint32_t subtractCount,
                                    bool keepOriginals);
+
+/* ── 2026-09-24 추가 — 타원·스플라인·지시선, 2D 편집(늘이기·길이조정·끊기), 3D(간섭·메시 검사/수리·필렛 기록·3D 배열/정렬·프리미티브) ──
+ * 명령 문자열(CAD_ExecuteCommand("ellipse") …)로도 되지만 이쪽은 클릭 없이 값으로, 결과를 돌려받는다. 좌표는 월드(mm), 전부 되돌리기 한 단계. */
+
+/* 타원 — 중심, 장축 반벡터(중심→장축 끝, 길이 = 장반경), 단축비(0<ratio≤1), 평면 법선(0,0,0 이면 +Z). 실패 0. */
+CAD_API uint32_t CAD_CreateEllipse(float cx, float cy, float cz,
+                                   float majorX, float majorY, float majorZ,
+                                   float ratio,
+                                   float normalX, float normalY, float normalZ);
+/* 맞춤점을 지나는 스플라인 — fitXYZ = count*3, closed = 닫힌(주기) 스플라인. 열린 것은 2점, 닫힌 것은 3점 이상. 실패 0. */
+CAD_API uint32_t CAD_CreateSpline(const float* fitXYZ, uint32_t count, bool closed);
+/* 지시선 — 화살촉 → 꺾임 점 + 글(UTF-8, 여러 줄은 \n). textHeight<=0 이면 2.5. 평면은 XY. 실패 0. */
+CAD_API uint32_t CAD_CreateLeader(float tipX, float tipY, float tipZ,
+                                  float bendX, float bendY, float bendZ,
+                                  const char* textUtf8, float textHeight);
+
+/* 늘이기 — XY 교차 창(월드) 안의 편집점을 (dx,dy,dz) 만큼. 창 판정은 z 를 보지 않는다. 반환 = 걸린 객체 수. */
+CAD_API uint32_t CAD_StretchWindowXY(float minX, float minY, float maxX, float maxY, float dx, float dy, float dz);
+/* 길이조정 — mode 0 = 증분, 1 = 퍼센트, 2 = 전체 길이. atStart = 시작 쪽 끝. 선·열린 폴리선·호. */
+CAD_API bool     CAD_Lengthen(uint32_t id, int mode, float value, bool atStart);
+/* 끊기 — 두 점(객체 위로 투영) 사이를 지운다. 같은 점이면 둘로 나눈다. 결과는 새 객체들(원본 삭제). */
+CAD_API bool     CAD_BreakObject(uint32_t id, float x1, float y1, float z1, float x2, float y2, float z2);
+
+/* 간섭 검사 — ids 가 null/1개 이하면 보이는 솔리드 전부. createObjects = 겹친 덩어리를 "간섭" 층에 만든다.
+ * out 에 cap 개까지 채우고(부피 큰 순), 반환 = 전체 간섭 쌍 수. */
+typedef struct CAD_InterferenceInfo {
+    uint32_t objectA, objectB;
+    double volume;          /* 겹친 부피(월드 단위³) */
+    uint32_t resultId;      /* createObjects 일 때 만든 덩어리 id, 아니면 0 */
+} CAD_InterferenceInfo;
+CAD_API uint32_t CAD_CheckInterference(const uint32_t* ids, uint32_t count, bool createObjects,
+                                       CAD_InterferenceInfo* out, uint32_t cap);
+
+/* 메시 검사 — 모델 로컬 단위. ok = 닫힘·바깥향·결함 없음. 메시가 아니면 false. */
+typedef struct CAD_MeshCheckInfo {
+    uint32_t triangles, vertices, degenerate, duplicates;
+    uint32_t openEdges, nonManifoldEdges, flippedEdges, holes, components;
+    bool closed, ok;
+    double volume, area;
+} CAD_MeshCheckInfo;
+CAD_API bool     CAD_CheckMesh(uint32_t id, CAD_MeshCheckInfo* out);
+/* 메시 수리 — ids 의 메시(null 이면 보이는 메시 전부)를 붙이기·퇴화/중복 제거·방향 통일·구멍 메움. 반환 = 고친 객체 수. */
+CAD_API uint32_t CAD_RepairMeshes(const uint32_t* ids, uint32_t count, bool fillHoles);
+// 구멍 메우기 방식 지정판 — curvedFill: 둘레 곡면을 따라 둥글게(CAD_RepairMeshes 기본) / false = 평평하게.
+CAD_API uint32_t CAD_RepairMeshesEx(const uint32_t* ids, uint32_t count, bool fillHoles, bool curvedFill);
+// 메시 매끈하게(토빈 — 부피가 거의 안 준다, 모서리는 둥글어진다). ids 가 비면 선택 메시(없으면 보이는 메시 전부). undo 1. 반환: 바꾼 개수.
+CAD_API uint32_t CAD_SmoothMeshes(const uint32_t* ids, uint32_t count, int iterations);
+// 삼각형 줄이기(QEM) — ratio = 남길 비율(0~1 사이). 경계 윤곽은 거의 그대로. undo 1. 반환: 바꾼 개수(0 = 대상 없음/범위 밖).
+CAD_API uint32_t CAD_DecimateMeshes(const uint32_t* ids, uint32_t count, double ratio);
+// 틈 꿰매기 — tolerance(모델 로컬 단위) 안의 경계 점을 붙이고 T 이음을 쪼개 잇는다. 0 = 자동(대각선의 0.1%). 이미 닫힌 메시는 건너뜀.
+CAD_API uint32_t CAD_StitchMeshes(const uint32_t* ids, uint32_t count, float tolerance);
+// 두께 주기 — 열린 메시를 법선 방향으로 thickness 만큼 두껍게 해 닫힌 솔리드로(음수 = 반대쪽, 0 은 거부). 닫힌 메시는 건너뜀.
+CAD_API uint32_t CAD_ThickenMeshes(const uint32_t* ids, uint32_t count, double thickness);
+// 다시 나누기(등방 리메시) — edgeLength = 목표 모서리 길이(0 = 지금 평균). 경계·날카로운 모서리(45°↑)는 그대로.
+CAD_API uint32_t CAD_RemeshMeshes(const uint32_t* ids, uint32_t count, double edgeLength);
+
+/* 모서리 가공 기록 — B-Rep 솔리드에 필렛/모따기 하나를 더한다(스케치가 바뀌어도 다시 적용).
+ * allEdges = 볼록 모서리 전부, 아니면 brepEdge(B-Rep 선 모서리 id). distance = 모델 로컬 단위. 안 먹으면 false(변화 없음). */
+CAD_API bool     CAD_AddEdgeBevel(uint32_t id, bool fillet, float distance, bool allEdges, uint32_t brepEdge);
+CAD_API uint32_t CAD_GetEdgeBevelCount(uint32_t id);
+
+/* 3D 배열 — 현재 선택을 월드 X(열)·Y(행)·Z(층) 격자로. 생성 = cols*rows*levels - 1. */
+CAD_API bool     CAD_Array3DRect(int cols, int rows, int levels, float dx, float dy, float dz);
+/* 3D 원형 배열 — 현재 선택을 두 점(a→b) 축 둘레로. count = 원본 포함 총 개수. */
+CAD_API bool     CAD_Array3DPolar(int count, float angleDeg,
+                                  float ax, float ay, float az, float bx, float by, float bz, bool rotateItems);
+/* 3D 정렬 — ids 를 점 pairs 쌍(1~3)으로. src/dst = pairs*3. 1 = 이동, 2 = 방향, 3 = 방향까지. 반환 = 옮긴 객체 수. */
+CAD_API uint32_t CAD_Align3D(const uint32_t* ids, uint32_t count, const float* srcXYZ, const float* dstXYZ, int pairs);
+
+/* 솔리드 — 밑면 중심(월드) 위에 +Z 로 선다. 실패 0.
+ *   쐐기 sx·sy 밑면, sz 높이 / 피라미드 외접 반지름·높이·변 수(3~64)·윗면 반지름(0 = 뾰족) / 관 바깥·안 반지름·높이 */
+CAD_API uint32_t CAD_CreateWedge(float x, float y, float z, float sx, float sy, float sz);
+CAD_API uint32_t CAD_CreatePyramid(float x, float y, float z, float radius, float height, int sides, float topRadius);
+/* 구·원기둥·원뿔·토러스 — (x,y,z) = 밑면 중심(구·토러스는 바닥에 닿는 점), 축 = +Z. 닫힌 메시, 선택 + undo 1. 잘못된 크기면 0. */
+CAD_API uint32_t CAD_CreateSphere(float x, float y, float z, float radius);
+CAD_API uint32_t CAD_CreateCylinder(float x, float y, float z, float radius, float height);
+CAD_API uint32_t CAD_CreateCone(float x, float y, float z, float radius, float height);
+CAD_API uint32_t CAD_CreateTorus(float x, float y, float z, float majorRadius, float minorRadius);   /* minor < major */
+/* 해치 — 닫힌 폴리선·사각형·원 ids(같은 평면이면 한 객체, 안쪽 루프 = 구멍). pattern: SOLID ANSI31~38 NET LINE DOTS BRICK STEEL CROSS
+ * (null/빈 = ANSI31), scale > 0, angleDeg. 선택이 새 해치로 바뀐다. 반환 = 해치 id, 실패 0. */
+CAD_API uint32_t CAD_CreateHatch(const uint32_t* ids, uint32_t count, const char* pattern, float scale, float angleDeg);
+/* 도면 출력 — path 확장자로 .pdf(벡터)/.png(래스터). 지금 뷰 방향, 흰 종이. paperW/H mm(0 = A3 가로 420×297), pngLongSidePx(0 = 4000).
+ * selectedOnly = 선택만, monochrome = 흑백. 3D 메시·이미지는 아직 안 나온다. */
+CAD_API bool     CAD_Plot(const char* path, bool selectedOnly, bool monochrome, float paperW, float paperH, int pngLongSidePx);
+/* 오프셋·대칭·자르기·연장 — 클릭 대신 점을 값으로(도구와 같은 계산, 전부 undo 1). 좌표는 월드.
+ * outIds/outCapacity 는 새 객체 id 받을 곳(null 이면 안 받음). 반환 = 새로 만든 개수.
+ *   CAD_Offset : 선·원·호·폴리선을 distance(>0) 만큼 (sx,sy,sz) 쪽으로 평행 복제.
+ *   CAD_Mirror : 미러선 (x1..z1)→(x2..z2) 과 작업 평면 법선 (nx,ny,nz)(0,0,0 = 지금 작업 평면)이 이루는 면으로 반사 복제.
+ *                선·원·호·폴리선·메시. deleteOriginals = 원본 지움.
+ *   CAD_Trim / CAD_Extend : 대상 하나, (px,py,pz) = 지울 부분 / 늘릴 끝 가까운 점. 경계 ids(0개 = 씬의 선·폴리선 전부).
+ *                원·호는 제 평면, 선·폴리선은 (nx,ny,nz)(0 = 지금 작업 평면)에 투영해 교차. 못 하면 false(변화 없음). */
+CAD_API uint32_t CAD_Offset(const uint32_t* ids, uint32_t count, float distance, float sx, float sy, float sz,
+                            uint32_t* outIds, uint32_t outCapacity);
+CAD_API uint32_t CAD_Mirror(const uint32_t* ids, uint32_t count, float x1, float y1, float z1, float x2, float y2, float z2,
+                            float nx, float ny, float nz, bool deleteOriginals, uint32_t* outIds, uint32_t outCapacity);
+CAD_API bool     CAD_Trim(uint32_t id, float px, float py, float pz, const uint32_t* boundaryIds, uint32_t boundaryCount,
+                          float nx, float ny, float nz);
+CAD_API bool     CAD_Extend(uint32_t id, float px, float py, float pz, const uint32_t* boundaryIds, uint32_t boundaryCount,
+                            float nx, float ny, float nz);
+CAD_API uint32_t CAD_CreateTube(float x, float y, float z, float outerRadius, float innerRadius, float height);
 
 #ifdef __cplusplus
 }
