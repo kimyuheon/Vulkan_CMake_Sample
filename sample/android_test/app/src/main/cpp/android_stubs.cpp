@@ -21,6 +21,7 @@ namespace lot {
     std::string saveModelFileDialog(IWindow*, const std::string&) { return {}; }
     std::string openImageFileDialog(IWindow*) { return {}; }
     std::string saveImageFileDialog(IWindow*, const std::string&) { return {}; }
+    std::string openParticlePresetFileDialog(IWindow*, bool) { return {}; }
 
     // ── LotStatusBar — 하단 명령행/상태바는 데스크톱 ImGui 전용 ──
     void LotStatusBar::setPrompt(const std::string&) {}

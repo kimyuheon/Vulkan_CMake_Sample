@@ -3,11 +3,30 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// SDK 위치: local.properties(sdk.dir) > ANDROID_HOME > OS 기본 경로.
+fun installedNdkVersion(): String? {
+    val localSdk = rootProject.file("local.properties").takeIf { it.exists() }
+        ?.readLines()?.firstOrNull { it.startsWith("sdk.dir=") }
+        ?.substringAfter("=")?.replace("\\:", ":")?.replace("\\\\", "\\")
+    val home = System.getProperty("user.home")
+    val sdk = localSdk ?: System.getenv("ANDROID_HOME")
+        ?: listOf("$home/Library/Android/sdk", "$home/AppData/Local/Android/Sdk", "$home/Android/Sdk")
+            .firstOrNull { file(it).exists() }
+        ?: return null
+    return file("$sdk/ndk").listFiles { f -> f.isDirectory }
+        ?.map { it.name }
+        ?.maxWithOrNull(compareBy<String>(
+            { it.split(".").getOrNull(0)?.toIntOrNull() ?: 0 },
+            { it.split(".").getOrNull(1)?.toIntOrNull() ?: 0 },
+            { it.split(".").getOrNull(2)?.toIntOrNull() ?: 0 }))
+}
+
 android {
     namespace = "com.vulkancad.androidtest"
     compileSdk = 34
-    // 머신에 설치된 NDK 버전으로 (SDK Manager 에서 확인). 다르면 여기만 수정.
-    ndkVersion = "30.0.15729638"
+    // 머신마다 설치된 NDK 버전이 달라도 되도록 <sdk>/ndk/ 중 가장 최신을 자동 선택.
+    // 하나도 없으면 AGP 기본 버전(필요 시 자동 다운로드).
+    installedNdkVersion()?.let { ndkVersion = it }
 
     defaultConfig {
         applicationId = "com.vulkancad.androidtest"
