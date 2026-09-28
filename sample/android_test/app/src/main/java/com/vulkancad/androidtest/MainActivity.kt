@@ -73,6 +73,14 @@ class MainActivity : Activity() {
 
     private fun cursorBarVisible() = ::cursorBar.isInitialized && cursorBar.visibility == View.VISIBLE
 
+    // 엔진은 Surface 가 사라져도 살려 둔다(창만 뗐다 붙임 — android_jni.cpp nativeSurfaceDestroyed).
+    // 그래서 **앱이 정말 끝날 때만** 파괴한다. 회전 등 액티비티 재생성(isFinishing=false)은 제외 —
+    // 새 SurfaceView 가 같은 엔진에 다시 붙어 장면이 이어진다.
+    override fun onDestroy() {
+        if (isFinishing) CadNative.nativeDestroyEngine()
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

@@ -69,6 +69,8 @@ JNI(jboolean, nativeSurfaceCreated)(JNIEnv* env, jobject, jobject surface, jint 
     g_window = ANativeWindow_fromSurface(env, surface);
     if (!g_window) { LOGE("ANativeWindow_fromSurface failed"); return JNI_FALSE; }
     // 계약: AttachView(핸들) 등록 → CreateEngine 이 그 ANativeWindow 에 렌더.
+    // 엔진이 이미 살아 있으면(창만 뗐다 돌아온 경우) AttachView 가 새 창에 다시 붙이고
+    // CreateEngine 은 아무것도 안 하고 true — 장면이 그대로 이어진다.
     CAD_AttachView(g_window, w, h);
     const bool ok = CAD_CreateEngine();
     // 손가락/가상 커서는 마우스만큼 정밀하지 않다 — 스냅·선 픽 반경을 3.5배(12→42px)로.
@@ -85,11 +87,25 @@ JNI(void, nativeSurfaceChanged)(JNIEnv*, jobject, jint w, jint h) {
     CAD_ResizeView(w, h);
 }
 
+// Surface 가 사라질 때(파일 선택기·홈 버튼·앱 전환) — **창만 떼고 엔진은 살려 둔다.**
+// 예전엔 여기서 CAD_DestroyEngine 까지 해서, 돌아올 때마다 Vulkan 초기화·텍스처 로딩을 처음부터
+// 다시 하느라 몇 초씩 걸리고 장면·되돌리기·카메라가 전부 날아갔다(데모 장면으로 초기화).
+// 엔진이 창 떼기/붙이기를 지원한다(d084472: 스왑체인·Surface 만 내려놓음). 다시 붙이는 건
+// nativeSurfaceCreated 의 CAD_AttachView — 엔진이 이미 있으면 그 호출이 새 창에 스왑체인을 다시 만든다.
+// ⚠️ 창 해제는 DetachView **뒤에** — 엔진이 그 창의 Surface 를 먼저 내려놓아야 한다.
 JNI(void, nativeSurfaceDestroyed)(JNIEnv*, jobject) {
+    CAD_DetachView();
+    if (g_window) { ANativeWindow_release(g_window); g_window = nullptr; }
+    LOGI("nativeSurfaceDestroyed (engine kept)");
+}
+
+// 앱이 정말 끝날 때만(액티비티 finish) 엔진을 파괴한다. 회전처럼 액티비티만 다시 만들어지는
+// 경우엔 부르지 않는다 — 엔진은 프로세스 전역이라 새 SurfaceView 가 그대로 다시 붙는다.
+JNI(void, nativeDestroyEngine)(JNIEnv*, jobject) {
     CAD_DetachView();
     CAD_DestroyEngine();
     if (g_window) { ANativeWindow_release(g_window); g_window = nullptr; }
-    LOGI("nativeSurfaceDestroyed");
+    LOGI("nativeDestroyEngine");
 }
 
 JNI(void, nativeTick)(JNIEnv*, jobject) {

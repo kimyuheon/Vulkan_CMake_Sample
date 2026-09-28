@@ -10,6 +10,8 @@ object CadNative {
     external fun nativeSurfaceCreated(surface: Surface, w: Int, h: Int): Boolean
     external fun nativeSurfaceChanged(w: Int, h: Int)
     external fun nativeSurfaceDestroyed()
+    /** 앱이 정말 끝날 때만(finish) — Surface 가 사라질 땐 엔진을 살려 두고 창만 뗀다. */
+    external fun nativeDestroyEngine()
     external fun nativeTick()
     // phase: 0=down 1=move 2=up, button: 0=left(선택) 1=right(궤도 회전) 2=middle(이동)
     external fun nativeTouch(phase: Int, button: Int, x: Float, y: Float)
