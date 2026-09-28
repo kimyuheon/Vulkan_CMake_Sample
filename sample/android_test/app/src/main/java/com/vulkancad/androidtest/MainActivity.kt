@@ -277,6 +277,12 @@ class MainActivity : Activity() {
         }
         renderView.onDimPointCountChanged = { n -> runOnUiThread { onDimCount(n) } }
         renderView.onPromptChanged = { p -> runOnUiThread { onPrompt(p) } }
+        // 열기 결과 — 실패를 조용히 삼키지 않게(엔진 쪽 이유는 logcat -s VulkanCAD-stdout).
+        renderView.onFileOpened = { path, ok ->
+            if (!ok) runOnUiThread {
+                android.widget.Toast.makeText(this, "열기 실패: " + File(path).name, android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
         this.renderView = renderView
         // [회전] 토글 — 켜지면 문구로 상태를 보인다 (●). 1손가락 드래그 = pan ↔ 궤도회전.
         orbitBtn.setOnClickListener {
@@ -317,7 +323,9 @@ class MainActivity : Activity() {
         if (requestCode != REQ_OPEN_FILE || resultCode != RESULT_OK) return
         val uri = data?.data ?: return
         val dst = copyToFiles(uri) ?: return
-        if (CadNative.nativeOpenFile(dst.absolutePath)) CadNative.nativeZoomExtents()
+        // 여기서 바로 열면 안 된다 — 선택기가 앱을 가린 동안 엔진이 파괴됐고, 이 콜백은 화면이
+        // 돌아오기(엔진 재생성) 전에 온다. 엔진이 준비되면 VulkanSurfaceView 가 연다.
+        renderView?.openWhenReady(dst.absolutePath)
     }
 
     private fun copyToFiles(uri: Uri): File? = try {
