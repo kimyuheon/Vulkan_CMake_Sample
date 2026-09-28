@@ -207,13 +207,14 @@ class MainActivity : Activity() {
 
         // 선택한 것의 길이·면적 — 선택이 있을 때만 보인다.
         // 점 찍기·스냅 없이 탭 한 번으로 값이 나오는 경로라 모바일에서 가장 쓰기 쉽다.
+        // ⚠️ 줄로 끼워 넣지 않고 3D 뷰 **위에 겹쳐** 띄운다(아래 stack). 끼우면 선택할 때마다 뷰 높이가 줄었다 늘어
+        //    화면 비율이 바뀌고, 맞춰 둔 뷰(줌 맞춤)가 위아래로 밀리고 크기가 변했다(2026-09-28).
         val measureLabel = TextView(this).apply {
             visibility = View.GONE
             setTextColor(0xFF4CD964.toInt())
+            setBackgroundColor(0x99000000.toInt())
             setPadding(24, 12, 24, 12)
         }
-        root.addView(measureLabel, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
         // 숫자패드 — 5열×3줄 고정 (iOS 와 동일). ↵ 는 값칸 옆에 두어 격자가 15칸에 딱 맞는다.
         // 값은 엔진 명령행과 같은 입구(nativeExecuteCommand)로 들어간다 — 접두 없으면 상대,
@@ -307,6 +308,8 @@ class MainActivity : Activity() {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             addView(overlay, FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            addView(measureLabel, FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.START))
         }
         root.addView(stack, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))  // 남은 공간 전부
