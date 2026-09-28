@@ -13,6 +13,7 @@ import android.widget.HorizontalScrollView
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import java.io.File
 
 // 상단 툴바(버튼) + Vulkan SurfaceView. 에셋(모델/폰트/텍스처)을 filesDir 로 추출한 뒤
@@ -330,15 +331,28 @@ class MainActivity : Activity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode != REQ_OPEN_FILE || resultCode != RESULT_OK) return
         val uri = data?.data ?: return
-        val dst = copyToFiles(uri) ?: return
-        // 여기서 바로 열면 안 된다 — 선택기가 앱을 가린 동안 엔진이 파괴됐고, 이 콜백은 화면이
-        // 돌아오기(엔진 재생성) 전에 온다. 엔진이 준비되면 VulkanSurfaceView 가 연다.
-        renderView?.openWhenReady(dst.absolutePath)
+        // 복사는 백그라운드에서 — 큰 STL·DXF 나 구글 드라이브(내려받으며 읽음)는 수 초가 걸려 UI 스레드에서
+        // 하면 화면이 멈추고 "응답 없음"(ANR)이 뜬다. 여는 것은 엔진 스레드(= UI 스레드)로 돌아와서.
+        val loading = Toast.makeText(this, "불러오는 중…", Toast.LENGTH_LONG).apply { show() }
+        Thread {
+            val dst = copyToFiles(uri)
+            runOnUiThread {
+                loading.cancel()
+                if (isDestroyed) return@runOnUiThread
+                if (dst == null) { Toast.makeText(this, "파일을 가져오지 못했습니다", Toast.LENGTH_SHORT).show(); return@runOnUiThread }
+                // 선택기가 떠 있던 동안 창이 떨어져 있다 — 다시 붙은 뒤 연다(VulkanSurfaceView.openWhenReady).
+                renderView?.openWhenReady(dst.absolutePath)
+            }
+        }.start()
     }
 
+    // imported/ 에는 방금 고른 파일 하나만 둔다 — 엔진은 읽어서 메모리에 올리므로 예전 복사본은 필요 없다
+    // (예전엔 열 때마다 쌓였다).
     private fun copyToFiles(uri: Uri): File? = try {
         val name = displayName(uri) ?: "imported.bin"
-        val dst = File(File(filesDir, "imported").apply { mkdirs() }, name)
+        val dir = File(filesDir, "imported").apply { mkdirs() }
+        dir.listFiles()?.forEach { if (it.name != name) it.deleteRecursively() }
+        val dst = File(dir, name)
         contentResolver.openInputStream(uri)?.use { input ->
             dst.outputStream().use { input.copyTo(it) }
         }
