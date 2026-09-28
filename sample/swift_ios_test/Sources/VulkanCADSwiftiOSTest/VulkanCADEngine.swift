@@ -332,4 +332,24 @@ final class VulkanCADEngine {
             demoObjectIds.append(id)
         }
     }
+
+    // 시험용 명령 "focustext 1018@5" — 그 글자인 문자 객체(같은 글자면 N 번째, 0부터 id 순)를 골라 맞춰 보기
+    func focusText(_ spec: String) {
+        var want = spec, nth = 0
+        if let at = spec.lastIndex(of: "@") { want = String(spec[..<at]); nth = Int(spec[spec.index(after: at)...]) ?? 0 }
+        var ids = [UInt32](repeating: 0, count: 20000)
+        let n = Int(CAD_QueryObjects("{\"kind\":\"text\"}", &ids, UInt32(ids.count)))
+        var buf = [CChar](repeating: 0, count: 8192)
+        for id in ids.prefix(n).sorted() {
+            guard CAD_GetObjectJson(id, &buf, Int32(buf.count)) > 0 else { continue }
+            let json = String(cString: buf)
+            guard json.contains("\"text\":\"\(want)\"") else { continue }
+            if nth > 0 { nth -= 1; continue }
+            _ = CAD_SelectObject(id, false)
+            CAD_RequestFocusSelected()
+            print("[test] focus text id \(id)")
+            return
+        }
+        print("[test] focus text not found: \(spec)")
+    }
 }

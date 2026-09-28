@@ -404,7 +404,13 @@ final class VulkanCADController: ObservableObject {
         engine.resize(to: CGSize(width: view.bounds.width * scale,
                                   height: view.bounds.height * scale))
 
-        engine.createDemoScene()
+        // 시험용 — 환경 변수 VULKANCAD_OPEN 의 파일을 문서 선택기 없이 연다(재현용). 데모 장면은 만들지 않고,
+        //   몇 프레임 뒤에 열고(엔진 첫 프레임 뒤), VULKANCAD_CMD 의 명령(; 로 구분)을 차례로 친다.
+        //   xcrun simctl launch 에 SIMCTL_CHILD_VULKANCAD_OPEN=<경로> SIMCTL_CHILD_VULKANCAD_CMD="top;zoom" 로 넘긴다.
+        let env = ProcessInfo.processInfo.environment
+        testOpenPath = env["VULKANCAD_OPEN"] ?? ""
+        testCommands = (env["VULKANCAD_CMD"] ?? "").split(separator: ";").map(String.init)
+        if testOpenPath.isEmpty { engine.createDemoScene() }
         engine.setGizmoTouchMode(true)   // 손가락용 핸들 hit 허용범위 확대
         statusText = "engine ready"
 
@@ -412,7 +418,40 @@ final class VulkanCADController: ObservableObject {
         startDisplayLink()
     }
 
+    // 시험용 자동 열기(start 참고) — 몇 번째 프레임에 무엇을 할지
+    private var testOpenPath = ""
+    private var testCommands: [String] = []
+    private var testFrame = 0
+
+    private func runTestHooks() {
+        guard !testOpenPath.isEmpty else { return }
+        testFrame += 1
+        if testFrame == 5 {
+            let t0 = CFAbsoluteTimeGetCurrent()
+            let ok = engine.openFile(testOpenPath)
+            print(String(format: "[test] open %.0f ms", (CFAbsoluteTimeGetCurrent() - t0) * 1000))
+            statusText = ok ? "opened \((testOpenPath as NSString).lastPathComponent)" : "open failed: \(testOpenPath)"
+            if ok { engine.zoomExtents() }
+        } else if testFrame >= 15, !testCommands.isEmpty, testFrame % 10 == 5 {
+            let cmd = testCommands.removeFirst()
+            if cmd.hasPrefix("focustext ") { engine.focusText(String(cmd.dropFirst(10))) } else { _ = engine.executeCommand(cmd) }
+        }
+    }
+
+    private var testTickMs: [Double] = []
+
     @objc private func tick(_ link: CADisplayLink) {
+        runTestHooks()
+        let t0 = CFAbsoluteTimeGetCurrent()
+        defer {
+            // 시험용 — 연 뒤 프레임 시간(엔진 tick) 60개 평균을 한 번 찍는다
+            if !testOpenPath.isEmpty, testFrame > 60, testTickMs.count < 60 {
+                testTickMs.append((CFAbsoluteTimeGetCurrent() - t0) * 1000)
+                if testTickMs.count == 60 {
+                    print(String(format: "[test] tick avg %.1f ms (max %.1f)", testTickMs.reduce(0, +) / 60, testTickMs.max() ?? 0))
+                }
+            }
+        }
         if !engine.tick() {
             statusText = "engine tick failed"
             shutdown()
