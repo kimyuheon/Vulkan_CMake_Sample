@@ -136,6 +136,9 @@ class VulkanSurfaceView(context: Context) : SurfaceView(context),
         const val BTN_LEFT = 0
         const val BTN_RIGHT = 1          // 엔진 궤도회전
         const val BTN_MIDDLE = 2         // 엔진 이동(pan)
+        const val TWO_UNDECIDED = 0      // 2손가락 제스처 — 아직 핀치/드래그 미정
+        const val TWO_PINCH = 1          // 핀치(줌)로 잠김
+        const val TWO_DRAG = 2           // 드래그(회전/이동)로 잠김
     }
 
     // ─── 마우스(에뮬레이터 / 블루투스) ──────────────────────────────
@@ -158,12 +161,31 @@ class VulkanSurfaceView(context: Context) : SurfaceView(context),
     // ─── 핀치 줌 ────────────────────────────────────────────────
     // iOS 는 UIPinchGestureRecognizer 로 진작 되고 있었는데 안드로이드엔 아예 없었다.
     // 도구 진행 중엔 2손가락이 pan 이라, 줌은 핀치가 유일한 수단이다.
-    // 핀치와 드래그는 **동시에** 받는다 (iOS "2손가락 궤도회전과 pinch 는 동시 인식" 과 동일).
-    // ⚠️ 처음엔 핀치 중 ACTION_MOVE 를 막았는데, 손가락 간격이 slop 만큼만 흔들려도 핀치로
-    //    판정돼 2손가락 드래그가 손을 뗄 때까지 얼어붙었다. 줌하면서 돌리는 게 CAD 표준이다.
+    // 2손가락 제스처는 **핀치(줌) 또는 드래그(회전/이동) 중 하나로 잠근다** — iOS 와 같은 체감.
+    // (iOS 는 동시 인식 delegate 가 없어 UIPinch/UIPan 중 하나만 동작한다.)
+    // ⚠️ 예전엔 둘을 동시에 받았다. 한 손가락을 두고 다른 손가락만 벌리는 핀치는 중심점이
+    //    벌린 거리의 절반만큼 움직이는데, 그게 2손가락 드래그(궤도회전)로 잡혀 확대할 때마다
+    //    화면이 돌았다(사용자 지적).
+    // ⚠️ "줌 감지기가 먼저 반응하면 줌" 으로 잠갔더니 이번엔 회전이 안 됐다 — 실제 손가락은
+    //    드래그 중에도 간격이 조금씩 벌어져 줌 감지기(span slop)가 거의 항상 먼저 걸린다.
+    //    그래서 먼저가 아니라 **어느 쪽이 더 크냐**로 판정한다: 시작점 대비 간격 변화 vs 중심
+    //    이동을 재다가 둘 중 하나가 문턱을 넘는 순간 큰 쪽으로 잠근다. 비대칭 핀치는 간격 변화가
+    //    중심 이동의 두 배라 줌이 되고, 나란히 끄는 드래그는 간격이 거의 그대로라 회전이 된다.
+    private var twoFingerMode = TWO_UNDECIDED
+    private var twoStartSpan = -1f
+    private var twoStartX = 0f
+    private var twoStartY = 0f
+    private fun spanOf(e: MotionEvent): Float {
+        if (e.pointerCount < 2) return 0f
+        val dx = e.getX(0) - e.getX(1); val dy = e.getY(0) - e.getY(1)
+        return kotlin.math.sqrt(dx * dx + dy * dy)
+    }
+    private fun resetTwoFinger() { twoFingerMode = TWO_UNDECIDED; twoStartSpan = -1f }
+
     private val scaleDetector = ScaleGestureDetector(context,
         object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(d: ScaleGestureDetector): Boolean {
+                if (twoFingerMode != TWO_PINCH) return true   // 판정 전·드래그로 잠긴 동안은 줌 안 함
                 // scaleFactor 는 직전 대비 배율(1.0 = 변화 없음). 확대(>1) = 양수 휠.
                 val delta = (d.scaleFactor - 1f) * 8f   // 감도 계수 — iOS 와 동일
                 if (kotlin.math.abs(delta) > 0.0001f) {
@@ -238,17 +260,35 @@ class VulkanSurfaceView(context: Context) : SurfaceView(context),
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 downX = e.x; downY = e.y; activeButton = -1
+                resetTwoFinger()
             }
             // 손가락이 늘거나 줄면 진행 중인 드래그를 끝내고 새 모드로 다시 시작한다.
             // (1↔2 손가락 전환에서 버튼이 섞이지 않게)
             MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_POINTER_UP -> {
                 endDrag(centroidX(e), centroidY(e))
                 downX = centroidX(e); downY = centroidY(e)
+                resetTwoFinger()
             }
             MotionEvent.ACTION_MOVE -> {
                 val twoFinger = e.pointerCount >= 2
                 val x = if (twoFinger) centroidX(e) else e.x
                 val y = if (twoFinger) centroidY(e) else e.y
+
+                // 2손가락: 핀치/드래그 판정 → 핀치로 잠기면 드래그를 만들지 않는다 (확대 중 회전 방지).
+                if (twoFinger && !isMouse(e)) {
+                    if (twoStartSpan < 0f) { twoStartSpan = spanOf(e); twoStartX = x; twoStartY = y }
+                    if (twoFingerMode == TWO_UNDECIDED) {
+                        val dSpan = kotlin.math.abs(spanOf(e) - twoStartSpan)
+                        val cx = x - twoStartX; val cy = y - twoStartY
+                        val dMove = kotlin.math.sqrt(cx * cx + cy * cy)
+                        if (dSpan > touchSlop || dMove > touchSlop) {
+                            twoFingerMode = if (dSpan > dMove) TWO_PINCH else TWO_DRAG
+                        } else {
+                            return true   // 아직 미정 — 줌도 회전도 하지 않고 기다린다
+                        }
+                    }
+                    if (twoFingerMode == TWO_PINCH) { downX = x; downY = y; return true }
+                }
 
                 // 도구 사용 중이면 1손가락은 **커서 상대 이동**(손가락과 분리 → 가림 없음).
                 // 2손가락 pan · 핀치 줌은 그대로라 도구 진행 중에도 화면 조작이 된다.
@@ -275,7 +315,8 @@ class VulkanSurfaceView(context: Context) : SurfaceView(context),
                        else BTN_MIDDLE
                 if (activeButton < 0) {
                     val dx = x - downX; val dy = y - downY
-                    if (dx * dx + dy * dy > touchSlop * touchSlop) beginDrag(want, x, y)
+                    // 2손가락은 위에서 이미 드래그로 판정됐으니 바로 시작한다(판정에 쓴 이동을 또 기다리지 않게).
+                    if (twoFinger && !isMouse(e) || dx * dx + dy * dy > touchSlop * touchSlop) beginDrag(want, x, y)
                 } else if (activeButton != want) {
                     endDrag(x, y); beginDrag(want, x, y)   // 손가락 수가 바뀐 경우
                 } else {
