@@ -49,7 +49,20 @@ android {
     }
 
     buildTypes {
-        debug { isJniDebuggable = true }
+        debug {
+            isJniDebuggable = true
+            // ⭐ 엔진 C++ 는 디버그 APK 에서도 **최적화(-O2)** 로 컴파일한다.
+            //    AGP 는 debug 변형을 CMAKE_BUILD_TYPE=Debug(-O0 -g)로 빌드하는데, 엔진은 glm 수학·
+            //    레이캐스트·메시 생성이 많아 -O0 이면 수 배 느리다 — S21 에서 아이폰보다 확연히 굼떴던
+            //    주된 원인(사용자 지적). Debug 구성의 플래그만 바꿔서 run_android.sh(installDebug)
+            //    흐름은 그대로 둔다. 네이티브 중단점 디버깅이 필요할 땐 이 두 줄을 잠시 빼면 된다.
+            //    (-g 는 NDK 툴체인이 늘 붙이지만 APK 패키징 때 벗겨지므로 폰 쪽 크기·속도와 무관)
+            externalNativeBuild {
+                cmake {
+                    arguments += listOf("-DCMAKE_CXX_FLAGS_DEBUG=-O2", "-DCMAKE_C_FLAGS_DEBUG=-O2")
+                }
+            }
+        }
     }
 
     compileOptions {
