@@ -1299,6 +1299,35 @@ CAD_API bool     CAD_Trim(uint32_t id, float px, float py, float pz, const uint3
 CAD_API bool     CAD_Extend(uint32_t id, float px, float py, float pz, const uint32_t* boundaryIds, uint32_t boundaryCount,
                             float nx, float ny, float nz);
 CAD_API uint32_t CAD_CreateTube(float x, float y, float z, float outerRadius, float innerRadius, float height);
+/* 피처 치수 — 솔리드를 만든 치수(솔리드웍스 Instant3D 식). 상자: 가로·세로·높이 / 원기둥: 지름·높이 /
+ * 돌출: 높이 + 단면·컷 스케치의 원 지름, 직사각형 가로·세로. 값은 월드 단위.
+ * 일반 폴리선 단면(12꼭짓점까지)은 변마다 길이 — 바꾸면 그 변 끝 너머 꼭짓점을 같이 민다(STRETCH, 직각 유지).
+ * kind: 0=가로 1=세로 2=높이 3=지름 4=변. sketchId = 값이 사는 스케치(0 = 솔리드 자체).
+ * Set 은 재생성(스케치 치수는 스케치를 고쳐 피처가 다음 프레임에 따라온다), undo 1. 실패 false.
+ * Visible = 선택한 솔리드 위에 파란 치수 표시(명령 fdim, 상태바 "치수") — 더블클릭하면 명령행이 새 값을 기다린다. */
+CAD_API void     CAD_SetFeatureDimensionsVisible(bool visible);
+CAD_API bool     CAD_GetFeatureDimensionsVisible(void);
+CAD_API uint32_t CAD_GetFeatureDimensionCount(uint32_t id);
+CAD_API bool     CAD_GetFeatureDimension(uint32_t id, uint32_t index, int* outKind, float* outValue, uint32_t* outSketchId);
+CAD_API bool     CAD_SetFeatureDimension(uint32_t id, uint32_t index, float value);
+/* 스윕 — 닫힌 단면(원·사각형·닫힌 폴리선) id 를 열린 경로(폴리선·선) id 를 따라 쓸어 솔리드. 단면은 경로 시작점으로
+ * 옮겨지고 경로 방향에 맞게 돌려진다(어디에 그렸든 된다). 새 솔리드는 선택되고 undo 1. 실패 0. */
+CAD_API uint32_t CAD_Sweep(uint32_t profileId, uint32_t pathId);
+/* 회전체 — 단면 스케치(폴리선·원·사각형) id 를 축 (x1,y1,z1)→(x2,y2,z2) 둘레로 360°, segments 분할(0 = 32).
+ * 새 솔리드는 선택되고 undo 1. 스윕과 같이 피처 기록이 남아 단면을 고치면 다시 만들어진다(피처 치수로도). 실패 0. */
+CAD_API uint32_t CAD_Revolve(uint32_t profileId, float x1, float y1, float z1, float x2, float y2, float z2, int segments);
+/* 재질 — textures/ 의 파일 이름(확장자 없이, 예 "wood_oak_veneer"). 이름에 metal·steel 이 들면 금속 셰이딩.
+ * nameUtf8 이 null/"" 이면 재질 빼기. 재질 패널 클릭과 같다(앱과 같이 undo 없음). 없는 이름·id 는 false. */
+CAD_API bool     CAD_ApplyMaterial(uint32_t id, const char* nameUtf8);
+CAD_API uint32_t CAD_GetMaterialCount(void);
+CAD_API int      CAD_GetMaterialName(uint32_t index, char* buf, int bufLen);   /* UTF-8 길이, 범위 밖이면 빈 문자열 */
+/* 화면 캡처 → PNG(창 전체). clean = 그리드·뷰큐브 없이. 한 프레임 그려 파일이 생겼는지까지 확인하고 돌아온다
+ * (엔진 틱 안 — 플러그인 콜백 등 — 에서 불리면 요청만 남기고 다음 프레임에 찍는다, true = 요청됨). AI 가 결과를 눈으로 볼 때. */
+CAD_API bool     CAD_CaptureViewport(const char* pathUtf8, bool clean);
+/* 카메라 — 지금 궤도 중심 둘레로 (ax,ay,az) 축 angleDeg 만큼 돌리기. 턴테이블 = (0,0,1). */
+CAD_API void     CAD_OrbitCamera(float ax, float ay, float az, float angleDeg);
+/* 상태줄 임시 안내(시연 자막 등). seconds <= 0 이면 지금 문구를 지운다. */
+CAD_API void     CAD_ShowMessage(const char* textUtf8, float seconds);
 
 #ifdef __cplusplus
 }
