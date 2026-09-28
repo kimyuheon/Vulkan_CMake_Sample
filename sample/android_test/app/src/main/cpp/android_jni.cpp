@@ -9,15 +9,52 @@
 #include "api/VulkanCAD_API.h"
 
 #include <string>   // 클립보드 보관
+#include <cstdio>
+#include <thread>
+#include <unistd.h>  // pipe/dup2 — 엔진 stdout 을 logcat 으로
 
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO,  "VulkanCAD", __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "VulkanCAD", __VA_ARGS__)
 
 namespace {
     ANativeWindow* g_window = nullptr;
+
+    // 엔진 로그(std::cout/cerr) → logcat.
+    // 안드로이드 앱의 stdout/stderr 는 /dev/null 이라 엔진이 찍는 실패 이유("[Model] …", "[Dim] …")가
+    // 통째로 사라졌다 — "Fox.glb 가 안 열린다" 를 봐도 원인을 알 길이 없었다. 파이프로 가로채
+    // 줄 단위로 "VulkanCAD-stdout" 태그에 흘린다. 확인: adb logcat -s VulkanCAD-stdout
+    void startStdoutToLogcat() {
+        static bool started = false;
+        if (started) return;
+        started = true;
+        setvbuf(stdout, nullptr, _IOLBF, 0);   // 줄 단위로 바로 흘러가게
+        setvbuf(stderr, nullptr, _IONBF, 0);
+        static int fds[2];
+        if (pipe(fds) != 0) return;
+        dup2(fds[1], STDOUT_FILENO);
+        dup2(fds[1], STDERR_FILENO);
+        std::thread([] {
+            char buf[1024];
+            std::string line;
+            ssize_t n;
+            while ((n = read(fds[0], buf, sizeof(buf))) > 0) {
+                line.append(buf, static_cast<size_t>(n));
+                size_t pos;
+                while ((pos = line.find('\n')) != std::string::npos) {
+                    __android_log_print(ANDROID_LOG_INFO, "VulkanCAD-stdout", "%s", line.substr(0, pos).c_str());
+                    line.erase(0, pos + 1);
+                }
+            }
+        }).detach();
+    }
 }
 
 extern "C" {
+
+JNIEXPORT jint JNI_OnLoad(JavaVM*, void*) {
+    startStdoutToLogcat();   // 라이브러리가 올라오자마자 — 엔진 생성 로그부터 잡히게
+    return JNI_VERSION_1_6;
+}
 
 #define JNI(ret, name) JNIEXPORT ret JNICALL Java_com_vulkancad_androidtest_CadNative_##name
 

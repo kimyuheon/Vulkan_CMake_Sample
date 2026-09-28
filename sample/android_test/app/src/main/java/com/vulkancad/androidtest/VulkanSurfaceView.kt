@@ -27,7 +27,32 @@ class VulkanSurfaceView(context: Context) : SurfaceView(context),
             CadNative.nativeSurfaceChanged(w, h)                   // ResizeView
             true
         }
-        if (engineReady) Choreographer.getInstance().postFrameCallback(this)
+        if (engineReady) {
+            flushPendingOpen()
+            Choreographer.getInstance().postFrameCallback(this)
+        }
+    }
+
+    // ── 엔진이 준비된 뒤에 열기 ──
+    // 파일 선택기(다른 액티비티)가 앱을 가리면 Surface 가 파괴되고 **엔진도 같이 파괴된다**
+    // (surfaceDestroyed → nativeSurfaceDestroyed → CAD_DestroyEngine). 선택 결과(onActivityResult)는
+    // 앱 화면이 돌아오기 **전에** 도착하므로 그 자리에서 열면 엔진이 없어 조용히 실패했고,
+    // 곧 새로 만들어진 엔진엔 데모 장면만 떴다(사용자 지적: Fox.glb 가 안 열림).
+    // 그래서 경로를 맡아 두었다가 엔진이 다시 만들어진 직후에 연다.
+    private var pendingOpenPath: String? = null
+    var onFileOpened: ((String, Boolean) -> Unit)? = null
+
+    fun openWhenReady(path: String) {
+        pendingOpenPath = path
+        if (engineReady) flushPendingOpen()
+    }
+
+    private fun flushPendingOpen() {
+        val p = pendingOpenPath ?: return
+        pendingOpenPath = null
+        val ok = CadNative.nativeOpenFile(p)
+        if (ok) CadNative.nativeZoomExtents()
+        onFileOpened?.invoke(p, ok)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
