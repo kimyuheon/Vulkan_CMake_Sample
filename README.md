@@ -1,13 +1,18 @@
 # VulkanCAD 샘플
 
 [VulkanCAD 엔진](https://github.com/kimyuheon/Vulkan_CMake)을 여러 UI 프레임워크에서 호스팅하는 예제 모음입니다.
-**엔진 소스 없이** 이 레포만 클론하면 빌드됩니다 — 필요한 것은 `sdk/` 안에 다 들어 있습니다.
+헤더·에셋은 `sdk/` 에 들어 있고, **엔진 라이브러리(바이너리)는 레포에 넣지 않습니다** — 둘 중 하나로 채웁니다.
+- 엔진 레포를 옆(`../3dEngine`)에 두고 Release 로 빌드 → 빌드가 `sdk/` 로 자동 복사
+- 또는 GitHub Releases 에서 받아 `sdk/` 바로 아래에 둠
+
+(빌드하는 곳마다 다른 바이너리가 생겨 풀할 때마다 충돌해서 2026-09-28 부터 추적하지 않습니다.
+안드로이드 샘플은 라이브러리 없이 엔진 소스를 직접 빌드합니다.)
 
 ```
 3dEngine_Sample/
 ├── sdk/                    ← 엔진 배포본 (빌드에 필요한 전부)
 │   ├── include/            VulkanCAD_API.h — 공개 C API
-│   ├── libVulkanCADCore.*  공유 라이브러리 (.dylib / .so / .dll + .lib)
+│   ├── libVulkanCADCore.*  공유 라이브러리 (.dylib / .so / .dll + .lib) — 엔진 빌드 또는 Releases (git 추적 안 함)
 │   ├── lib-ios-sim/        iOS 정적 라이브러리 (시뮬레이터) — Releases 에서 받음
 │   ├── lib-ios-device/     iOS 정적 라이브러리 (실기)       — Releases 에서 받음
 │   └── models/ textures/ fonts/    런타임 에셋

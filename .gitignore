@@ -53,3 +53,16 @@ sdk/plugins/
 
 # Claude Code 개인 설정
 .claude/settings.local.json
+
+# ── SDK 바이너리 (2026-09-28) ──
+# 엔진을 Release 로 빌드하면 3dEngine 의 CMake 가 여기로 자동 복사한다(cmake/export_sdk_lib.cmake).
+# 빌드하는 곳마다 다른 바이너리가 생겨 풀할 때마다 충돌했고, 커밋된 것이 엔진보다 낡은 일도 잦았다 → 추적하지 않는다.
+# 헤더(sdk/include)·에셋은 계속 추적. 공개할 땐 GitHub Releases 첨부로 배포.
+sdk/*.dylib
+sdk/*.so
+sdk/*.so.*
+sdk/*.dll
+sdk/*.lib
+sdk/*.pdb
+sdk/*.exp
+sdk/lib-ios-*/
