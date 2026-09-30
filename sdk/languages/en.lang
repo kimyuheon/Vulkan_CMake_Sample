@@ -186,6 +186,14 @@ tool.slice=Slice
 tool.slice.tip=Split selected solids with the current section plane
 tool.edge_chamfer.tip=Plane chamfer on convex solid edges
 tool.edge_fillet.tip=Round convex solid edges
+tool.exploded_view=Exploded
+tool.exploded_view.tip=Toggle the exploded-view bar — drag for amount, ◀ assemble · ▶ explode
+tool.balloon=Balloons
+tool.balloon.tip=Toggle item balloons — same shape = same number, ×qty
+tool.bom=BOM
+tool.bom.tip=Toggle the bill of materials — save with bom csv
+tool.assembly_manual=Manual
+tool.assembly_manual.tip=Assembly manual PDF — cover (BOM) + one page per assembly step
 tool.move=Move
 tool.rotate=Rotate
 tool.scale=Scale
@@ -239,6 +247,7 @@ ribbon.group.polyline=Polyline
 ribbon.group.primitives=Primitives
 ribbon.group.shape=Shape
 ribbon.group.edit3d=Edit
+ribbon.group.assembly=Assembly
 
 # Common / Rigging / Joints
 common.flip=Flip

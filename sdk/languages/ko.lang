@@ -186,6 +186,14 @@ tool.slice=슬라이스
 tool.slice.tip=현재 단면 평면으로 선택 솔리드를 둘로 분할
 tool.edge_chamfer.tip=솔리드 볼록 모서리 평면 모따기
 tool.edge_fillet.tip=솔리드 볼록 모서리 둥글리기
+tool.exploded_view=분해도
+tool.exploded_view.tip=분해도 막대 켜고 끔 — 끌면 분해 정도, ◀ 조립 · ▶ 분해
+tool.balloon=풍선
+tool.balloon.tip=품번 풍선 켜고 끔 — 같은 모양 = 같은 번호, ×수량
+tool.bom=부품표
+tool.bom.tip=부품표 켜고 끔 — bom csv 로 저장
+tool.assembly_manual=설명서
+tool.assembly_manual.tip=조립 설명서 PDF — 표지(부품표) + 조립 단계마다 한 쪽
 tool.move=이동
 tool.rotate=회전
 tool.scale=축척
@@ -239,6 +247,7 @@ ribbon.group.polyline=폴리선
 ribbon.group.primitives=프리미티브
 ribbon.group.shape=형상
 ribbon.group.edit3d=편집
+ribbon.group.assembly=조립
 
 # 공통 / 리깅 / 관절
 common.flip=뒤집기

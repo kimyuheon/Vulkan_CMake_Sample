@@ -934,6 +934,21 @@ CAD_API bool     CAD_CutExtrudeFromSketch(uint32_t id,
                                           uint32_t sketchId,
                                           float depth,
                                           bool throughAll);
+// 보스(더하는 돌출) — Extrude 솔리드의 캡 안쪽에 폐프로파일을 쌓는다(피처 기록에 남아 치수·재생성이 된다).
+// height > 0 = 위 캡에서 위로, < 0 = 아래 캡에서 아래로. 발자국이 외곽에 닿거나 같은 쪽 보스와 겹치거나
+// 기존 컷 테두리를 가로지르면 false. 이미 있던 관통 컷은 보스까지 관통한다.
+CAD_API bool     CAD_BossExtrudeBRep(uint32_t id,
+                                     const float* profileXYZ,
+                                     uint32_t pointCount,
+                                     float height);
+// 닫힌 스케치로 — 스케치가 가까운 캡(위/아래) 쪽으로 height(양수) 만큼. 스케치가 바뀌면 다시 만든다.
+CAD_API bool     CAD_BossExtrudeFromSketch(uint32_t id,
+                                           uint32_t sketchId,
+                                           float height);
+CAD_API uint32_t CAD_GetBRepBossCount(uint32_t id);
+// 보스 높이 읽기·바꾸기(부호 = 위/아래). 바꾸기는 undo 1.
+CAD_API bool     CAD_GetBRepBossHeight(uint32_t id, uint32_t bossIndex, float* outHeight);
+CAD_API bool     CAD_SetBRepBossHeight(uint32_t id, uint32_t bossIndex, float height);
 typedef struct CAD_BRepCutInfo {
     uint32_t cutIndex;
     uint32_t pointCount;
@@ -1283,6 +1298,10 @@ CAD_API uint32_t CAD_CreateHatch(const uint32_t* ids, uint32_t count, const char
 /* 도면 출력 — path 확장자로 .pdf(벡터)/.png(래스터). 지금 뷰 방향, 흰 종이. paperW/H mm(0 = A3 가로 420×297), pngLongSidePx(0 = 4000).
  * selectedOnly = 선택만, monochrome = 흑백. 3D 메시·이미지는 아직 안 나온다. */
 CAD_API bool     CAD_Plot(const char* path, bool selectedOnly, bool monochrome, float paperW, float paperH, int pngLongSidePx);
+/* 분해도·조립 설명서 — AI 액션 explode·MCP 도구 explode_view 와 같은 창구. argsJson = {"op":"status|solve|auto|clear|amount|play|back|
+ * part|spin|balloons|bom|manual", ids, id, t, seconds, turns, dir[3], distance, step, show, path, paper}. 결과 JSON(ok·error·t·steps·parts·items…)
+ * 을 outUtf8 에(cap 바이트, null 이면 길이만). 반환 = 길이, 실패 -1. manual 은 여러 프레임 작업 — status 의 manual_busy 로 끝을 본다. */
+CAD_API int      CAD_ExplodeView(const char* argsJson, char* outUtf8, int cap);
 /* 오프셋·대칭·자르기·연장 — 클릭 대신 점을 값으로(도구와 같은 계산, 전부 undo 1). 좌표는 월드.
  * outIds/outCapacity 는 새 객체 id 받을 곳(null 이면 안 받음). 반환 = 새로 만든 개수.
  *   CAD_Offset : 선·원·호·폴리선을 distance(>0) 만큼 (sx,sy,sz) 쪽으로 평행 복제.
