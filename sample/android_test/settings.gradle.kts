@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "VulkanCADAndroid"
-include(":app")
+include(":engine", ":app", ":robot")

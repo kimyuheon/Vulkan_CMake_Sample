@@ -9,6 +9,16 @@ macOS 의 `swift_api_test/VulkanCADSwiftNativeViewTest` 를 iOS 로 미러링.
 
 ---
 
+## 타깃
+
+| 타깃 | 내용 |
+|------|------|
+| `VulkanCADSwiftiOSTest` | 기본 테스트 앱 — 그리기·치수·파일 열기 |
+| `RobotArmiOS` | 🆕 로봇 팔 샘플 — URDF 로봇 + 관절 슬라이더·자동 재생 (`com.vulkancad.robotarm`). 화면은 `Sources/RobotArm`, 로직은 [`../shared/robot_demo`](../shared) (Android·macOS 와 공용). 엔진 연결 코드는 테스트 앱 것을 같이 쓴다 |
+
+두 타깃의 엔진 링크·에셋 설정은 `project.yml` 의 `targetTemplates: VulkanCADApp` 한 곳에 있다.
+시험용: `SIMCTL_CHILD_ROBOT_AUTOPLAY=1 xcrun simctl launch <기기> com.vulkancad.robotarm` 이면 재생부터.
+
 ## 1회 셋업
 
 ### 전제

@@ -19,13 +19,14 @@ settings:
     CODE_SIGN_STYLE: Automatic
     # DEVELOPMENT_TEAM: "XXXXXXXXXX"
 
-targets:
-  VulkanCADSwiftiOSTest:
+# 두 앱(테스트 앱·로봇 팔)이 공유하는 엔진 연결 설정 — 에셋 번들·헤더·정적 라이브러리·프레임워크.
+# 앱을 하나 더 만들 땐 targets 에 항목을 추가하고 templates: [VulkanCADApp] 만 붙이면 된다.
+targetTemplates:
+  VulkanCADApp:
     type: application
     platform: iOS
     deploymentTarget: "15.0"
     sources:
-      - path: Sources/VulkanCADSwiftiOSTest
       # 엔진 에셋들을 .app 번들에 folder reference 로 복사 (디렉토리 구조 유지).
       # 엔진은 setRuntimeAssetPath(Bundle.main.resourcePath) 받고
       # models/*.obj 등 상대 경로로 fopen.
@@ -49,19 +50,8 @@ targets:
       - path: ../../sdk/fonts
         type: folder
         buildPhase: resources
-    info:
-      path: Info.plist
-      properties:
-        UILaunchScreen:
-          UIColorName: ""
-        UISupportedInterfaceOrientations:
-          - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
-        UIRequiresFullScreen: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.vulkancad.iossample
         # C API 헤더 위치 (modulemap 이 가리키는 ../api 풀어줘야 됨)
         HEADER_SEARCH_PATHS:
           - "$(SRCROOT)/../../sdk/include"
@@ -97,3 +87,49 @@ targets:
       - sdk: UIKit.framework
       - sdk: IOSurface.framework
       - sdk: CoreGraphics.framework
+
+targets:
+  VulkanCADSwiftiOSTest:
+    templates: [VulkanCADApp]
+    sources:
+      - path: Sources/VulkanCADSwiftiOSTest
+    info:
+      path: Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIRequiresFullScreen: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vulkancad.iossample
+
+  # 로봇 팔 샘플 — URDF 로봇을 관절 슬라이더로 움직인다.
+  # 로직은 sample/shared/robot_demo (Android 와 공용), 화면은 Sources/RobotArm.
+  # 엔진 연결 코드(VulkanCADEngine·MetalView·ViewRepresentable)는 테스트 앱 것을 그대로 쓴다.
+  RobotArmiOS:
+    templates: [VulkanCADApp]
+    sources:
+      - path: Sources/RobotArm
+      - path: Sources/VulkanCADSwiftiOSTest/VulkanCADEngine.swift
+      - path: Sources/VulkanCADSwiftiOSTest/VulkanCADMetalView.swift
+      - path: Sources/VulkanCADSwiftiOSTest/VulkanCADViewRepresentable.swift
+      - path: ../shared
+        includes: ["robot_demo.*"]
+    info:
+      path: Info-RobotArm.plist
+      properties:
+        CFBundleDisplayName: 로봇 팔
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIRequiresFullScreen: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vulkancad.robotarm
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/RobotArm/RobotArm-Bridging-Header.h
+        CLANG_CXX_LANGUAGE_STANDARD: c++17

@@ -61,6 +61,7 @@ file(GLOB VOLUME_SRC   "${ENGINE_ROOT}/volume/*.cpp")
 file(GLOB MEDICAL_SRC  "${ENGINE_ROOT}/medical/*.cpp")
 file(GLOB DXF_SRC      "${ENGINE_ROOT}/dxf/*.cpp")
 file(GLOB GEOMETRY_SRC "${ENGINE_ROOT}/geometry/*.cpp")
+file(GLOB DRAWING_SRC  "${ENGINE_ROOT}/drawing/*.cpp")
 
 # ufbx / miniz — 데스크톱처럼 C 파일을 C++ 로 컴파일.
 set(UFBX_C  "${ENGINE_ROOT}/external/ufbx/ufbx.c")
@@ -100,10 +101,19 @@ list(FILTER ENGINE_SRC EXCLUDE REGEX "/ios_stubs\\.cpp$")
 set(ALL_SRC
     ${ENGINE_SRC} ${API_SRC} ${BOOLEAN_SRC} ${DIMENSION_SRC} ${MODIFY_SRC}
     ${FIRSTAPP_SRC} ${IMAGE_SRC}
-    ${PLUGIN_SRC} ${UI_SRC} ${VOLUME_SRC} ${MEDICAL_SRC} ${DXF_SRC} ${GEOMETRY_SRC}
+    ${PLUGIN_SRC} ${UI_SRC} ${VOLUME_SRC} ${MEDICAL_SRC} ${DXF_SRC} ${GEOMETRY_SRC} ${DRAWING_SRC}
     "${UFBX_C}" "${MINIZ_C}" "${EMBEDDED_SHADERS_CPP}"
     "${CMAKE_CURRENT_SOURCE_DIR}/android_jni.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/android_stubs.cpp"
+)
+
+# ── 샘플 앱 공용 로직 + 앱별 JNI ──
+# 엔진 상태(g_app)는 .so 전역이라 샘플 로직도 **같은 .so** 에 들어가야 같은 엔진을 본다.
+# 로직은 sample/shared/ (iOS 와 공용), JNI 는 그 앱 모듈 폴더에 둔다.
+get_filename_component(SAMPLE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../../.." ABSOLUTE)
+list(APPEND ALL_SRC
+    "${SAMPLE_ROOT}/shared/robot_demo.cpp"
+    "${SAMPLE_ROOT}/android_test/robot/src/main/cpp/robot_jni.cpp"
 )
 
 # ── Manifold (CSG) ──
@@ -135,6 +145,8 @@ target_include_directories(vulkancad PRIVATE
     ${GLFW_INCLUDE_DIRS}           # GLFW_KEY_* 매크로/타입만 (링크 X, 네이티브뷰)
     "${ENGINE_ROOT}/AI_external/cpp-httplib"
     "${ENGINE_ROOT}/AI_external/json"
+    "${ENGINE_ROOT}/api"               # 샘플 공용 로직이 VulkanCAD_API.h 를 바로 include
+    "${SAMPLE_ROOT}/shared"
 )
 
 # vulkan / android / log 는 NDK sysroot 제공.

@@ -20,7 +20,14 @@ class VulkanSurfaceView(context: Context) : SurfaceView(context),
 
     override fun surfaceCreated(holder: SurfaceHolder) { /* 크기는 surfaceChanged 에서 */ }
 
+    /** 엔진이 Surface 에 붙을 때마다(첫 생성 + 앱 복귀) — 장면을 채우는 앱 코드가 여기서 시작한다. */
+    var onEngineReady: (() -> Unit)? = null
+    /** 매 프레임 nativeTick 직전. 인자 = 지난 프레임부터 초. 애니메이션을 엔진에 넣는 자리. */
+    var onBeforeTick: ((Double) -> Unit)? = null
+    private var lastFrameNanos = 0L
+
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, w: Int, h: Int) {
+        val wasReady = engineReady
         engineReady = if (!engineReady) {
             CadNative.nativeSurfaceCreated(holder.surface, w, h)   // AttachView + CreateEngine
         } else {
@@ -28,6 +35,7 @@ class VulkanSurfaceView(context: Context) : SurfaceView(context),
             true
         }
         if (engineReady) {
+            if (!wasReady) { lastFrameNanos = 0L; onEngineReady?.invoke() }
             flushPendingOpen()
             Choreographer.getInstance().postFrameCallback(this)
         }
@@ -74,6 +82,9 @@ class VulkanSurfaceView(context: Context) : SurfaceView(context),
 
     override fun doFrame(frameTimeNanos: Long) {
         if (!engineReady) return
+        val dt = if (lastFrameNanos == 0L) 0.0 else (frameTimeNanos - lastFrameNanos) / 1e9
+        lastFrameNanos = frameTimeNanos
+        onBeforeTick?.invoke(dt)
         CadNative.nativeTick()
         updateMeasure()
         val dc = CadNative.nativeDimensionPointCount()

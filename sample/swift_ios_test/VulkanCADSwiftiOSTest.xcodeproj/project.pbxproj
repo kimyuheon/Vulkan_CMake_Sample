@@ -8,30 +8,50 @@
 
 /* Begin PBXBuildFile section */
 		01EC03993777D8BF8CB0DC85 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41C0823CA289F7DEBB70400 /* ContentView.swift */; };
+		209A73FB2EFE9B494BACDDA1 /* VulkanCADMetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C993F2241329D73D5D398129 /* VulkanCADMetalView.swift */; };
+		2EE281D101ECFAF86ACD550F /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8F9EA42600A218246839107 /* UIKit.framework */; };
 		32F7C3FF700D67B79D77DD42 /* VulkanCADApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A77A7C9B4F63E006F36827 /* VulkanCADApp.swift */; };
 		4688016984FBDEFA2B4A2699 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8F9EA42600A218246839107 /* UIKit.framework */; };
 		5168E3FA213FC5F1C4DE54E8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */; };
+		5E0E95972BE71EEEB19E123B /* VulkanCADViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA05E1C7B577DD8E334F7CBE /* VulkanCADViewRepresentable.swift */; };
+		5FC01CBDB469D96B600287AE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */; };
+		606E90158F5B31B160B2CED4 /* RobotArmApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17AA7F79CA1729D595DE4B9 /* RobotArmApp.swift */; };
 		616F982DA9591D5AE489E6E8 /* models in Resources */ = {isa = PBXBuildFile; fileRef = 2CD40DEC4A67A98991CA9AB2 /* models */; };
 		63833AB06A0ED6105EF66CAD /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D46E00F8242E58F496654B0F /* QuartzCore.framework */; };
 		6808FC7385156DF3DEDC8F39 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C8D9F9F82DA118419C0CDB5 /* Metal.framework */; };
+		6B19AA701E6AFEEC2F9E0494 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = EE5F47F52BA04457BB1935A0 /* fonts */; };
+		711451FC58384C25CC521CB7 /* robot_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 35E55DE8697743CCF0004996 /* robot_demo.cpp */; };
 		8B2FCC163B93CD789C308E5E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */; };
 		8D3BC11374CA1CA984657499 /* textures in Resources */ = {isa = PBXBuildFile; fileRef = 5CB36480FB34CA02A5A9DDD4 /* textures */; };
+		9DEDBDB4471EA1BB792CA5A3 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C8D9F9F82DA118419C0CDB5 /* Metal.framework */; };
 		A8986A91111F751793A3AB4D /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DFF8B3C20B860620BABFADA /* IOSurface.framework */; };
 		AE49CA76C39F6E45FFF5A8CC /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = EE5F47F52BA04457BB1935A0 /* fonts */; };
+		AF40CB3C02E29C4DAB1D0B77 /* textures in Resources */ = {isa = PBXBuildFile; fileRef = 5CB36480FB34CA02A5A9DDD4 /* textures */; };
+		C274B7FD29433EA12C05CF96 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */; };
+		C4BECCB965B69B1BD4859F86 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DFF8B3C20B860620BABFADA /* IOSurface.framework */; };
+		CB6BB25720E8930A7065A778 /* RobotArmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6F10D64FB967D2473878C9F /* RobotArmView.swift */; };
 		D1D1D2F920B6F458AAF7F92E /* VulkanCADViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA05E1C7B577DD8E334F7CBE /* VulkanCADViewRepresentable.swift */; };
+		D708002C184D4FA1F91C7B46 /* VulkanCADEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436FFAC8CE6FD6070CFC1D8E /* VulkanCADEngine.swift */; };
 		E3FB72A13E7F3192CAA4D3E2 /* VulkanCADMobileBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CCCDC45A52961EBCBD8F76 /* VulkanCADMobileBridge.swift */; };
 		E4760A15DD948FFC5F878614 /* VulkanCADMetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C993F2241329D73D5D398129 /* VulkanCADMetalView.swift */; };
+		ECA3D92025D04E6E0E59C605 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D46E00F8242E58F496654B0F /* QuartzCore.framework */; };
+		ECA813B3D207A1735A243C6A /* models in Resources */ = {isa = PBXBuildFile; fileRef = 2CD40DEC4A67A98991CA9AB2 /* models */; };
 		FCC853ECC04D0D9494A6E6C2 /* VulkanCADEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436FFAC8CE6FD6070CFC1D8E /* VulkanCADEngine.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		206AB7291DA76BD268019F8F /* RobotArm-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RobotArm-Bridging-Header.h"; sourceTree = "<group>"; };
 		2CD40DEC4A67A98991CA9AB2 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; name = models; path = ../../sdk/models; sourceTree = SOURCE_ROOT; };
+		35E55DE8697743CCF0004996 /* robot_demo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = robot_demo.cpp; sourceTree = "<group>"; };
+		3E6412FCBB642EE33664DBB5 /* robot_demo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = robot_demo.h; sourceTree = "<group>"; };
 		436FFAC8CE6FD6070CFC1D8E /* VulkanCADEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADEngine.swift; sourceTree = "<group>"; };
 		5CB36480FB34CA02A5A9DDD4 /* textures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = textures; path = ../../sdk/textures; sourceTree = SOURCE_ROOT; };
 		8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		8C8D9F9F82DA118419C0CDB5 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		8DFF8B3C20B860620BABFADA /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
-		97A60E215C3FB285B001989B /* VulkanCADSwiftiOSTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VulkanCADSwiftiOSTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		97A60E215C3FB285B001989B /* VulkanCADSwiftiOSTest.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = VulkanCADSwiftiOSTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		990D7EB8126DC7D54DDC9E46 /* RobotArmiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RobotArmiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B6F10D64FB967D2473878C9F /* RobotArmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RobotArmView.swift; sourceTree = "<group>"; };
 		B8F9EA42600A218246839107 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		B9CCCDC45A52961EBCBD8F76 /* VulkanCADMobileBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADMobileBridge.swift; sourceTree = "<group>"; };
 		BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -41,9 +61,23 @@
 		D46E00F8242E58F496654B0F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		DA05E1C7B577DD8E334F7CBE /* VulkanCADViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VulkanCADViewRepresentable.swift; sourceTree = "<group>"; };
 		EE5F47F52BA04457BB1935A0 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../../sdk/fonts; sourceTree = SOURCE_ROOT; };
+		F17AA7F79CA1729D595DE4B9 /* RobotArmApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RobotArmApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		5DB872F2E090BE4B2D629CF7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9DEDBDB4471EA1BB792CA5A3 /* Metal.framework in Frameworks */,
+				ECA3D92025D04E6E0E59C605 /* QuartzCore.framework in Frameworks */,
+				5FC01CBDB469D96B600287AE /* Foundation.framework in Frameworks */,
+				2EE281D101ECFAF86ACD550F /* UIKit.framework in Frameworks */,
+				C4BECCB965B69B1BD4859F86 /* IOSurface.framework in Frameworks */,
+				C274B7FD29433EA12C05CF96 /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		69D692A3EE799D93F8582CD4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -63,9 +97,21 @@
 		04D8890DA44CA876D938119C /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				990D7EB8126DC7D54DDC9E46 /* RobotArmiOS.app */,
 				97A60E215C3FB285B001989B /* VulkanCADSwiftiOSTest.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		4C160129E4752A804B1889EF /* RobotArm */ = {
+			isa = PBXGroup;
+			children = (
+				206AB7291DA76BD268019F8F /* RobotArm-Bridging-Header.h */,
+				F17AA7F79CA1729D595DE4B9 /* RobotArmApp.swift */,
+				B6F10D64FB967D2473878C9F /* RobotArmView.swift */,
+			);
+			name = RobotArm;
+			path = Sources/RobotArm;
 			sourceTree = "<group>";
 		};
 		60E339B10DC3B7C08EDD69A6 /* Frameworks */ = {
@@ -101,10 +147,22 @@
 				EE5F47F52BA04457BB1935A0 /* fonts */,
 				2CD40DEC4A67A98991CA9AB2 /* models */,
 				5CB36480FB34CA02A5A9DDD4 /* textures */,
+				4C160129E4752A804B1889EF /* RobotArm */,
+				EBB140AFBDC5519A6C8B9B9A /* shared */,
 				8CCEA42428D97EF0DB493A90 /* VulkanCADSwiftiOSTest */,
 				60E339B10DC3B7C08EDD69A6 /* Frameworks */,
 				04D8890DA44CA876D938119C /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		EBB140AFBDC5519A6C8B9B9A /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				35E55DE8697743CCF0004996 /* robot_demo.cpp */,
+				3E6412FCBB642EE33664DBB5 /* robot_demo.h */,
+			);
+			name = shared;
+			path = ../shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -129,6 +187,25 @@
 			productReference = 97A60E215C3FB285B001989B /* VulkanCADSwiftiOSTest.app */;
 			productType = "com.apple.product-type.application";
 		};
+		D7A173666FA46886CDAC17E3 /* RobotArmiOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1ACC92AB5A298355FA30F334 /* Build configuration list for PBXNativeTarget "RobotArmiOS" */;
+			buildPhases = (
+				26B17840C62C93BB91A29EE3 /* Sources */,
+				DC02C07161B6B4A5FFD50D3C /* Resources */,
+				5DB872F2E090BE4B2D629CF7 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RobotArmiOS;
+			packageProductDependencies = (
+			);
+			productName = RobotArmiOS;
+			productReference = 990D7EB8126DC7D54DDC9E46 /* RobotArmiOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -139,6 +216,9 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					506B1CF8BAACE7B3F51E1071 = {
+						ProvisioningStyle = Automatic;
+					};
+					D7A173666FA46886CDAC17E3 = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -158,6 +238,7 @@
 			projectRoot = "";
 			targets = (
 				506B1CF8BAACE7B3F51E1071 /* VulkanCADSwiftiOSTest */,
+				D7A173666FA46886CDAC17E3 /* RobotArmiOS */,
 			);
 		};
 /* End PBXProject section */
@@ -170,6 +251,16 @@
 				AE49CA76C39F6E45FFF5A8CC /* fonts in Resources */,
 				616F982DA9591D5AE489E6E8 /* models in Resources */,
 				8D3BC11374CA1CA984657499 /* textures in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC02C07161B6B4A5FFD50D3C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B19AA701E6AFEEC2F9E0494 /* fonts in Resources */,
+				ECA813B3D207A1735A243C6A /* models in Resources */,
+				AF40CB3C02E29C4DAB1D0B77 /* textures in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -189,15 +280,72 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		26B17840C62C93BB91A29EE3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				606E90158F5B31B160B2CED4 /* RobotArmApp.swift in Sources */,
+				CB6BB25720E8930A7065A778 /* RobotArmView.swift in Sources */,
+				D708002C184D4FA1F91C7B46 /* VulkanCADEngine.swift in Sources */,
+				209A73FB2EFE9B494BACDDA1 /* VulkanCADMetalView.swift in Sources */,
+				5E0E95972BE71EEEB19E123B /* VulkanCADViewRepresentable.swift in Sources */,
+				711451FC58384C25CC521CB7 /* robot_demo.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		4C8FB707C4C52AAF19B80091 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../sdk/include",
+					"$(SRCROOT)/Sources/CVulkanCAD",
+				);
+				INFOPLIST_FILE = "Info-RobotArm.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-device",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-sim",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+				);
+				OTHER_LDFLAGS = (
+					"-lVulkanCADCoreStatic",
+					"-lmanifold",
+					"-lMoltenVK",
+					"-liconv",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-I$(SRCROOT)/Sources/CVulkanCAD",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.vulkancad.robotarm;
+				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = (
+					"$(SRCROOT)/Sources/CVulkanCAD",
+				);
+				SWIFT_OBJC_BRIDGING_HEADER = "Sources/RobotArm/RobotArm-Bridging-Header.h";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		7BDDF31C35906B33C325A4A3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = YHBZ4NW3P3;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../../sdk/include",
 					"$(SRCROOT)/Sources/CVulkanCAD",
@@ -223,10 +371,15 @@
 					"-liconv",
 					"-lc++",
 				);
-				OTHER_SWIFT_FLAGS = "-Xcc -I$(SRCROOT)/Sources/CVulkanCAD";
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-I$(SRCROOT)/Sources/CVulkanCAD",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.vulkancad.iossample;
 				SDKROOT = iphoneos;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Sources/CVulkanCAD";
+				SWIFT_INCLUDE_PATHS = (
+					"$(SRCROOT)/Sources/CVulkanCAD",
+				);
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -360,7 +513,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = YHBZ4NW3P3;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/../../sdk/include",
 					"$(SRCROOT)/Sources/CVulkanCAD",
@@ -386,10 +538,60 @@
 					"-liconv",
 					"-lc++",
 				);
-				OTHER_SWIFT_FLAGS = "-Xcc -I$(SRCROOT)/Sources/CVulkanCAD";
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-I$(SRCROOT)/Sources/CVulkanCAD",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.vulkancad.iossample;
 				SDKROOT = iphoneos;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Sources/CVulkanCAD";
+				SWIFT_INCLUDE_PATHS = (
+					"$(SRCROOT)/Sources/CVulkanCAD",
+				);
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E0B19968C33C32289D005DB1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../sdk/include",
+					"$(SRCROOT)/Sources/CVulkanCAD",
+				);
+				INFOPLIST_FILE = "Info-RobotArm.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-device",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-sim",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+				);
+				OTHER_LDFLAGS = (
+					"-lVulkanCADCoreStatic",
+					"-lmanifold",
+					"-lMoltenVK",
+					"-liconv",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-I$(SRCROOT)/Sources/CVulkanCAD",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.vulkancad.robotarm;
+				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = (
+					"$(SRCROOT)/Sources/CVulkanCAD",
+				);
+				SWIFT_OBJC_BRIDGING_HEADER = "Sources/RobotArm/RobotArm-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -397,6 +599,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1ACC92AB5A298355FA30F334 /* Build configuration list for PBXNativeTarget "RobotArmiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E0B19968C33C32289D005DB1 /* Debug */,
+				4C8FB707C4C52AAF19B80091 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		20FD91CAFE21B012C424B907 /* Build configuration list for PBXProject "VulkanCADSwiftiOSTest" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

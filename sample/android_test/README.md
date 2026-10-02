@@ -8,15 +8,29 @@ Android 기기/에뮬레이터에서 VulkanCAD 엔진을 띄우는 최소 샘플
 
 | 파일 | 역할 |
 |------|------|
-| `run_android.sh` | 에뮬레이터 실행 + 빌드 + 설치 + 앱 실행 (한 방에) |
-| `app/src/main/AndroidManifest.xml` | `MainActivity` 를 런처(`action.MAIN`)로 지정 |
-| `.../java/.../MainActivity.kt` | ⭐ **진입점** — 에셋 filesDir 추출 → 툴바 + 렌더뷰 구성 |
-| `.../java/.../VulkanSurfaceView.kt` | SurfaceView + Choreographer(vsync) Tick + 터치 |
-| `.../java/.../CadNative.kt` | JNI 선언 + `System.loadLibrary("vulkancad")` |
-| `.../java/.../CadMobileBridge.kt` | 모바일 OS 기능(클립보드/사진/OCR) 연결 |
-| `app/src/main/cpp/CMakeLists.txt` | 엔진 소스 → Android `.so` (GLOB·제외 목록·`LOT_NO_IMGUI`/`LOT_PLATFORM_IOS`) |
-| `app/src/main/cpp/android_jni.cpp` | JNI(`CadNative`) ↔ C API(`CAD_*`). ANativeWindow 로 AttachView/Tick/터치 |
-| `app/src/main/cpp/android_stubs.cpp` | 데스크톱 UI 클래스(LotUiManager 등) no-op 스텁 (ImGui 없이) |
+Gradle 모듈 3개 — 엔진은 `engine` 한 곳에서만 빌드하고, 앱 모듈은 그것만 참조한다.
+
+| 모듈 | 내용 |
+|------|------|
+| `engine` | 엔진 C++ → `libvulkancad.so`, 렌더 뷰·JNI·런타임 에셋 (Android 라이브러리) |
+| `app` | 기본 테스트 앱 — 그리기·치수·파일 열기 (`com.vulkancad.androidtest`) |
+| `robot` | 🆕 로봇 팔 샘플 — URDF 관절 슬라이더 (`com.vulkancad.robotarm`). 로직은 [`../shared/robot_demo`](../shared) (iOS·macOS 와 공용) |
+
+| 파일 | 역할 |
+|------|------|
+| `run_android.sh` | 에뮬레이터 실행 + 빌드 + 설치 + 앱 실행 (한 방에). `--robot` 이면 로봇 팔 앱 |
+| `engine/.../VulkanSurfaceView.kt` | SurfaceView + Choreographer(vsync) Tick + 터치. `onEngineReady`·`onBeforeTick` 훅 |
+| `engine/.../CadNative.kt` | JNI 선언 + `System.loadLibrary("vulkancad")` |
+| `engine/.../EngineAssets.kt` | APK assets → filesDir 추출 + 엔진 에셋 경로 지정 (앱마다 onCreate 에서 한 번) |
+| `engine/src/main/cpp/CMakeLists.txt` | 엔진 소스 → Android `.so` (GLOB·제외 목록·`LOT_NO_IMGUI`/`LOT_PLATFORM_IOS`) + 샘플 공용 로직·앱별 JNI |
+| `engine/src/main/cpp/android_jni.cpp` | JNI(`CadNative`) ↔ C API(`CAD_*`). ANativeWindow 로 AttachView/Tick/터치 |
+| `engine/src/main/cpp/android_stubs.cpp` | 데스크톱 UI 클래스(LotUiManager 등) no-op 스텁 (ImGui 없이) |
+| `app/.../MainActivity.kt` | ⭐ 테스트 앱 **진입점** — 툴바 + 렌더뷰 구성 |
+| `app/.../CadMobileBridge.kt` | 모바일 OS 기능(클립보드/사진/OCR) 연결 |
+| `robot/.../RobotActivity.kt` | 로봇 팔 화면 — 3D 뷰 + [재생]·[홈 자세]·[화면 맞춤] + 관절 슬라이더 |
+| `robot/src/main/cpp/robot_jni.cpp` | JNI(`RobotNative`) ↔ `RobotDemo_*`. 엔진 `.so` 에 같이 빌드된다(엔진 전역 상태 공유) |
+
+> Kotlin 패키지 `com.vulkancad.androidtest` 는 `engine` 모듈에도 그대로다 — JNI 함수 이름이 이 패키지에 묶여 있다.
 
 안드로이드엔 `main()` 이 없다 — **`MainActivity.onCreate()` 가 시작점**이고, 흐름은:
 
@@ -46,6 +60,7 @@ MainActivity.onCreate()          에셋 추출 → nativeSetAssetPath → 툴바
 cd samples/android_test
 ./run_android.sh                 # 첫 번째 AVD 로 실행
 ./run_android.sh Pixel_7         # AVD 이름 지정
+./run_android.sh --robot         # 로봇 팔 샘플 (AVD 이름과 같이 써도 됨)
 ./run_android.sh --list          # 사용 가능한 AVD 목록만 출력
 ```
 
@@ -106,7 +121,7 @@ $ADB shell screencap -p /sdcard/s.png && $ADB pull /sdcard/s.png   # 화면 캡�
 
 | 증상 | 원인 | 대응 |
 |------|------|------|
-| `FirstApp::*` 등 **대량 undefined symbol** | 엔진에 **새 소스 폴더**가 생겼는데 안드로이드 `CMakeLists.txt` 의 `file(GLOB ...)` 에 빠짐 | `app/src/main/cpp/CMakeLists.txt` 의 GLOB 목록을 **데스크톱 `CMakeLists.txt` 와 대조**해 누락 폴더 추가 |
+| `FirstApp::*` 등 **대량 undefined symbol** | 엔진에 **새 소스 폴더**가 생겼는데 안드로이드 `CMakeLists.txt` 의 `file(GLOB ...)` 에 빠짐 | `engine/src/main/cpp/CMakeLists.txt` 의 GLOB 목록을 **데스크톱 `CMakeLists.txt` 와 대조**해 누락 폴더 추가 |
 | `fatal error: 'imgui.h' file not found` | 안드로이드는 `LOT_NO_IMGUI` 라 ImGui 헤더가 없는데, 그 파일이 **가드 없이** include | 해당 파일을 `#ifndef LOT_NO_IMGUI` 로 감싸고 `#ifdef LOT_NO_IMGUI` 쪽에 no-op 구현 (`lot_dimension_panel.cpp` 가 표준 예시) |
 | `LotUiManager::render ... does not match any declaration` | 데스크톱 UI 헤더의 **시그니처가 바뀌었는데** `android_stubs.cpp` 가 옛 시그니처 | 헤더 선언과 1:1로 맞춰 스텁 수정 |
 | 제외된 파일의 심볼 undefined (`saveModelFileDialog` 등) | `CMakeLists.txt` 제외 목록의 파일이 제공하던 함수가 새로 **호출되기 시작** | `android_stubs.cpp` 에 no-op 스텁 추가 — **실제로 undefined 로 뜬 것만** (안 뜬 걸 넣으면 중복 심볼) |

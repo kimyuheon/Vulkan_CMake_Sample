@@ -9,6 +9,7 @@
 # 사용:
 #   ./run_android.sh              # 기본 AVD 로 실행
 #   ./run_android.sh Pixel_7      # AVD 이름 지정
+#   ./run_android.sh --robot      # 로봇 팔 샘플(robot 모듈)을 실행 — AVD 이름과 같이 써도 된다
 #   ./run_android.sh --list       # 사용 가능한 AVD 목록만 출력
 #
 # 전제: Android SDK/NDK/CMake 설치 (런타임 에셋은 레포의 sdk/ 에서 가져온다)
@@ -19,8 +20,16 @@ cd "$(dirname "$0")"
 SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 EMU="$SDK/emulator/emulator"
 ADB="$SDK/platform-tools/adb"
+# 실행할 앱 — 기본은 테스트 앱(app), --robot 이면 로봇 팔(robot). 둘 다 :engine 모듈을 쓴다.
+MODULE="app"
 PKG="com.vulkancad.androidtest"
 ACT="$PKG/.MainActivity"
+if [ "$1" = "--robot" ]; then
+    shift
+    MODULE="robot"
+    PKG="com.vulkancad.robotarm"
+    ACT="$PKG/.RobotActivity"
+fi
 
 # gradlew 는 JDK 필요 — JAVA_HOME 없으면 Android Studio 번들 JBR 사용.
 if [ -z "$JAVA_HOME" ]; then
@@ -51,7 +60,7 @@ else
 fi
 
 echo "===== 빌드 + 설치 ====="
-sh ./gradlew installDebug
+sh ./gradlew ":$MODULE:installDebug"
 
 echo "===== 앱 실행: $ACT ====="
 "$ADB" shell am start -n "$ACT"

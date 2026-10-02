@@ -85,9 +85,8 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1) APK assets → filesDir 추출 → 엔진 asset 경로 지정
-        extractAssets()
-        CadNative.nativeSetAssetPath(filesDir.absolutePath)
+        // 1) APK assets → filesDir 추출 → 엔진 asset 경로 지정 (:engine 모듈)
+        EngineAssets.install(this)
 
         // 2) 레이아웃: 세로(툴바 + 렌더뷰)
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -365,25 +364,4 @@ class MainActivity : Activity() {
     private fun displayName(uri: Uri): String? =
         contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
             ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
-
-    // assets/ 하위(models/fonts/textures)를 filesDir 로 재귀 복사.
-    private fun extractAssets() {
-        for (dir in listOf("models", "fonts", "textures")) copyAssetDir(dir)
-    }
-
-    private fun copyAssetDir(dir: String) {
-        val items = assets.list(dir) ?: return
-        File(filesDir, dir).mkdirs()
-        for (item in items) {
-            val path = "$dir/$item"
-            val children = assets.list(path)
-            if (children != null && children.isNotEmpty()) {
-                copyAssetDir(path)  // 하위 폴더
-            } else {
-                assets.open(path).use { input ->
-                    File(filesDir, path).outputStream().use { input.copyTo(it) }
-                }
-            }
-        }
-    }
 }
