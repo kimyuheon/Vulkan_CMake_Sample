@@ -6,11 +6,13 @@
 |------|------|
 | `VulkanCADSwiftApiTest` | 콘솔. 엔진이 자기 GLFW 창을 만들고, API 몇 개를 호출해 보는 최소 예제 |
 | `VulkanCADSwiftNativeViewTest` | AppKit 앱. `NSView` 를 `CAD_AttachView()` 로 엔진에 넘기고, **풀다운 메뉴 · 리본 · 도킹 도구모음 · 명령행**을 네이티브로 꾸민 CAD 스타일 창 |
+| `RobotArmMac` | 🆕 로봇 팔 샘플. URDF 로봇 + 관절 슬라이더·자동 재생. 로직은 [`../shared/robot_demo`](../shared) (iOS·Android 와 공용, `Sources/RobotDemo` 는 심볼릭 링크) |
 
 ```bash
 cd sample/swift_api_test
 swift run VulkanCADSwiftNativeViewTest     # AppKit 앱
 swift run VulkanCADSwiftApiTest            # 콘솔
+swift run RobotArmMac                      # 로봇 팔 (ROBOT_AUTOPLAY=1 이면 재생부터)
 ```
 
 `Package.swift` 가 `../../sdk` 를 링크·rpath 경로로 넣으므로 따로 복사할 것이 없습니다.

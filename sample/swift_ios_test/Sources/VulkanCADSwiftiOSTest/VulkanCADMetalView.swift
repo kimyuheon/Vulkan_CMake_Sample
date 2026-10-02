@@ -12,6 +12,9 @@ import QuartzCore
 //   탭            → select (엔진 left button = 0, down+up)
 final class VulkanCADMetalView: UIView {
     weak var engine: VulkanCADEngine?
+    /// true 면 1손가락 드래그 = 궤도회전(빈 곳). 돌려 보는 게 주목적인 뷰어(로봇 팔 샘플)용.
+    /// 기본 false — CAD 화면은 이동(pan)이 더 잦다.
+    var oneFingerOrbits = false
 
     // ─── 가상 커서 (도구 사용 중) ────────────────────────────────
     // 손가락이 목표를 가려 스냅 심볼(□△○⊕)이 안 보이는 문제를 구조적으로 없앤다.
@@ -199,7 +202,7 @@ final class VulkanCADMetalView: UIView {
             // down 시점에 기즈모 핸들 hit-test → 버튼 결정.
             // 핸들 위가 아니면 이동(pan) — 도면에서 가장 자주 쓰는 동작.
             oneFingerButton = engine.gizmoHitTest(x: x, y: y) ? MouseButton.left
-                                                              : MouseButton.middle
+                            : (oneFingerOrbits ? MouseButton.right : MouseButton.middle)
             lastDragPoint = pt
             engine.mouseDown(button: oneFingerButton, x: x, y: y, modifiers: 0)
         case .changed:
@@ -221,7 +224,8 @@ final class VulkanCADMetalView: UIView {
     // 점을 찍는 중에 정작 필요한 건 회전이 아니라 "화면 밖 목표를 끌어오는" pan 이고,
     // 도중에 시점이 돌면 스케치 평면 기준이 흔들려 오히려 방해가 된다. 줌은 핀치로 유지.
     @objc private func handleOrbit(_ g: UIPanGestureRecognizer) {
-        sendDrag(g, button: cursorMode ? MouseButton.middle : MouseButton.right)
+        // 1손가락이 궤도회전이면 2손가락은 이동 — 두 조작이 다 남게 서로 맞바꾼다.
+        sendDrag(g, button: (cursorMode || oneFingerOrbits) ? MouseButton.middle : MouseButton.right)
     }
 
     // 3손가락 드래그 = 궤도회전 (커서 모드 여부와 무관)

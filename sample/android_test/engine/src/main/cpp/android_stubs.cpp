@@ -30,6 +30,7 @@ namespace lot {
     // ── ui_input_capture — ImGui 없음 → 항상 false (모든 입력이 3D 뷰로 흐름) ──
     bool uiWantsMouseCapture()    { return false; }
     bool uiWantsKeyboardCapture() { return false; }
+    void uiRequestKeyboardRelease() {}
     // 모바일은 ImGui 데스크톱 백엔드가 없다 — 클립보드는 iOS UIPasteboard /
     // Android ClipboardManager 로 따로 이어야 한다 (미구현).
     // 모바일엔 ImGui 백엔드가 없다 — 호스트가 등록한 처리기로 넘긴다(ui_clipboard_bridge).
@@ -61,7 +62,7 @@ namespace lot {
                               ObjectSelectionManager& /*selectionManager*/,
                               bool /*commandLineAutoFocus*/,
                               LotStatusBar::CommandLineResult& /*outCmd*/) {}
-    void LotUiManager::endFrame(VkCommandBuffer /*commandBuffer*/) {}
+    void LotUiManager::endFrame(VkCommandBuffer /*commandBuffer*/, bool /*draw*/) {}
     void LotUiManager::buildViewportGizmo(const LotCamera& /*camera*/,
                                           float /*vpX*/, float /*vpY*/, float /*vpW*/, float /*vpH*/) {}
     void LotUiManager::discardFrame() {}
