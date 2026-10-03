@@ -32,6 +32,13 @@ public:
     Q_INVOKABLE void undo()           { CAD_Undo(); }
     Q_INVOKABLE void redo()           { CAD_Redo(); }
 
+    // 명령행과 같은 입구 — 이름은 영문·별칭·한글 모두 받는다.
+    // 기능 패널의 "화면에서 고르기" 가 이걸로 엔진 도구를 띄워 3D 뷰에서 클릭을 받게 한다.
+    // 진행 중인 도구가 있으면 같은 함수가 값 입력("12,30")으로 들어간다.
+    Q_INVOKABLE bool executeCommand(const QString& name) {
+        return CAD_ExecuteCommand(name.toUtf8().constData());
+    }
+
     // 스케치 도구
     Q_INVOKABLE void startBox()       { CAD_RequestStartBoxSketch(); }
     Q_INVOKABLE void startLine()      { CAD_RequestStartLineSketch(); }

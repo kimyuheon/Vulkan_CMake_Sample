@@ -43,6 +43,10 @@ qt_add_executable(qml_host
     vulkan_viewport.cpp
     vulkan_viewport.h
     cad_commands.h
+    cad_json.h          # JSON 반환 API 2회 호출 규약 헬퍼 (QML 싱글톤 아님)
+    drawing_api.h       # 기능별 QML 싱글톤 — 한 파일에 몰지 않고 기능 단위로 나눈다
+    section_api.h
+    demo_scene.h
 )
 
 # QML 모듈 — URI 는 main.cpp 의 리소스 경로 / Main.qml 의 import 와 일치해야 함.
@@ -50,7 +54,11 @@ qt_add_executable(qml_host
 qt_add_qml_module(qml_host
     URI VulkanCadQml
     VERSION 1.0
-    QML_FILES Main.qml
+    QML_FILES
+        Main.qml
+        Ribbon.qml       # 엔진 ImGui 리본과 같은 탭/그룹 구성
+        ToolIcon.qml     # 아이콘 한 개(Canvas)
+        ToolIcons.js     # 67개 선 아이콘 — 엔진 ui/lot_tool_icons.cpp 포팅
 )
 
 target_link_libraries(qml_host PRIVATE
