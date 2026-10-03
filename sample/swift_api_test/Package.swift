@@ -17,7 +17,8 @@ let package = Package(
     products: [
         .executable(name: "VulkanCADSwiftApiTest", targets: ["VulkanCADSwiftApiTest"]),
         .executable(name: "VulkanCADSwiftNativeViewTest", targets: ["VulkanCADSwiftNativeViewTest"]),
-        .executable(name: "RobotArmMac", targets: ["RobotArmMac"])
+        .executable(name: "RobotArmMac", targets: ["RobotArmMac"]),
+        .executable(name: "VulkanCADSamples", targets: ["VulkanCADSamples"])
     ],
     targets: [
         .systemLibrary(
@@ -62,6 +63,26 @@ let package = Package(
         .executableTarget(
             name: "RobotArmMac",
             dependencies: ["CVulkanCAD", "RobotDemo"],
+            linkerSettings: [
+                .linkedFramework("AppKit"),
+                .unsafeFlags([
+                    "-L\(buildDirectory)",
+                    "-lVulkanCADCore",
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", buildDirectory
+                ])
+            ]
+        ),
+        // 기능 샘플 공용 로직 + 조작 항목 정의 — sample/shared/demo_*.cpp (iOS·Android 와 같은 파일, 심볼릭 링크).
+        .target(
+            name: "DemoKit",
+            path: "Sources/DemoKit",
+            cxxSettings: [.unsafeFlags(["-I\(projectRoot.appendingPathComponent("sdk/include").path)"])]
+        ),
+        // 기능 샘플 앱 — 한 창에 메뉴 [샘플] 로 기능을 바꾼다. 조작 패널은 demo_kit 항목을 그대로 그리는 범용 패널.
+        .executableTarget(
+            name: "VulkanCADSamples",
+            dependencies: ["CVulkanCAD", "DemoKit"],
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .unsafeFlags([

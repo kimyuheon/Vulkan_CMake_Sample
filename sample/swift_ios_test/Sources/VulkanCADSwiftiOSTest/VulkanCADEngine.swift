@@ -207,7 +207,7 @@ final class VulkanCADEngine {
         guard isCreated else { return "" }
         var buf = [CChar](repeating: 0, count: 256)
         let n = CAD_GetPrompt(&buf, Int32(buf.count))
-        return n > 0 ? (String(cString: buf)) : ""
+        return n > 0 ? String(decoding: buf.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self) : ""
     }
 
     // ─── 그리기 (전부 점 찍기 → 커서로 데스크톱과 동일하게 동작) ───
@@ -342,7 +342,7 @@ final class VulkanCADEngine {
         var buf = [CChar](repeating: 0, count: 8192)
         for id in ids.prefix(n).sorted() {
             guard CAD_GetObjectJson(id, &buf, Int32(buf.count)) > 0 else { continue }
-            let json = String(cString: buf)
+            let json = String(decoding: buf.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
             guard json.contains("\"text\":\"\(want)\"") else { continue }
             if nth > 0 { nth -= 1; continue }
             _ = CAD_SelectObject(id, false)
