@@ -418,6 +418,15 @@ CAD_API void CAD_JigCancel(void);
 //   확정 → 선택된 후보만 남고 나머지는 삭제 (AcEdJig 의 "성공 시에만 남긴다" 규약)
 //   취소 → 후보 전부 삭제 (임시 형상이라 씬에 남기지 않음)
 // 콜백이 필요 없어 C#/Qt 어디서든 그대로 쓸 수 있다.
+// 코드로 끌기 — 모바일(가상 커서 없이 버튼으로)·자동 시연. Jig 중이 아니면 false.
+//   MoveTo: 지그를 월드 점으로(OSnap 미적용). 이후 실제 마우스가 움직이면 다시 마우스를 따른다.
+//   Commit: 좌클릭과 같은 확정(undo 1). CAD_JigState 는 다음 폴링에 2.
+//   SetBasePoint: 이동·복사의 기준점(기본 = 선택 경계 상자 중심), 회전·축척은 피벗.
+//   GetDelta: 지금 미리보기 — 이동량(이동·복사, 직교 반영), 회전각(도), 배율. 인자는 NULL 가능.
+CAD_API bool CAD_JigMoveTo(float x, float y, float z);
+CAD_API bool CAD_JigCommit(void);
+CAD_API bool CAD_JigSetBasePoint(float x, float y, float z);
+CAD_API bool CAD_JigGetDelta(float* dx, float* dy, float* dz, float* angleDeg, float* scale);
 CAD_API bool CAD_JigBeginVariants(int mode, const uint32_t* ids, int count,
                                   float px, float py, float pz);
 CAD_API bool CAD_JigNextVariant(void);   // Tab 과 동일 (호스트 버튼으로 전환할 때)
@@ -789,6 +798,103 @@ CAD_API uint32_t CAD_CreateParticleEmitter(int preset, float x, float y, float z
 CAD_API uint32_t CAD_CreateParticleEmitterFromPreset(const char* path, float x, float y, float z, float unitsPerMeter);
 // state: 0 pause (preserves particles), 1 play/resume, 2 reset/stop.
 CAD_API bool CAD_SetParticlePlayback(uint32_t id, int state);
+// Settings — JSON schema v1 of particle_preset_io.h (version, unit, style, rate, lifetime, speed, radius, spread,
+// size, acceleration, start_color, end_color, capacity, seed). Get returns unit "m". Set accepts a partial object:
+// only the given keys change (unit "mm" converts the given length keys). Undo 1 step. Fail: false + CAD_GetLastError.
+CAD_API int      CAD_GetParticleSettingsJson(uint32_t id, char* out, int cap);   // length, -1 = not an emitter
+CAD_API bool     CAD_SetParticleSettingsJson(uint32_t id, const char* json);
+CAD_API uint32_t CAD_GetParticleLiveCount(uint32_t id);                          // 0 = none / not an emitter
+// Preset library — effects/*.json sorted by name, loaded on first use (no panel needed, works on iOS).
+// Path is absolute UTF-8, ready for CAD_CreateParticleEmitterFromPreset. Effekseer files are not listed.
+CAD_API uint32_t CAD_GetParticlePresetCount(void);
+CAD_API int      CAD_GetParticlePresetName(uint32_t index, char* out, int cap);  // -1 = out of range
+CAD_API int      CAD_GetParticlePresetPath(uint32_t index, char* out, int cap);  // -1 = out of range
+// Save an emitter's settings as a v1 preset (UTF-8 path, folders created). Saving into effects/ refreshes the list.
+CAD_API bool     CAD_SaveParticlePreset(uint32_t id, const char* path);
+
+// ── 평면도 이미지 → 벽 (AI 없이) ───────────────────────────────────────
+// 추출은 장면을 바꾸지 않는다. widthMm = 도면 전체 폭(벽 중심선, mm), 0 이면 문 폭 900mm 로 축척 추정.
+// 출력 JSON(mm, 좌하단 원점·Y 위): {"widthMm","depthMm","walls":[{"x1","y1","x2","y2","thicknessMm","exterior"}],
+//   "outerThicknessMm","innerThicknessMm","scaleEstimated","doorCount","imageWidthMm","imageOrigin":[x,y],"summary"}
+//   — imageWidthMm/imageOrigin = 이미지 **전체**의 실폭·좌하단(바닥에 깔 때). 실패 -1 + CAD_GetLastError. 2회 호출 규약.
+CAD_API int  CAD_FloorplanExtractFromImage(const char* path, float widthMm, char* outJson, int cap);
+// rgba = 4바이트 × w × h(행 우선, 위에서 아래) — 모바일 카메라·사진 선택기용.
+CAD_API int  CAD_FloorplanExtractFromRgba(const unsigned char* rgba, int w, int h, float widthMm, char* outJson, int cap);
+// 벽 그래프 → 3D 벽. segs = [x1,y1,x2,y2,thickness] × count, **단위 m**(CAD_CreateFloorplan 과 같음), 축에 나란한 벽만.
+// thickness <= 0 이면 defaultThickness. 반환 = 만든 벽 수, outIds 에 최대 cap 개. undo 1.
+CAD_API uint32_t CAD_CreateWallGraph(float ox, float oy, float oz, const float* segs, uint32_t count,
+                                     float height, float defaultThickness, uint32_t* outIds, uint32_t cap);
+// 편의 — 이미지에서 벽을 찾아 m 로 세우고, underlayImage 면 원본을 같은 축척으로 바닥에(AI create_wall_graph 와 같음).
+CAD_API uint32_t CAD_CreateFloorplanFromImage(const char* path, float widthMm, float height, bool underlayImage,
+                                              uint32_t* outIds, uint32_t cap);
+
+// ── 내비(경로 주행) — 패널·마우스 없이. 패널과 같은 규약: agentId 0 = 체크된 것 전부(없으면 고른 줄).
+//   agentId = 대상의 대표 객체 id(차체·바퀴처럼 조각 모델은 가장 큰 조각). 단위 = 장면 단위(m 장면이면 m, mm 도면이면 mm).
+// 지도 — paramsJson: {"cellSize","agentRadius","minZ","maxZ","margin","maxCells"} 중 준 키만 자동값 위에 덮음. NULL/"" = 자동.
+CAD_API bool     CAD_NavBuildMap(const char* paramsJson);
+CAD_API void     CAD_NavShowGrid(bool on);
+// 대상 — 장면 객체를 주행 대상으로. 반환 agentId(0 실패). 자동 수집(뼈·바퀴 클립)된 대상도 Remove/Clear 하면 다시 안 들어온다.
+CAD_API uint32_t CAD_NavAddAgent(uint32_t objectId, bool isVehicle);
+CAD_API uint32_t CAD_NavAddSelected(void);                 // 반환 = 추가된 수
+CAD_API bool     CAD_NavRemoveAgent(uint32_t agentId);
+CAD_API void     CAD_NavClearAgents(void);
+// {"speed","scanRange","radius"(0=자동),"showRays","checked","isVehicle"} 중 준 키만.
+CAD_API bool     CAD_NavSetAgentParams(uint32_t agentId, const char* json);
+// 목적지 — 경로 계획까지(출발은 Start). 길이 없으면 false + CAD_GetLastError.
+CAD_API bool     CAD_NavSetGoal(uint32_t agentId, float x, float y, float z);
+CAD_API bool     CAD_NavStart(uint32_t agentId);
+CAD_API bool     CAD_NavStop(uint32_t agentId);
+CAD_API bool     CAD_NavReset(uint32_t agentId);          // 정지·경로 삭제·출발 자리로
+// {"grid":{"ready","showing","w","h","cellSize","origin","blockedCells","totalCells"},"activeAgent",
+//  "agents":[{"agentId","name","isVehicle","checked","active","hasGoal","goal","driving","pathPoints","pathIndex","pathLength",
+//             "position"(몸통 중심),"yaw"(도, 0=+Y 시계 — CAD_ApplyExternalPose 와 같음),"arrived","speed","scanRange","radius","showRays"}]}
+CAD_API int      CAD_NavGetStateJson(char* out, int cap);
+// 경로 점 [x,y] × n — 반환 = 점 수(out NULL/cap 0 이면 개수만, 2회 호출). capPoints = 점 개수 단위.
+CAD_API uint32_t CAD_NavGetPath(uint32_t agentId, float* outXY, uint32_t capPoints);
+
+// ── AI ─────────────────────────────────────────────────────────────
+// 엔드포인트 — 모바일은 원격 서버. url 예 "http://192.168.0.10:8080"(OpenAI 호환 /v1/chat/completions), model = 서버가 쓰는 이름(NULL = 안 보냄).
+//   설정 뒤 서버 확인에 1초쯤 — 준비 전 Submit 은 false + CAD_GetLastError.
+CAD_API bool CAD_AiSetEndpoint(const char* url, const char* model);
+CAD_API bool CAD_AiStartLocalServer(void);        // 데스크톱 전용(helperAI llama-server), 모바일 false + GetLastError
+// 비동기 요청 — 결과 액션은 다음 틱들에서 트랜잭션 하나로 적용(AI 창과 같음). 처리 중이거나 준비 전이면 false.
+CAD_API bool CAD_AiSubmit(const char* prompt);
+CAD_API bool CAD_AiSubmitWithImage(const char* prompt, const char* imagePath);
+CAD_API int  CAD_AiGetStatus(void);               // 0 idle 1 busy 2 done 3 error (2·3 은 한 번만)
+CAD_API int  CAD_AiGetLastAnswer(char* out, int cap);   // 모델의 답 문장(질문엔 액션 없이 이것만)
+CAD_API int  CAD_AiGetNotes(char* out, int cap);        // 액션별 결과 줄(\n 구분)
+CAD_API void CAD_AiCancel(void);                  // 진행 중 답을 버리고 대기 액션도 지움
+// 동기 — 호스트가 자기 LLM(Claude API 등)으로 받은 액션 JSON(배열 또는 {"actions":[…]}, lot_ai_prompt.h 계약)을 바로.
+//   MCP ai_actions 와 같은 처리 + 되돌리기 한 단계. 반환 = notes 길이(2회 호출), 실패 -1 + GetLastError.
+CAD_API int  CAD_RunAiActionsJson(const char* actionsJson, char* outNotes, int cap);
+// MCP 도구를 TCP 없이 직접 — CAD_GetMcpToolsJson 짝. 결과 = MCP content JSON. 실패 -1.
+CAD_API int  CAD_McpCall(const char* toolName, const char* argsJson, char* out, int cap);
+
+// ── 실시간 단면 — 셰이더가 잘라 보여 준다(보기 상태, undo 없음). 패널(section 명령)과 같은 상태라 둘이 같이 움직인다.
+//   mode 0 끄기 1 평면(axis 위치 pos 보다 큰 쪽을 자름, flip 이면 반대) 2 슬라이스(pos 중심 thickness 두께만 남김) 3 상자(SetSectionBox).
+//   axis 0 X 1 Y 2 Z. thickness 는 슬라이스에만(0 이하면 지금 값 유지). 틀린 값 false.
+CAD_API bool CAD_SetSection(int mode, int axis, float pos, bool flip, float thickness);
+CAD_API bool CAD_SetSectionBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);   // 상자 값만(켜기는 SetSection(3,…))
+CAD_API void CAD_SetSectionOptions(bool showArrows, bool selectedOnly);
+// {"mode","modeName","axis","pos","flip","thickness","box":{"min","max"},"showArrows","selectedOnly","sceneBounds":{"min","max"}} — sceneBounds = 슬라이더 범위
+CAD_API int  CAD_GetSectionStateJson(char* out, int cap);
+// 지금 평면 단면 → 2D 윤곽(편집 가능한 폴리선, includeBehind 면 뒤쪽 회색 참조선 1개 더)을 모델 오른쪽 XY 평면에. 반환 = 만든 객체 수, undo 1.
+CAD_API uint32_t CAD_ExtractSectionTo2D(bool includeBehind);
+
+// ── 도면 뷰(3D → 2D, 솔리드웍스 Drawing 식) — 뷰는 장면 객체가 아니라 CAD_GetObjectIds 에 안 나온다. 좌표 = 도면 평면(월드 XY, mm).
+// 3D 를 고치면 따라온다(연관). 만들기·지우기·옮기기는 undo 1. 실패 0/false + CAD_GetLastError.
+// CreateDrawingViews: 정면·평면·우측면(3각법) + 등각(0.6배), 모델 치수 자동. 반환 = 만든 뷰 수(4). ids 없으면(count 0) 보이는 솔리드 전부.
+CAD_API uint32_t CAD_CreateDrawingViews(const uint32_t* ids, uint32_t count, float scale);
+// 단면도 A-A — 정투상 뷰를 가로지르는 선(첫 점 → 둘째 점), 보는 쪽 = 선의 왼쪽. 반환 = 뷰 id.
+CAD_API uint32_t CAD_CreateSectionView(float ax, float ay, float bx, float by);
+// 상세도 — 정투상 뷰 위 원(중심·반지름)을 factor 배(0 이면 2)로 도면 오른쪽에. 반환 = 뷰 id.
+CAD_API uint32_t CAD_CreateDetailView(float cx, float cy, float radius, float factor);
+// 뷰 옮기기 — 3각법 정렬 유지(평면도는 위아래, 우측면도는 좌우, 정면도는 매달린 뷰·단면도와 함께).
+CAD_API bool     CAD_MoveDrawingView(uint32_t viewId, float dx, float dy);
+CAD_API void     CAD_ClearDrawingViews(void);
+// 뷰 목록 JSON — [{"id","name","kind":"base|section|detail","dir","up","origin","scale","hidden","dims","sources",
+// "parent","label"(단면·상세),"bounds":{"min":[x,y],"max":[x,y]}}] — bounds = 뷰가 차지하는 자리(선 + 모델 치수 + 이름). 2회 호출 규약.
+CAD_API int      CAD_GetDrawingViewsJson(char* out, int cap);
 // Load an Effekseer .efkefc/.efk with referenced resources. Inserted stopped.
 // CAD_SetParticlePlayback also controls these objects. Files embed in .lot.
 CAD_API uint32_t CAD_CreateExternalEffect(const char* path,float x,float y,float z,float unitsPerMeter);
@@ -1302,6 +1408,9 @@ CAD_API bool     CAD_Plot(const char* path, bool selectedOnly, bool monochrome, 
  * part|spin|balloons|bom|manual", ids, id, t, seconds, turns, dir[3], distance, step, show, path, paper}. 결과 JSON(ok·error·t·steps·parts·items…)
  * 을 outUtf8 에(cap 바이트, null 이면 길이만). 반환 = 길이, 실패 -1. manual 은 여러 프레임 작업 — status 의 manual_busy 로 끝을 본다. */
 CAD_API int      CAD_ExplodeView(const char* argsJson, char* outUtf8, int cap);
+/* MCP 도구 목록(JSON 배열) — 엔진을 만들지 않아도 된다. VulkanApp --mcp 브리지가 앱이 꺼져 있을 때 목록을 보여 주는 데 쓴다.
+ * 반환 = 길이, 실패 -1. */
+CAD_API int      CAD_GetMcpToolsJson(char* outUtf8, int cap);
 /* 오프셋·대칭·자르기·연장 — 클릭 대신 점을 값으로(도구와 같은 계산, 전부 undo 1). 좌표는 월드.
  * outIds/outCapacity 는 새 객체 id 받을 곳(null 이면 안 받음). 반환 = 새로 만든 개수.
  *   CAD_Offset : 선·원·호·폴리선을 distance(>0) 만큼 (sx,sy,sz) 쪽으로 평행 복제.
