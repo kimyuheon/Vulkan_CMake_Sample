@@ -116,6 +116,9 @@ menu.solid.boolean=Boolean...
 menu.effects=Effects
 menu.effects.particles=Particle Emitter...
 menu.ai.prompt=Prompt
+menu.ai.connect=Connect AI apps (Claude · ChatGPT)
+menu.ai.connect_status=Connection status
+menu.ai.disconnect=Disconnect
 
 # Toolbars
 toolbar.2d.title=2D###toolbar_2d
