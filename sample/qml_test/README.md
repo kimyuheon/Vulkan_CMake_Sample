@@ -21,21 +21,22 @@ Qt 6.4에서도 동작하도록 Vulkan을 QML Scene Graph에 직접 합성하지
 
 ## 준비
 
-1. Qt 6.4 이상에서 Quick, QML, Controls 모듈을 설치합니다.
-2. 레포 루트에서 공유 엔진을 먼저 빌드합니다.
+엔진은 **미리 빌드된 것이 레포 안 `sdk/` 에 들어 있습니다.** 따로 빌드할 것이 없고,
+엔진 소스 레포도 필요 없습니다. 아래 패키지만 갖추면 됩니다.
 
-```bash
-cmake -B build
-cmake --build build --target VulkanCADCoreShared
-```
+1. Qt 6.4 이상 — Quick, QML, Controls 모듈
+2. Vulkan 헤더(`libvulkan-dev`) — Qt6 Gui 가 구성 단계에서 찾습니다
+3. Vulkan 드라이버(ICD) — 예: `mesa-vulkan-drivers`.
+   로더(`libvulkan.so.1`)는 `sdk/` 에 동봉돼 있지만 드라이버는 시스템 것이 필요합니다
 
-Ubuntu 24.04의 Qt 패키지 예시:
+Ubuntu 24.04 패키지 예시:
 
 ```bash
 sudo apt install qt6-base-dev qt6-declarative-dev \
     qml6-module-qtquick qml6-module-qtquick-controls \
     qml6-module-qtquick-templates qml6-module-qtquick-layouts \
-    qml6-module-qtquick-window qml6-module-qt-labs-platform
+    qml6-module-qtquick-window qml6-module-qt-labs-platform \
+    libvulkan-dev mesa-vulkan-drivers
 ```
 
 `qt-labs-platform`은 풀다운 메뉴용입니다. Windows/macOS 공식 Qt 설치본에는 기본 포함이고, 데비안 계열만 패키지가 쪼개져 있어 따로 설치합니다.
@@ -44,10 +45,12 @@ sudo apt install qt6-base-dev qt6-declarative-dev \
 
 1. Qt Creator에서 이 폴더의 `CMakeLists.txt`를 엽니다.
 2. Desktop Qt 6.4 이상 Kit를 선택합니다.
-3. CMake 옵션 `VULKANCAD_ENGINE_BUILD`가 엔진의 `build` 폴더인지 확인합니다.
-4. `qml_host`를 시작 프로젝트로 선택하고 실행합니다.
+3. `qml_host`를 시작 프로젝트로 선택하고 실행합니다.
 
-기본 경로는 레포 루트의 `build`입니다. 별도 빌드 폴더라면 Qt Creator의 CMake Configuration에 다음 값을 추가합니다.
+**별도 설정은 없습니다.** `VULKANCAD_ENGINE_BUILD` 기본값이 레포 안 `sdk/` 를 가리키므로
+클론한 그대로 구성·빌드·실행됩니다.
+
+다른 위치의 SDK(예: 엔진 레포의 `build/`)를 쓰려면 Qt Creator 의 CMake Configuration 에만 추가합니다.
 
 ```text
 VULKANCAD_ENGINE_BUILD=/absolute/path/to/3dEngine/build
@@ -65,8 +68,8 @@ CMake가 다음 작업을 자동 처리합니다.
 ## 터미널에서 직접 실행
 
 ```bash
-cd samples/qml_test
-cmake -S . -B build -DVULKANCAD_ENGINE_BUILD=../../build
+cd sample/qml_test
+cmake -S . -B build
 cmake --build build
 ./build/qml_host
 ```
