@@ -394,7 +394,8 @@ final class VulkanCADEngine {
         var buf = [CChar](repeating: 0, count: 1024)
         let n = buf.withUnsafeMutableBufferPointer { read($0.baseAddress, Int32($0.count)) }
         guard n > 0 else { return "" }
-        return String(cString: buf)
+        // 널 문자 앞까지만 UTF-8 로 (배열을 받는 String(cString:) 은 사용 중단)
+        return String(decoding: buf.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
     }
 
     func mouseDown(button: Int32, x: Double, y: Double, modifiers: Int32) {
