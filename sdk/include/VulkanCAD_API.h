@@ -74,6 +74,7 @@ typedef struct CAD_OverlayFrameInfo {
     double pointerY;
     uint32_t pointerButtons;
     int modifiers;
+    uint32_t sampleCount;
 } CAD_OverlayFrameInfo;
 
 enum {
@@ -87,6 +88,23 @@ typedef uint32_t (*CAD_OverlayRenderFn)(
 
 CAD_API void CAD_SetOverlayRenderCallback(
     CAD_OverlayRenderFn callback,
+    void* user);
+
+typedef struct CAD_OverlayPointerInfo {
+    uint32_t structSize;
+    int windowWidth;
+    int windowHeight;
+    double x;
+    double y;
+    uint32_t buttons;
+    int modifiers;
+} CAD_OverlayPointerInfo;
+typedef uint32_t (*CAD_OverlayInputFn)(
+    const CAD_OverlayPointerInfo* pointer,
+    void* user);
+
+CAD_API void CAD_SetOverlayInputCallback(
+    CAD_OverlayInputFn callback,
     void* user);
 
 // ── Win32 호스트(MFC 등) 편의용 키 입력 ──
@@ -812,6 +830,29 @@ CAD_API int      CAD_GetParticlePresetPath(uint32_t index, char* out, int cap); 
 // Save an emitter's settings as a v1 preset (UTF-8 path, folders created). Saving into effects/ refreshes the list.
 CAD_API bool     CAD_SaveParticlePreset(uint32_t id, const char* path);
 
+// ── 노드 트리·도면층 창 — ImGui 패널이 안 뜨는 호스트(WinForms·WPF·Qt·모바일)가 자기 트리·목록을 그릴 때 ──
+// 장면이 바뀔 때마다(객체 추가·삭제·이름·보이기·도면층 …) 커지는 번호 — 같으면 다시 안 읽어도 된다(폴링용).
+CAD_API uint64_t CAD_GetSceneRevision(void);
+// 노드 트리 — 엔진 패널과 같은 구성(파일 → glTF/FBX 노드 계층 → 객체 → 피처·가공 기록). 평평한 배열 + 부모 번호:
+// {"revision","nodes":[{"index","key","kind":"scene|file|node|object|feature","label","parent"(-1 = 뿌리),"depth","children":[…],
+//   "total","shown"(아래 객체 수·보이는 수),  객체 줄만: "objectId","objectKind","visible","selected","locked","layerId","layer"}]}
+// 클릭·보이기·이름 바꾸기는 기존 함수로: CAD_SelectObject · CAD_SetObjectVisible · CAD_SetObjectName(묶음 줄은 children 의 objectId 들).
+CAD_API int      CAD_GetSceneTreeJson(char* out, int cap);
+// 도면층 창 — 한 번에: {"revision","layers":[{"id","name","visible","locked","color":[r,g,b],"opacity","linetypeId","linetype",
+//   "objectCount","selectedCount"(,"fixed":true — 도면층 0)}]}. 바꾸기는 기존 CAD_SetLayer*·CAD_RenameLayer·CAD_CreateLayer·CAD_AssignSelectedToLayer.
+CAD_API int      CAD_GetLayersJson(char* out, int cap);
+
+// ── 객체 스냅·직교·극좌표 — 상태바 버튼(객체스냅·직교(F8)·극좌표(F10))과 같은 설정. 명령 osnap/ortho/polar [on|off] 과도 같다.
+// 모드 비트: CAD_OSNAP_END 1 · MID 2 · CEN 4 · FACE 8(면 중심) · NODE 16(점) · QUA 32(사분점) · INT 64(교차) · PER 128(수직) · TAN 256(접선) · NEA 512(근처)
+CAD_API bool     CAD_SetOSnapEnabled(bool on);
+CAD_API bool     CAD_GetOSnapEnabled(void);
+CAD_API bool     CAD_SetOSnapModes(uint32_t mask);
+CAD_API uint32_t CAD_GetOSnapModes(void);
+CAD_API void     CAD_SetOrthoEnabled(bool on);
+CAD_API bool     CAD_GetOrthoEnabled(void);
+CAD_API bool     CAD_SetPolarTracking(bool on, float incrementDeg);   // incrementDeg <= 0 = 지금 값 유지(기본 45°, 1~90)
+CAD_API bool     CAD_GetPolarTracking(float* incrementDeg);           // 켜짐 여부, incrementDeg NULL 가능
+
 // ── 평면도 이미지 → 벽 (AI 없이) ───────────────────────────────────────
 // 추출은 장면을 바꾸지 않는다. widthMm = 도면 전체 폭(벽 중심선, mm), 0 이면 문 폭 900mm 로 축척 추정.
 // 출력 JSON(mm, 좌하단 원점·Y 위): {"widthMm","depthMm","walls":[{"x1","y1","x2","y2","thicknessMm","exterior"}],
@@ -849,8 +890,8 @@ CAD_API bool     CAD_NavReset(uint32_t agentId);          // 정지·경로 삭�
 //  "agents":[{"agentId","name","isVehicle","checked","active","hasGoal","goal","driving","pathPoints","pathIndex","pathLength",
 //             "position"(몸통 중심),"yaw"(도, 0=+Y 시계 — CAD_ApplyExternalPose 와 같음),"arrived","speed","scanRange","radius","showRays"}]}
 CAD_API int      CAD_NavGetStateJson(char* out, int cap);
-// 경로 점 [x,y] × n — 반환 = 점 수(out NULL/cap 0 이면 개수만, 2회 호출). capPoints = 점 개수 단위.
-CAD_API uint32_t CAD_NavGetPath(uint32_t agentId, float* outXY, uint32_t capPoints);
+// 경로 점 [x,y] × n — 반환 = 점 수(outXY NULL/cap 0 이면 개수만, 2회 호출). cap = 점 개수 단위(배열은 float cap×2 칸).
+CAD_API uint32_t CAD_NavGetPath(uint32_t agentId, float* outXY, uint32_t cap);
 
 // ── AI ─────────────────────────────────────────────────────────────
 // 엔드포인트 — 모바일은 원격 서버. url 예 "http://192.168.0.10:8080"(OpenAI 호환 /v1/chat/completions), model = 서버가 쓰는 이름(NULL = 안 보냄).
@@ -1313,13 +1354,35 @@ CAD_API int  CAD_GetStatusMessage(char* buf, int bufLen);
 CAD_API int  CAD_GetTransientMessage(char* buf, int bufLen);
 
 // ── 3D 불리언 (CSG) ──
-// Union/Intersection 은 현재 선택된 메시 전체 대상. keepOriginals=false 면 원본 삭제.
+// **요청형**(예전부터 있던 셋) — 반환값 없음, 다음 프레임에 실행. 결과 id·실패를 알 수 없다.
+// Union/Intersection 은 **부른 순간의 선택**(메시만)이 대상. keepOriginals=false 면 원본 삭제(되돌리기 한 단계).
+// 결과가 필요하거나 여러 번 이어 부를 땐 아래 바로 실행형(CAD_BooleanUnionIds …)을 쓴다.
 CAD_API void CAD_BooleanUnion(bool keepOriginals);
 CAD_API void CAD_BooleanIntersection(bool keepOriginals);
 // Difference: union(baseIds) − union(subtractIds). id 배열 + 개수 전달.
 CAD_API void CAD_BooleanDifference(const uint32_t* baseIds, uint32_t baseCount,
                                    const uint32_t* subtractIds, uint32_t subtractCount,
                                    bool keepOriginals);
+
+// **바로 실행형**(2026-10-04) — 부르면 그 자리에서 계산하고 결과를 돌려준다. 선택과 무관(넘긴 id 만),
+// 한 프레임에 여러 번 이어 불러도 된다. 공통 규칙:
+//   · 입력을 먼저 전부 검사 — 없는 id·메시 아님·잠긴 도면층·닫히지 않은 메시·중복(기준과 빼는 쪽 사이 포함)이
+//     하나라도 있으면 **아무것도 바꾸지 않고** 0, 이유는 CAD_GetLastError.
+//   · 결과(들) 추가 + 원본 삭제(keepOriginals=false) = 되돌리기 한 단계. 끝나면 결과만 선택된다.
+//   · 결과는 첫 원본(기준)의 이름·도면층·색·금속·불투명도를 이어받는다(텍스처는 안 이어받음 — UV 없음).
+//   · 여러 개는 한 번에 계산(Manifold BatchBoolean) — 순서 무관.
+// 합집합 — ids 2개 이상 → 한 객체(떨어져 있어도 한 객체에 덩어리 여럿). 결과 id, 실패 0.
+CAD_API uint32_t CAD_BooleanUnionIds(const uint32_t* ids, uint32_t count, bool keepOriginals);
+// 교집합 — ids 2개 이상 **모두의** 공통 부분(A∩B∩C). 공통 부분이 없으면 0. 결과 id, 실패 0.
+CAD_API uint32_t CAD_BooleanIntersectionIds(const uint32_t* ids, uint32_t count, bool keepOriginals);
+// 차집합 — 기준 baseIds 에서 cutIds 전부를 뺀다.
+//   perBase=false: union(기준) − union(빼는 것) → 결과 1개(기준들이 한 덩어리로 합쳐짐, 오토캐드 SUBTRACT 와 같음)
+//   perBase=true : 기준마다 따로(판 3장에 같은 구멍 → 판 3장). 통째로 깎여 사라진 기준은 결과가 없다.
+// 반환 = 결과 개수(실패 0), outIds 에 cap 개까지 결과 id. outIds=NULL 이면 개수만.
+CAD_API uint32_t CAD_BooleanSubtract(const uint32_t* baseIds, uint32_t baseCount,
+                                     const uint32_t* cutIds, uint32_t cutCount,
+                                     bool keepOriginals, bool perBase,
+                                     uint32_t* outIds, uint32_t cap);
 
 /* ── 2026-09-24 추가 — 타원·스플라인·지시선, 2D 편집(늘이기·길이조정·끊기), 3D(간섭·메시 검사/수리·필렛 기록·3D 배열/정렬·프리미티브) ──
  * 명령 문자열(CAD_ExecuteCommand("ellipse") …)로도 되지만 이쪽은 클릭 없이 값으로, 결과를 돌려받는다. 좌표는 월드(mm), 전부 되돌리기 한 단계. */
