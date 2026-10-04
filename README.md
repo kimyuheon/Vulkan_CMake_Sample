@@ -1,12 +1,14 @@
 # VulkanCAD 샘플
 
 [VulkanCAD 엔진](https://github.com/kimyuheon/Vulkan_CMake)을 여러 UI 프레임워크에서 호스팅하는 예제 모음입니다.
-헤더·에셋은 `sdk/` 에 들어 있습니다. **Windows 라이브러리(`VulkanCADCore.dll` + `.lib`)도 들어 있어**
-clone 만 하면 Windows 샘플을 바로 빌드·실행할 수 있습니다. 그 밖의 플랫폼은 둘 중 하나로 채웁니다.
+헤더·에셋은 `sdk/` 에 들어 있습니다. **데스크톱 라이브러리 — Windows(`VulkanCADCore.dll` + `.lib`) ·
+macOS(`libVulkanCADCore.dylib`) · Linux(`libVulkanCADCore.so`) — 도 들어 있어** clone 만 하면 데스크톱 샘플을
+바로 빌드·실행할 수 있습니다(macOS 는 Vulkan 로더·MoltenVK 가 필요해 [Vulkan SDK](https://vulkan.lunarg.com/) 설치 전제).
+iOS 정적 라이브러리는 둘 중 하나로 채웁니다.
 - 엔진 레포를 옆(`../3dEngine`)에 두고 Release 로 빌드 → 빌드가 `sdk/` 로 자동 복사
 - 또는 GitHub Releases 에서 받아 `sdk/` 바로 아래에 둠
 
-(동봉된 Windows 바이너리는 공개용 스냅숏으로, 평소 개발 중 빌드 결과는 git 이 추적하지 않습니다 — `.gitignore` 참고.
+(동봉된 데스크톱 바이너리는 공개용 스냅숏(Release — Windows·macOS 는 엔진 3f29209)으로, 평소 개발 중 빌드 결과는 git 이 추적하지 않습니다 — `.gitignore` 참고.
 안드로이드 샘플은 라이브러리 없이 엔진 소스를 직접 빌드합니다.)
 
 ```
@@ -14,7 +16,9 @@ clone 만 하면 Windows 샘플을 바로 빌드·실행할 수 있습니다. �
 ├── sdk/                    ← 엔진 배포본 (빌드에 필요한 전부)
 │   ├── include/            VulkanCAD_API.h — 공개 C API
 │   ├── csharp/             C# 선언 (헤더에서 자동 생성, Windows) — C# 앱은 이 *.cs 를 포함
-│   ├── VulkanCADCore.dll/.lib  Windows 라이브러리 (동봉) — .dylib / .so 는 엔진 빌드 또는 Releases
+│   ├── VulkanCADCore.dll/.lib  Windows 라이브러리 (동봉)
+│   ├── libVulkanCADCore.dylib  macOS 라이브러리 (동봉, arm64 · macOS 14+)
+│   ├── libVulkanCADCore.so     Linux 라이브러리 (동봉)
 │   ├── lib-ios-sim/        iOS 정적 라이브러리 (시뮬레이터) — Releases 에서 받음
 │   ├── lib-ios-device/     iOS 정적 라이브러리 (실기)       — Releases 에서 받음
 │   └── models/ textures/ fonts/    런타임 에셋
