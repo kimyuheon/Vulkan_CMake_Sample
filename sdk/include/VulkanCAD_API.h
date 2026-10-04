@@ -835,7 +835,9 @@ CAD_API bool     CAD_SaveParticlePreset(uint32_t id, const char* path);
 CAD_API uint64_t CAD_GetSceneRevision(void);
 // 노드 트리 — 엔진 패널과 같은 구성(파일 → glTF/FBX 노드 계층 → 객체 → 피처·가공 기록). 평평한 배열 + 부모 번호:
 // {"revision","nodes":[{"index","key","kind":"scene|file|node|object|feature","label","parent"(-1 = 뿌리),"depth","children":[…],
-//   "total","shown"(아래 객체 수·보이는 수),  객체 줄만: "objectId","objectKind","visible","selected","locked","layerId","layer"}]}
+//   "total","shown"(아래 객체 수·보이는 수),  객체 줄만: "objectId"(1 이상),"objectKind","visible","selected","locked"(bool),"layerId","layer"}]}
+//   objectKind = 문자열, CAD_GetObjectJson 의 "kind" 와 같다: "mesh" "line" "polyline" "circle" "arc" "text" "dimension"
+//   "pointcloud" "particle" "effect" "hatch" (모르는 종류 "unknown"). 객체 id 는 늘 1 이상(0 = 없음/실패).
 // 클릭·보이기·이름 바꾸기는 기존 함수로: CAD_SelectObject · CAD_SetObjectVisible · CAD_SetObjectName(묶음 줄은 children 의 objectId 들).
 CAD_API int      CAD_GetSceneTreeJson(char* out, int cap);
 // 도면층 창 — 한 번에: {"revision","layers":[{"id","name","visible","locked","color":[r,g,b],"opacity","linetypeId","linetype",
