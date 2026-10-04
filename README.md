@@ -18,7 +18,6 @@
 │   ├── lib-ios-device/     iOS 정적 라이브러리 (실기)       — Releases 에서 받음
 │   └── models/ textures/ fonts/    런타임 에셋
 └── sample/
-    ├── gallery/            ★ 기능 갤러리 (C# WinForms·WPF) — 엔진 기능 36개를 기능별 파일로
     ├── cpp_api_test/       C++ 콘솔 — API 최소 예제
     ├── mfc_test/           MFC (SDI)
     ├── mfc_dlg_test/       MFC (다이얼로그)
@@ -47,7 +46,6 @@ CAD_ExecuteCommand("box");    // 명령행과 같은 입구 — 명령 200개 �
 
 | 샘플 | 빌드 | SDK 경로 변수 |
 |------|------|--------------|
-| gallery | `dotnet build sample/gallery/VulkanCAD.Gallery.sln -c Release` | `VulkanCadSdk` (CopySdkRuntime.targets) |
 | cpp_api_test | `cmake -B build && cmake --build build` | `-DVULKANCAD_SDK=<경로>` |
 | qml_test | `cmake -B build && cmake --build build` | `-DVULKANCAD_ENGINE_BUILD=<경로>` |
 | mfc_test / mfc_dlg_test | Visual Studio | `EngineOut` (vcxproj) |
