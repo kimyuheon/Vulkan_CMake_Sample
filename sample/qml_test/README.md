@@ -21,8 +21,14 @@ Qt 6.4에서도 동작하도록 Vulkan을 QML Scene Graph에 직접 합성하지
 
 ## 준비
 
-엔진은 **미리 빌드된 것이 레포 안 `sdk/` 에 들어 있습니다.** 따로 빌드할 것이 없고,
-엔진 소스 레포도 필요 없습니다. 아래 패키지만 갖추면 됩니다.
+**엔진 라이브러리는 레포에 들어 있지 않습니다**(`sdk/*.so|dll|dylib` 는 `.gitignore`).
+헤더와 에셋만 들어 있으므로, 먼저 라이브러리를 `sdk/` 바로 아래에 채워야 합니다 — 둘 중 하나:
+
+- 엔진 레포(`../3dEngine`)를 Release 로 빌드 → 엔진 CMake 가 `sdk/` 로 자동 복사
+- 또는 GitHub Releases 에서 받아 `sdk/` 바로 아래에 두기
+
+채우고 나면 CMake 설정은 따로 없습니다(`VULKANCAD_ENGINE_BUILD` 기본값이 `sdk/`).
+그 밖에 필요한 패키지는 아래와 같습니다.
 
 1. Qt 6.4 이상 — Quick, QML, Controls 모듈
 2. Vulkan 헤더(`libvulkan-dev`) — Qt6 Gui 가 구성 단계에서 찾습니다
@@ -47,10 +53,12 @@ sudo apt install qt6-base-dev qt6-declarative-dev \
 2. Desktop Qt 6.4 이상 Kit를 선택합니다.
 3. `qml_host`를 시작 프로젝트로 선택하고 실행합니다.
 
-**별도 설정은 없습니다.** `VULKANCAD_ENGINE_BUILD` 기본값이 레포 안 `sdk/` 를 가리키므로
-클론한 그대로 구성·빌드·실행됩니다.
+**라이브러리를 `sdk/` 에 채워 뒀다면 별도 설정은 없습니다.** `VULKANCAD_ENGINE_BUILD`
+기본값이 레포 안 `sdk/` 를 가리킵니다. 비어 있으면 구성 단계에서 바로 오류가 납니다.
 
-다른 위치의 SDK(예: 엔진 레포의 `build/`)를 쓰려면 Qt Creator 의 CMake Configuration 에만 추가합니다.
+다른 위치의 SDK 를 쓰려면 Qt Creator 의 CMake Configuration 에 추가합니다. 단 **그 폴더에
+`models/` `fonts/` `textures/` 도 함께 있어야 합니다** — 찾은 라이브러리의 폴더가 rpath 이자
+런타임 에셋 경로가 되기 때문입니다.
 
 ```text
 VULKANCAD_ENGINE_BUILD=/absolute/path/to/3dEngine/build

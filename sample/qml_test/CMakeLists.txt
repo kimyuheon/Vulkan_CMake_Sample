@@ -11,9 +11,15 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Gui Widgets)
 qt_standard_project_setup(REQUIRES 6.4)
 
 # ── 엔진 공유 라이브러리 위치 ──
-# 엔진을 먼저 빌드해야 함:  (레포 루트에서)
-#   cmake -B build && cmake --build build --target VulkanCADCoreShared
-# → build/libVulkanCADCore.so 생성. 다른 경로면 -DVULKANCAD_ENGINE_BUILD=/path 로 지정.
+# 라이브러리는 **레포에 없다**(sdk/*.so|dll|dylib 는 .gitignore). 둘 중 하나로 채운 뒤 빌드한다:
+#   1) 엔진 레포(../3dEngine)를 Release 로 빌드 — 엔진 CMake 가 sdk/ 로 자동 복사한다
+#   2) GitHub Releases 에서 받아 sdk/ 바로 아래에 둔다
+#
+# 기본값이 레포 안 sdk/ 라 1·2 중 하나만 하면 CMake 설정은 따로 필요 없다.
+# 다른 위치를 쓰려면 -DVULKANCAD_ENGINE_BUILD=/절대경로.
+# ⚠️ 찾은 라이브러리의 **폴더**가 rpath 이자 런타임 에셋 경로가 된다(아래 참조). 그래서 그 폴더에
+#    models/ fonts/ textures/ 도 같이 있어야 한다 — 에셋은 sdk/ 에 있으므로 라이브러리도 sdk/ 에
+#    두는 것이 사실상 유일하게 맞는 배치다.
 set(VULKANCAD_ENGINE_BUILD "${CMAKE_CURRENT_SOURCE_DIR}/../../sdk"
     CACHE PATH "VulkanCAD 엔진 빌드 폴더")
 
@@ -32,7 +38,11 @@ find_library(VULKANCAD_CORE_LIB
 if(NOT VULKANCAD_CORE_LIB)
     message(FATAL_ERROR
         "VulkanCADCore 공유 라이브러리를 찾지 못했습니다: ${VULKANCAD_ENGINE_BUILD}\n"
-        "먼저 엔진을 빌드하세요:  cmake --build build --target VulkanCADCoreShared")
+        "이 레포엔 라이브러리 바이너리가 들어 있지 않습니다. 둘 중 하나로 채우세요:\n"
+        "  1) 엔진 레포(../3dEngine)를 Release 로 빌드 — sdk/ 로 자동 복사됩니다\n"
+        "  2) GitHub Releases 에서 받아 sdk/ 바로 아래에 두세요\n"
+        "다른 위치의 SDK 를 쓰려면 -DVULKANCAD_ENGINE_BUILD=/절대경로 (그 폴더에 models/ fonts/ "
+        "textures/ 도 함께 있어야 합니다)")
 endif()
 get_filename_component(VULKANCAD_CORE_DIR "${VULKANCAD_CORE_LIB}" DIRECTORY)
 
