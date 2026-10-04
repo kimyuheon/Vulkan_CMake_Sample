@@ -7,6 +7,7 @@
 #include "VulkanCAD_MFC.h"
 #include "VulkanCAD_MFCDlg.h"
 #include "afxdialogex.h"
+#include "DarkTheme.h"
 
 #include "../../../sdk/include/VulkanCAD_API.h"
 
@@ -131,7 +132,6 @@ BEGIN_MESSAGE_MAP(CVulkanCADMFCDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_SIZE()
-	ON_BN_CLICKED(IDC_BTN_CUBE, &CVulkanCADMFCDlg::OnBnClickedBtnCube)
 	// 메뉴 명령은 ON_COMMAND — 버튼(ON_BN_CLICKED)과 달리 알림 코드가 없다.
 	ON_COMMAND(ID_CAD_OPEN,       &CVulkanCADMFCDlg::OnCadOpen)
 	ON_COMMAND(ID_CAD_SAVEAS,     &CVulkanCADMFCDlg::OnCadSaveAs)
@@ -152,12 +152,6 @@ BEGIN_MESSAGE_MAP(CVulkanCADMFCDlg, CDialogEx)
 	ON_COMMAND(ID_CAD_SPHERE,     &CVulkanCADMFCDlg::OnCadSphere)
 	ON_COMMAND(ID_CAD_CYLINDER,   &CVulkanCADMFCDlg::OnCadCylinder)
 	ON_COMMAND(ID_CAD_CONE,       &CVulkanCADMFCDlg::OnCadCone)
-	ON_BN_CLICKED(IDC_BTN_ALL_SELECT, &CVulkanCADMFCDlg::OnBnClickedBtnAllSelect)
-	ON_BN_CLICKED(IDC_BTN_DEL, &CVulkanCADMFCDlg::OnBnClickedBtnDel)
-	ON_BN_CLICKED(IDC_BTN_ZOOM, &CVulkanCADMFCDlg::OnBnClickedBtnZoom)
-	ON_BN_CLICKED(IDC_BTN_ISO, &CVulkanCADMFCDlg::OnBnClickedBtnIso)
-	ON_BN_CLICKED(IDC_BTN_UNDO, &CVulkanCADMFCDlg::OnBnClickedBtnUndo)
-	ON_BN_CLICKED(IDC_CHK_PROJECTION, &CVulkanCADMFCDlg::OnBnClickedChkProjection)
 END_MESSAGE_MAP()
 
 
@@ -172,23 +166,37 @@ BOOL CVulkanCADMFCDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 큰 아이콘을 설정합니다.
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
+	// 다크 테마 — 대화상자 바탕을 리본·3D 뷰와 같은 톤으로.
+	SetBackgroundColor(DarkTheme::DialogBg);
+
 	// Subclass IDC_CAD_VIEW as the engine render pane, then embed the engine.
 	m_view.SubclassDlgItem(IDC_CAD_VIEW, this);
 
+	// 리본을 맨 위에 만든다 (너비는 OnSize 가 창에 맞춘다).
+	BuildRibbon();
+	m_ribbon.Create(this, IDC_RIBBON);
+	m_commandLine.Create(this, IDC_COMMAND_LINE);   // 3D 뷰 아래 (자리는 LayoutChildren)
+	BuildStatusBar();
+	m_statusBar.Create(this, IDC_STATUS_BAR);       // 맨 아래
+	m_panel.Create(this, IDC_TOOL_PANEL);           // 오른쪽 — 리본 '도구' 탭에서 열 때만 보인다
+
 	// Capture the view's design offset/margins for all-sides anchoring on resize.
+	// 위·아래는 리본·명령행·상태바 높이로 정한다 — DPI 따라 높이가 바뀌어 리소스 좌표로 못 맞춘다.
 	CRect dlgRc; GetClientRect(&dlgRc);
 	CRect viewRc; m_view.GetWindowRect(&viewRc); ScreenToClient(&viewRc);
 	m_viewLeft     = viewRc.left;
-	m_viewTop      = viewRc.top;
+	m_viewTop      = m_ribbon.Height() + viewRc.left;   // 리본 아래, 왼쪽 여백과 같은 간격
 	m_marginRight  = dlgRc.right  - viewRc.right;
-	m_marginBottom = dlgRc.bottom - viewRc.bottom;
+	// 위에서 정한 자리로 한 번 배치. (OnSize 를 직접 부르면 안 된다 — 안의 Default() 가
+	// 지금 처리 중인 WM_INITDIALOG 를 다시 흘려 OnInitDialog 가 두 번 돈다.)
+	LayoutChildren(dlgRc.Width(), dlgRc.Height());
 
 	m_view.AttachEngine();   // CAD_AttachView + CAD_CreateEngine + timer
 
-	if (GetProjection())
-		GetDlgItem(IDC_CHK_PROJECTION)->SetWindowTextW(L"Ortho");
-	else
-		GetDlgItem(IDC_CHK_PROJECTION)->SetWindowTextW(L"Perspective");
+	// 상태바가 보여 주는 값과 엔진을 처음에 한 번 맞춘다 (SDK 에 읽는 함수가 없어 호스트 값이 기준).
+	CAD_RequestSetProjection(m_ortho);
+	CAD_SetGridEnabled(m_gridOn);
+	CAD_SetVisualStyle(m_visualStyle);
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -196,13 +204,71 @@ BOOL CVulkanCADMFCDlg::OnInitDialog()
 void CVulkanCADMFCDlg::OnSize(UINT nType, int cx, int cy)
 {
 	CDialogEx::OnSize(nType, cx, cy);
-	// Anchor the render view to fill from its design top-left to the client's bottom-right.
-	if (m_view.GetSafeHwnd() && nType != SIZE_MINIMIZED)
+	if (nType != SIZE_MINIMIZED) LayoutChildren(cx, cy);
+}
+
+// 위에서부터 리본(전체 폭) · 3D 뷰 · 명령행, 맨 아래 상태바(전체 폭).
+// 도구 패널이 열려 있으면 리본과 상태바 사이 오른쪽에 붙고, 3D 뷰·명령행은 그만큼 좁아진다.
+void CVulkanCADMFCDlg::LayoutChildren(int cx, int cy)
+{
+	if (m_ribbon.GetSafeHwnd())
+		m_ribbon.MoveWindow(0, 0, cx, m_ribbon.Height());
+
+	int bottom = cy;   // 3D 뷰가 내려올 수 있는 끝 — 아래 것부터 빼 나간다
+	if (m_statusBar.GetSafeHwnd())
 	{
-		int w = cx - m_marginRight  - m_viewLeft;
-		int h = cy - m_marginBottom - m_viewTop;
+		bottom -= m_statusBar.Height();
+		m_statusBar.MoveWindow(0, bottom, cx, m_statusBar.Height());
+	}
+	int right = cx - m_marginRight;   // 3D 뷰·명령행의 오른쪽 끝
+	if (m_panel.GetSafeHwnd() && m_panel.Kind() != kPanelNone)
+	{
+		const int top = m_ribbon.Height();
+		m_panel.MoveWindow(cx - m_panel.Width(), top, m_panel.Width(), bottom - top);
+		right = cx - m_panel.Width() - m_marginRight;
+	}
+	const int w = right - m_viewLeft;
+	if (m_commandLine.GetSafeHwnd())
+	{
+		const int h = m_commandLine.Height();
+		bottom -= h;
+		if (w > 1) m_commandLine.MoveWindow(m_viewLeft, bottom, w, h);
+	}
+	if (m_view.GetSafeHwnd())
+	{
+		const int h = bottom - m_viewTop;
 		if (w > 1 && h > 1) m_view.MoveWindow(m_viewLeft, m_viewTop, w, h);
 	}
+}
+
+BOOL CVulkanCADMFCDlg::PreTranslateMessage(MSG* pMsg)
+{
+	// F3 객체스냅 · F8 직교 추적 · F10 극좌표 추적 — 엔진처럼 포커스가 어디 있든 (명령행에 값을 치는 중에도).
+	// F10 은 윈도우가 메뉴 막대 키로 쓰는 시스템 키라 WM_SYSKEYDOWN 으로 온다 — 같이 막는다.
+	if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_SYSKEYDOWN)
+	{
+		if (pMsg->wParam == VK_F3)  { ToggleOSnap();         return TRUE; }
+		if (pMsg->wParam == VK_F8)  { ToggleOrthoTracking(); return TRUE; }
+		if (pMsg->wParam == VK_F10) { TogglePolarTracking(); return TRUE; }
+	}
+
+	// 오토캐드처럼 3D 뷰를 보면서 바로 타이핑 — 뷰가 포커스를 쥔 채 친 키를 명령행으로 돌린다.
+	// (명령행 입력란에서 친 키는 CCommandLine::PreTranslateMessage 가 먼저 처리한다.)
+	if (m_commandLine.GetSafeHwnd() && pMsg->hwnd == m_view.GetSafeHwnd())
+	{
+		if (pMsg->message == WM_KEYDOWN)
+		{
+			// 그냥 두면 대화상자가 Enter=확인, Esc=취소 로 바꿔 창이 닫힌다.
+			if (pMsg->wParam == VK_RETURN) { m_commandLine.Submit(); return TRUE; }
+			if (pMsg->wParam == VK_ESCAPE) { m_commandLine.Cancel(); return TRUE; }
+		}
+		if (pMsg->message == WM_CHAR && pMsg->wParam > L' ')   // 글자만 (제어문자·공백 제외)
+		{
+			m_commandLine.TypeChar((wchar_t)pMsg->wParam);
+			return TRUE;
+		}
+	}
+	return CDialogEx::PreTranslateMessage(pMsg);
 }
 
 // 대화 상자에 최소화 단추를 추가할 경우 아이콘을 그리려면
@@ -341,13 +407,16 @@ void CVulkanCADMFCDlg::OnCadTop()   { CAD_RequestSetView(1); }
 void CVulkanCADMFCDlg::OnCadFront() { CAD_RequestSetView(0); }
 void CVulkanCADMFCDlg::OnCadRight() { CAD_RequestSetView(2); }
 
-// 하단 버튼과 같은 상태를 봐야 한다 — 체크박스를 뒤집고 그 결과를 엔진에 넘긴다.
-// (엔진에만 토글을 보내면 버튼 라벨이 실제 투영과 어긋난다)
-void CVulkanCADMFCDlg::OnCadProjection()
+void CVulkanCADMFCDlg::OnCadProjection() { SetOrtho(!m_ortho); }
+
+// 메뉴·리본·상태바가 같은 상태(m_ortho)를 본다 — 엔진에 토글(ToggleProjection)만 보내면
+// 버튼 표시가 실제 투영과 어긋날 수 있어, 값을 정해 보내고 표시를 같이 고친다.
+void CVulkanCADMFCDlg::SetOrtho(bool ortho)
 {
-	CheckDlgButton(IDC_CHK_PROJECTION,
-	               GetProjection() ? BST_UNCHECKED : BST_CHECKED);
-	OnBnClickedChkProjection();
+	m_ortho = ortho;
+	CAD_RequestSetProjection(ortho);   // true=직교(Ortho) false=원근(Persp)
+	m_ribbon.Invalidate(FALSE);
+	m_statusBar.Refresh();
 }
 
 // ── 만들기 ──────────────────────────────────────────────────────────────
@@ -357,30 +426,3 @@ void CVulkanCADMFCDlg::OnCadCube()     { CAD_RequestAddCube(); }
 void CVulkanCADMFCDlg::OnCadSphere()   { CAD_ExecuteCommand("sphere"); }
 void CVulkanCADMFCDlg::OnCadCylinder() { CAD_ExecuteCommand("cylinder"); }
 void CVulkanCADMFCDlg::OnCadCone()     { CAD_ExecuteCommand("cone"); }
-
-void CVulkanCADMFCDlg::OnBnClickedBtnCube()      { CAD_RequestAddCube(); }
-void CVulkanCADMFCDlg::OnBnClickedBtnAllSelect() { CAD_RequestSelectAll(); }
-void CVulkanCADMFCDlg::OnBnClickedBtnDel()       { CAD_RequestDeleteSelected(); }
-void CVulkanCADMFCDlg::OnBnClickedBtnZoom()      { CAD_RequestZoomExtents(); }
-void CVulkanCADMFCDlg::OnBnClickedBtnIso()       { CAD_RequestSetView(3); }  // 0=Front 1=Top 2=Right 3=Iso
-void CVulkanCADMFCDlg::OnBnClickedBtnUndo()      { CAD_Undo(); }
-
-
-void CVulkanCADMFCDlg::OnBnClickedChkProjection()
-{
-	// 체크 = Orthographic(직교), 해제 = Perspective(원근).
-	// CAD_RequestSetProjection(true=ortho / false=perspective)
-	if (GetProjection())
-		GetDlgItem(IDC_CHK_PROJECTION)->SetWindowTextW(L"Ortho");
-	else
-		GetDlgItem(IDC_CHK_PROJECTION)->SetWindowTextW(L"Perspective");
-
-	CAD_RequestSetProjection(GetProjection() ? true : false);
-}
-
-bool CVulkanCADMFCDlg::GetProjection()
-{
-	BOOL ortho = false;
-	ortho = (IsDlgButtonChecked(IDC_CHK_PROJECTION) == BST_CHECKED);
-	return ortho;
-}

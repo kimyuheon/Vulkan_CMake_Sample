@@ -5,15 +5,11 @@
 #define IDD_VULKANCAD_MFC_DIALOG        102
 #define IDR_MAINFRAME                   128
 #define IDR_MAINMENU                    130
-#define IDC_BTN_CUBE                    1000
-#define IDC_BTN_ALL_SELECT              1001
-#define IDC_BTN_DEL                     1002
-#define IDC_BTN_ZOOM                    1003
-#define IDC_BTN_ISO                     1004
-#define IDC_BTN_UNDO                    1005
 #define IDC_CAD_VIEW                    1006
-#define IDC_CHECK1                      1007
-#define IDC_CHK_PROJECTION              1007
+#define IDC_RIBBON                      1008
+#define IDC_COMMAND_LINE                1009
+#define IDC_STATUS_BAR                  1010
+#define IDC_TOOL_PANEL                  1011
 #define ID_CAD_OPEN                     32771
 #define ID_CAD_SAVEAS                   32772
 #define ID_CAD_EXPORT                   32773
@@ -40,7 +36,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         32790
-#define _APS_NEXT_CONTROL_VALUE         1008
+#define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
