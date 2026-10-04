@@ -54,13 +54,11 @@ glTF 모델은 Khronos Group 의 glTF-Sample-Assets / glTF-Sample-Models 저장�
 | `Fox.glb` | 모델: PixelMannen (CC0, 2014). 리깅/애니메이션: tomkranis (CC-BY-4.0, 2014). glTF 변환: @AsoboStudio, @scurest (CC-BY-4.0, 2017) | CC-BY-4.0 | 제작자 표기 필수 |
 | `InterpolationTest.glb` | Khronos, (c) 2017 | CC0-1.0 | 의무 없음 |
 | `SheenChair.glb` | Eric Chadwick / Wayfair, LLC, (c) 2020 | CC0-1.0 | 의무 없음 |
-| `2CylinderEngine.gltf/.glb` | Okino Computer Graphics 가 JT 에서 변환. 원저작자 및 라이선스 미명시 | **불명** | **배포 전 제거 권장** |
-| `GearboxAssy.glb` | Okino Computer Graphics 가 JT 에서 변환. 원저작자 및 라이선스 미명시 | **불명** | **배포 전 제거 권장** |
 | `cube.obj`, `colored_cube.obj`, `quad.obj`, `flat_vase.obj`, `smooth_vase.obj` | Copyright (c) 2020 Brendan Galea (littleVulkanEngine 튜토리얼) | MIT | 저작권 고지 |
 | `demo_arm.urdf` | 자체 제작 | (VulkanCAD 라이선스 따름) | |
 
-> 2CylinderEngine 과 GearboxAssy 는 Khronos 가 새 저장소(glTF-Sample-Assets)로 옮기면서
-> 라이선스가 확인되지 않아 **제외한 모델**입니다. 재배포 근거가 없으므로 배포본에서 빼는 것을 권장합니다.
+> 2CylinderEngine 과 GearboxAssy 는 원저작자·라이선스가 명시되지 않았고, Khronos 도 새 저장소(glTF-Sample-Assets)로
+> 옮기면서 뺀 모델이라 이 저장소에는 넣지 않습니다(기록에서도 제거).
 
 ### 텍스처
 

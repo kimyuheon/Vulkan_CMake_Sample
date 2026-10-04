@@ -14,14 +14,15 @@ public:
 
     void setup() override {
         model_ = 0;
-        models_ = {"models/GearboxAssy.glb", "models/2CylinderEngine.glb"};
+        // 라이선스가 명확한 Khronos 샘플만 (THIRD_PARTY_NOTICES.md 참고)
+        models_ = {"models/CesiumMilkTruck.glb", "models/BoomBox.glb"};
         loadModel(0);
     }
 
 protected:
     void buildControls() override {
         header("모델");
-        choice("열기", {"기어박스", "2기통 엔진"}, [this] { return model_; },
+        choice("열기", {"밀크 트럭", "붐박스"}, [this] { return model_; },
                [this](int k) { loadModel(k); rebuild(); });
 
         header("실시간 단면 (CAD_SetSection)");
