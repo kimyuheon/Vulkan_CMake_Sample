@@ -1,0 +1,69 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "csharp", "csharp", "{B41BF331-FCCB-2ADF-CDB6-767964B34647}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gallery.Features", "csharp\Gallery.Features\Gallery.Features.csproj", "{4F0D1459-E04A-4296-A24F-A7B58DF2490D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VulkanCAD.Gallery.WinForms", "winforms\VulkanCAD.Gallery.WinForms.csproj", "{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VulkanCAD.Gallery.Wpf", "wpf\VulkanCAD.Gallery.Wpf.csproj", "{94956910-CEC7-4290-8486-99108E279FD9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Debug|Any CPU.Build.0 = Debug|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Debug|x64.ActiveCfg = Debug|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Debug|x64.Build.0 = Debug|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Debug|x86.ActiveCfg = Debug|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Debug|x86.Build.0 = Debug|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Release|Any CPU.ActiveCfg = Release|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Release|Any CPU.Build.0 = Release|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Release|x64.ActiveCfg = Release|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Release|x64.Build.0 = Release|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Release|x86.ActiveCfg = Release|x64
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D}.Release|x86.Build.0 = Release|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Debug|Any CPU.Build.0 = Debug|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Debug|x64.ActiveCfg = Debug|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Debug|x64.Build.0 = Debug|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Debug|x86.ActiveCfg = Debug|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Debug|x86.Build.0 = Debug|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Release|Any CPU.ActiveCfg = Release|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Release|Any CPU.Build.0 = Release|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Release|x64.ActiveCfg = Release|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Release|x64.Build.0 = Release|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Release|x86.ActiveCfg = Release|x64
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02}.Release|x86.Build.0 = Release|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Debug|Any CPU.Build.0 = Debug|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Debug|x64.ActiveCfg = Debug|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Debug|x64.Build.0 = Debug|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Debug|x86.ActiveCfg = Debug|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Debug|x86.Build.0 = Debug|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Release|Any CPU.ActiveCfg = Release|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Release|Any CPU.Build.0 = Release|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Release|x64.ActiveCfg = Release|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Release|x64.Build.0 = Release|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Release|x86.ActiveCfg = Release|x64
+		{94956910-CEC7-4290-8486-99108E279FD9}.Release|x86.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4F0D1459-E04A-4296-A24F-A7B58DF2490D} = {B41BF331-FCCB-2ADF-CDB6-767964B34647}
+		{A8CFABD0-DFB6-490E-9E2A-1FE8146ABE02} = {B41BF331-FCCB-2ADF-CDB6-767964B34647}
+		{94956910-CEC7-4290-8486-99108E279FD9} = {B41BF331-FCCB-2ADF-CDB6-767964B34647}
+	EndGlobalSection
+EndGlobal

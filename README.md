@@ -12,11 +12,13 @@
 3dEngine_Sample/
 ├── sdk/                    ← 엔진 배포본 (빌드에 필요한 전부)
 │   ├── include/            VulkanCAD_API.h — 공개 C API
+│   ├── csharp/             C# 선언 (헤더에서 자동 생성, Windows) — C# 앱은 이 *.cs 를 포함
 │   ├── libVulkanCADCore.*  공유 라이브러리 (.dylib / .so / .dll + .lib) — 엔진 빌드 또는 Releases (git 추적 안 함)
 │   ├── lib-ios-sim/        iOS 정적 라이브러리 (시뮬레이터) — Releases 에서 받음
 │   ├── lib-ios-device/     iOS 정적 라이브러리 (실기)       — Releases 에서 받음
 │   └── models/ textures/ fonts/    런타임 에셋
 └── sample/
+    ├── gallery/            ★ 기능 갤러리 (C# WinForms·WPF) — 엔진 기능 36개를 기능별 파일로
     ├── cpp_api_test/       C++ 콘솔 — API 최소 예제
     ├── mfc_test/           MFC (SDI)
     ├── mfc_dlg_test/       MFC (다이얼로그)
@@ -45,6 +47,7 @@ CAD_ExecuteCommand("box");    // 명령행과 같은 입구 — 명령 200개 �
 
 | 샘플 | 빌드 | SDK 경로 변수 |
 |------|------|--------------|
+| gallery | `dotnet build sample/gallery/VulkanCAD.Gallery.sln -c Release` | `VulkanCadSdk` (CopySdkRuntime.targets) |
 | cpp_api_test | `cmake -B build && cmake --build build` | `-DVULKANCAD_SDK=<경로>` |
 | qml_test | `cmake -B build && cmake --build build` | `-DVULKANCAD_ENGINE_BUILD=<경로>` |
 | mfc_test / mfc_dlg_test | Visual Studio | `EngineOut` (vcxproj) |
