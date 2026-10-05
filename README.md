@@ -1,6 +1,6 @@
 # VulkanCAD 샘플
 
-[VulkanCAD 엔진](https://github.com/kimyuheon/Vulkan_CMake)을 여러 UI 프레임워크에서 호스팅하는 예제 모음입니다.
+VulkanCAD 엔진을 여러 UI 프레임워크에서 호스팅하는 예제 모음입니다.
 헤더·에셋은 `sdk/` 에 들어 있습니다. **데스크톱 라이브러리 — Windows(`VulkanCADCore.dll` + `.lib`) ·
 macOS(`libVulkanCADCore.dylib`) · Linux(`libVulkanCADCore.so`) — 도 들어 있어** [Vulkan SDK](https://vulkan.lunarg.com/)만
 설치하면 clone 후 데스크톱 샘플을 바로 빌드·실행할 수 있습니다(아래 [플랫폼별 준비물](#플랫폼별-준비물)).
