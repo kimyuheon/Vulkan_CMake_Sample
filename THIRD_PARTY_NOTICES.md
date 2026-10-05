@@ -72,7 +72,7 @@ glTF 모델은 Khronos Group 의 glTF-Sample-Assets / glTF-Sample-Models 저장�
 | 샘플 | 프레임워크 | 라이선스 | 비고 |
 |---|---|---|---|
 | `qml_test` | Qt 6 | LGPL-3.0 | 소스 배포는 무관. **빌드된 실행 파일을 배포하면** 동적 링크, LGPL 본문 동봉, 재링크 가능성 보장 필요 |
-| `mfc_test`, `mfc_dlg_test`, `wpf_test` | MFC / .NET | Microsoft 재배포 조건 | Visual Studio / .NET 런타임 재배포 약관 따름 |
+| `mfc_dlg_test`, `wpf_test`, `winforms_test` | MFC / .NET | Microsoft 재배포 조건 | Visual Studio / .NET 런타임 재배포 약관 따름 |
 | `android_test` | Android SDK/NDK | Apache-2.0 등 | Android SDK 약관 따름 |
 
 ## 4. 상표

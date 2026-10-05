@@ -25,7 +25,6 @@ macOS(`libVulkanCADCore.dylib`) · Linux(`libVulkanCADCore.so`) — 도 들어 �
 │   └── models/ textures/ fonts/    런타임 에셋
 └── sample/
     ├── cpp_api_test/       C++ 콘솔 — API 최소 예제
-    ├── mfc_test/           MFC (SDI)
     ├── mfc_dlg_test/       MFC (다이얼로그)
     ├── wpf_test/           WPF (C# P/Invoke)
     ├── qml_test/           Qt / QML
@@ -54,7 +53,7 @@ CAD_ExecuteCommand("box");    // 명령행과 같은 입구 — 명령 200개 �
 |------|------|--------------|
 | cpp_api_test | `cmake -B build && cmake --build build` | `-DVULKANCAD_SDK=<경로>` |
 | qml_test | `cmake -B build && cmake --build build` | `-DVULKANCAD_ENGINE_BUILD=<경로>` |
-| mfc_test / mfc_dlg_test | Visual Studio | `EngineOut` (vcxproj) |
+| mfc_dlg_test | Visual Studio | `EngineOut` (vcxproj) |
 | wpf_test | `dotnet build` | `CadCoreBuildDir` (csproj) |
 | swift_api_test | `swift build` | `Package.swift` 의 `buildDirectory` |
 | swift_ios_test | `xcodegen` → Xcode | `project.yml` 의 라이브러리 검색 경로 |
@@ -63,7 +62,7 @@ CAD_ExecuteCommand("box");    // 명령행과 같은 입구 — 명령 200개 �
 ### 플랫폼별 라이브러리 배치
 
 **라이브러리는 `sdk/` 바로 아래**, 에셋과 같은 층에 둡니다. 샘플들이 "라이브러리가 있는 폴더
-= 에셋 폴더"를 전제하기 때문입니다 (qml_test 는 그 경로를 컴파일에 박고, mfc_test 는 거기서
+= 에셋 폴더"를 전제하기 때문입니다 (qml_test 는 그 경로를 컴파일에 박고, mfc_dlg_test·wpf_test·winforms_test 는 거기서
 DLL 과 `models/` 를 같이 꺼내 실행 파일 옆으로 복사합니다).
 
 | OS | 파일 | 실행 시 라이브러리를 찾는 법 |
@@ -148,7 +147,8 @@ Xcode 에서 실행하면 Metal API Validation 이 MoltenVK 를 멈출 수 있�
 
 ### Windows
 
-Visual Studio 에서 `sample/mfc_test/VulkanCadMfc.sln` 을 열고 **x64** 로 빌드합니다.
+Visual Studio 에서 `sample/mfc_dlg_test/VulkanCAD_MFC/VulkanCAD_MFC.sln` 을 열고 **x64** 로 빌드합니다.
+C# 은 `sample/wpf_test` · `sample/winforms_test` 에서 `dotnet build -c Release`.
 네이티브 라이브러리가 x64 라 프로세스도 x64 여야 합니다 (WPF 샘플도 x64 고정).
 DLL 과 에셋은 빌드 후 실행 파일 옆으로 자동 복사됩니다.
 
