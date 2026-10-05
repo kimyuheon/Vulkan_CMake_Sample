@@ -73,19 +73,19 @@ Windows 는 링크에 import library(`.lib`)가 따로 필요합니다. `sdk/Vul
 
 ### iOS 정적 라이브러리는 Releases 에서 내려받기
 
-iOS 는 공유 라이브러리 대신 정적 라이브러리(시뮬레이터용·실기용 각 약 20MB)를 링크합니다.
+iOS 는 공유 라이브러리 대신 정적 라이브러리(시뮬레이터용·실기용 각 약 20MB + MoltenVK)를 링크합니다.
 레포에는 넣지 않고 [Releases](https://github.com/kimyuheon/Vulkan_CMake_Sample/releases/tag/ios-sdk-2026.10.05) 에 올려 둡니다.
 
 ```bash
 # 레포 루트에서 — zip 을 sdk/ 에 풀면 아래 두 폴더가 채워진다
 gh release download ios-sdk-2026.10.05 -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'
 unzip -o VulkanCAD-iOS-SDK-*.zip -d sdk/
-#   sdk/lib-ios-sim/      libVulkanCADCoreStatic.a  libmanifold.a   (Apple Silicon 맥의 시뮬레이터, arm64)
-#   sdk/lib-ios-device/   libVulkanCADCoreStatic.a  libmanifold.a   (iPhone·iPad, arm64)
+#   sdk/lib-ios-sim/      libVulkanCADCoreStatic.a  libmanifold.a  libMoltenVK.a   (Apple Silicon 맥의 시뮬레이터, arm64)
+#   sdk/lib-ios-device/   libVulkanCADCoreStatic.a  libmanifold.a  libMoltenVK.a   (iPhone·iPad, arm64)
 ```
 
 `gh` 가 없으면 위 Releases 페이지에서 zip 을 받아 같은 곳에 풀면 됩니다.
-MoltenVK 는 Vulkan SDK 의 `MoltenVK.xcframework`(전역 설치 시 `/usr/local/lib`)를 정적 링크합니다.
+MoltenVK(Apache-2.0)도 zip 에 들어 있어 **Vulkan SDK 설치가 필요 없습니다**.
 iOS 샘플을 안 쓰신다면 받지 않아도 됩니다.
 
 ### Android 엔진 라이브러리도 Releases 에서 내려받기
@@ -116,7 +116,7 @@ unzip -o VulkanCAD-Android-SDK-*.zip -d sdk/
 | **Ubuntu** | `build-essential cmake libvulkan-dev vulkan-tools` |
 | **Qt** | Qt 6 (`qml_test`) |
 | **macOS** | Xcode 15+, **Vulkan SDK — 설치할 때 "시스템 전역 설치"(System Global Installation)** 를 고를 것 (`/usr/local/lib` 에 로더·MoltenVK 가 들어간다) |
-| **iOS** | Xcode 15+, Releases 의 iOS 정적 라이브러리, Vulkan SDK(전역 설치 — `MoltenVK.xcframework` 를 정적 링크) |
+| **iOS** | Xcode 15+, Releases 의 iOS SDK zip (엔진 + MoltenVK 정적 라이브러리 — Vulkan SDK 불필요) |
 | **Android** | Android Studio(NDK·CMake·Emulator), Releases 의 Android SDK(엔진 `.so`) — Vulkan 은 기기에 기본 포함 |
 
 ### Ubuntu
