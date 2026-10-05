@@ -4,9 +4,7 @@ VulkanCAD 엔진을 여러 UI 프레임워크에서 호스팅하는 예제 모�
 헤더·에셋은 `sdk/` 에 들어 있습니다. **데스크톱 라이브러리 — Windows(`VulkanCADCore.dll` + `.lib`) ·
 macOS(`libVulkanCADCore.dylib`) · Linux(`libVulkanCADCore.so`) — 도 들어 있어** [Vulkan SDK](https://vulkan.lunarg.com/)만
 설치하면 clone 후 데스크톱 샘플을 바로 빌드·실행할 수 있습니다(아래 [플랫폼별 준비물](#플랫폼별-준비물)).
-모바일(iOS 정적 라이브러리 · Android `.so`)은 둘 중 하나로 채웁니다.
-- 엔진 레포를 옆(`../3dEngine`)에 두고 Release 로 빌드 → 빌드가 `sdk/` 로 자동 복사
-- 또는 GitHub Releases 에서 받아 `sdk/` 바로 아래에 둠
+모바일(iOS 정적 라이브러리 · Android `.so`)은 GitHub Releases 에서 받아 `sdk/` 바로 아래에 둡니다.
 
 (동봉된 데스크톱 바이너리는 공개용 스냅숏(Release — Windows·macOS 는 엔진 3f29209)으로, 평소 개발 중 빌드 결과는 git 이 추적하지 않습니다 — `.gitignore` 참고.
 안드로이드는 엔진 `.so` 를 iOS 처럼 Releases 에서 받습니다.)
@@ -71,8 +69,7 @@ DLL 과 `models/` 를 같이 꺼내 실행 파일 옆으로 복사합니다).
 | Linux | `libVulkanCADCore.so` | rpath 로 `sdk/` 를 직접 참조 — 복사 불필요 |
 | macOS | `libVulkanCADCore.dylib` | `@rpath` — `sdk/` 와 Vulkan SDK 설치 위치(`/usr/local/lib`) 를 참조. Vulkan 로더(`libvulkan.1.dylib`)는 OS 에도 레포에도 없어 **Vulkan SDK 설치가 필수** |
 
-Windows 는 링크에 import library(`.lib`)가 따로 필요합니다. 엔진을 Windows 에서 빌드하면
-`.dll` 과 함께 `sdk/` 에 들어갑니다.
+Windows 는 링크에 import library(`.lib`)가 따로 필요합니다. `sdk/VulkanCADCore.lib` 로 함께 들어 있습니다.
 
 ### iOS 정적 라이브러리는 Releases 에서 내려받기
 
