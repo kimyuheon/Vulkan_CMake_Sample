@@ -18,6 +18,9 @@ set -e
 cd "$(dirname "$0")"
 
 SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+# Gradle 은 SDK 위치를 local.properties(sdk.dir) 또는 ANDROID_HOME 에서 찾는다. 새로 clone 한 레포엔 local.properties 가
+# 없어서(Android Studio 가 처음 열 때 만든다) "SDK location not found" 로 멈췄다 → 스크립트가 넘겨 준다.
+export ANDROID_HOME="$SDK"
 EMU="$SDK/emulator/emulator"
 ADB="$SDK/platform-tools/adb"
 # 실행할 앱 — 기본은 테스트 앱(app), --robot 이면 로봇 팔(robot). 둘 다 :engine 모듈을 쓴다.
