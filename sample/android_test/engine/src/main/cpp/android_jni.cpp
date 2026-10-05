@@ -6,7 +6,7 @@
 #include <android/native_window_jni.h>
 #include <android/log.h>
 
-#include "api/VulkanCAD_API.h"
+#include "VulkanCAD_API.h"
 
 #include <string>   // 클립보드 보관
 #include <cstdio>

@@ -4,13 +4,12 @@
 헤더·에셋은 `sdk/` 에 들어 있습니다. **데스크톱 라이브러리 — Windows(`VulkanCADCore.dll` + `.lib`) ·
 macOS(`libVulkanCADCore.dylib`) · Linux(`libVulkanCADCore.so`) — 도 들어 있어** [Vulkan SDK](https://vulkan.lunarg.com/)만
 설치하면 clone 후 데스크톱 샘플을 바로 빌드·실행할 수 있습니다(아래 [플랫폼별 준비물](#플랫폼별-준비물)).
-iOS 정적 라이브러리는 둘 중 하나로 채웁니다.
+모바일(iOS 정적 라이브러리 · Android `.so`)은 둘 중 하나로 채웁니다.
 - 엔진 레포를 옆(`../3dEngine`)에 두고 Release 로 빌드 → 빌드가 `sdk/` 로 자동 복사
 - 또는 GitHub Releases 에서 받아 `sdk/` 바로 아래에 둠
 
 (동봉된 데스크톱 바이너리는 공개용 스냅숏(Release — Windows·macOS 는 엔진 3f29209)으로, 평소 개발 중 빌드 결과는 git 이 추적하지 않습니다 — `.gitignore` 참고.
-**안드로이드 샘플은 준비 중**입니다 — 지금은 엔진 소스(비공개)를 직접 컴파일하는 구조라 이 레포만으로는 빌드되지 않습니다.
-미리 빌드한 `.so` 를 쓰는 구조로 바꾸는 중입니다.)
+안드로이드는 엔진 `.so` 를 iOS 처럼 Releases 에서 받습니다.)
 
 ```
 3dEngine_Sample/
@@ -22,6 +21,7 @@ iOS 정적 라이브러리는 둘 중 하나로 채웁니다.
 │   ├── libVulkanCADCore.so     Linux 라이브러리 (동봉)
 │   ├── lib-ios-sim/        iOS 정적 라이브러리 (시뮬레이터) — Releases 에서 받음 (아래 참조)
 │   ├── lib-ios-device/     iOS 정적 라이브러리 (실기)       — Releases 에서 받음
+│   ├── lib-android/        Android 엔진 .so (arm64-v8a · x86_64) — Releases 에서 받음
 │   └── models/ textures/ fonts/    런타임 에셋
 └── sample/
     ├── cpp_api_test/       C++ 콘솔 — API 최소 예제
@@ -31,7 +31,7 @@ iOS 정적 라이브러리는 둘 중 하나로 채웁니다.
     ├── qml_test/           Qt / QML
     ├── swift_api_test/     Swift (macOS, SwiftUI + AppKit)
     ├── swift_ios_test/     Swift (iOS)
-    └── android_test/       Android (Kotlin + JNI) — 준비 중 (엔진 소스 필요)
+    └── android_test/       Android (Kotlin + JNI) — 엔진 .so 는 Releases
 ```
 
 ## 엔진과의 계약
@@ -58,7 +58,7 @@ CAD_ExecuteCommand("box");    // 명령행과 같은 입구 — 명령 200개 �
 | wpf_test | `dotnet build` | `CadCoreBuildDir` (csproj) |
 | swift_api_test | `swift build` | `Package.swift` 의 `buildDirectory` |
 | swift_ios_test | `xcodegen` → Xcode | `project.yml` 의 라이브러리 검색 경로 |
-| android_test | (준비 중) 지금은 엔진 소스 필요 — `./gradlew assembleDebug` | 엔진 레포 `../3dEngine` |
+| android_test | `./gradlew assembleDebug` (또는 `./run_android.sh`) | `sdk/lib-android/<ABI>/` |
 
 ### 플랫폼별 라이브러리 배치
 
@@ -92,6 +92,18 @@ unzip -o VulkanCAD-iOS-SDK-*.zip -d sdk/
 MoltenVK 는 Vulkan SDK 의 `MoltenVK.xcframework`(전역 설치 시 `/usr/local/lib`)를 정적 링크합니다.
 iOS 샘플을 안 쓰신다면 받지 않아도 됩니다.
 
+### Android 엔진 라이브러리도 Releases 에서 내려받기
+
+```bash
+# 레포 루트에서
+gh release download android-sdk-2026.10.05 -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'
+unzip -o VulkanCAD-Android-SDK-*.zip -d sdk/
+#   sdk/lib-android/arm64-v8a/libVulkanCADCore.so   (실기 · 애플 실리콘 에뮬레이터)
+#   sdk/lib-android/x86_64/libVulkanCADCore.so      (인텔·Windows 에뮬레이터)
+```
+
+자세한 실행 방법은 [sample/android_test/README.md](sample/android_test/README.md).
+
 ### 런타임 에셋
 
 라이브러리만으로는 동작하지 않습니다 — `fonts/` 가 없으면 치수·문자가 아예 생성되지 않습니다
@@ -109,7 +121,7 @@ iOS 샘플을 안 쓰신다면 받지 않아도 됩니다.
 | **Qt** | Qt 6 (`qml_test`) |
 | **macOS** | Xcode 15+, **Vulkan SDK — 설치할 때 "시스템 전역 설치"(System Global Installation)** 를 고를 것 (`/usr/local/lib` 에 로더·MoltenVK 가 들어간다) |
 | **iOS** | Xcode 15+, Releases 의 iOS 정적 라이브러리, Vulkan SDK(전역 설치 — `MoltenVK.xcframework` 를 정적 링크) |
-| **Android** | (준비 중) NDK, Android Studio 번들 JDK, 엔진 소스 |
+| **Android** | Android Studio(NDK·CMake·Emulator), Releases 의 Android SDK(엔진 `.so`) — Vulkan 은 기기에 기본 포함 |
 
 ### Ubuntu
 

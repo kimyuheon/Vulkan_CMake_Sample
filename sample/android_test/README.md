@@ -1,21 +1,18 @@
 # VulkanCAD — Android 샘플 (Gradle + NDK)
 
-> ⚠️ **준비 중** — 지금 이 샘플은 엔진 **소스**(`../3dEngine`, 비공개)를 직접 컴파일합니다. 공개 레포만으로는 빌드되지 않습니다.
-> 미리 빌드한 `libVulkanCADCore.so` 를 링크하는 구조로 바꾸는 중입니다.
-
-Android 기기/에뮬레이터에서 VulkanCAD 엔진을 띄우는 최소 샘플.
-엔진 전체를 `libvulkancad.so` 로 크로스컴파일하고 `SurfaceView` 에 Vulkan 렌더한다.
-크로스플랫폼(Windows/macOS/Linux 호스트) 빌드 지원.
+Android 기기/에뮬레이터에서 VulkanCAD 엔진을 띄우는 샘플.
+엔진은 **미리 빌드된 `libVulkanCADCore.so`**(Releases)를 링크만 하고, 이 레포에서는 JNI·샘플 로직만 컴파일한다.
+`SurfaceView` 에 Vulkan 으로 렌더한다. 크로스플랫폼(Windows/macOS/Linux 호스트) 빌드 지원.
 
 ## 구조
 
 | 파일 | 역할 |
 |------|------|
-Gradle 모듈 3개 — 엔진은 `engine` 한 곳에서만 빌드하고, 앱 모듈은 그것만 참조한다.
+Gradle 모듈 3개 — 엔진 연결은 `engine` 한 곳에만 두고, 앱 모듈은 그것만 참조한다.
 
 | 모듈 | 내용 |
 |------|------|
-| `engine` | 엔진 C++ → `libvulkancad.so`, 렌더 뷰·JNI·런타임 에셋 (Android 라이브러리) |
+| `engine` | 미리 빌드된 엔진 `.so` + JNI(`libvulkancad.so`), 렌더 뷰·런타임 에셋 (Android 라이브러리) |
 | `app` | 기본 테스트 앱 — 그리기·치수·파일 열기 (`com.vulkancad.androidtest`) |
 | `robot` | 🆕 로봇 팔 샘플 — URDF 관절 슬라이더 (`com.vulkancad.robotarm`). 로직은 [`../shared/robot_demo`](../shared) (iOS·macOS 와 공용) |
 
@@ -25,13 +22,12 @@ Gradle 모듈 3개 — 엔진은 `engine` 한 곳에서만 빌드하고, 앱 모
 | `engine/.../VulkanSurfaceView.kt` | SurfaceView + Choreographer(vsync) Tick + 터치. `onEngineReady`·`onBeforeTick` 훅 |
 | `engine/.../CadNative.kt` | JNI 선언 + `System.loadLibrary("vulkancad")` |
 | `engine/.../EngineAssets.kt` | APK assets → filesDir 추출 + 엔진 에셋 경로 지정 (앱마다 onCreate 에서 한 번) |
-| `engine/src/main/cpp/CMakeLists.txt` | 엔진 소스 → Android `.so` (GLOB·제외 목록·`LOT_NO_IMGUI`/`LOT_PLATFORM_IOS`) + 샘플 공용 로직·앱별 JNI |
+| `engine/src/main/cpp/CMakeLists.txt` | `sdk/lib-android/<ABI>/libVulkanCADCore.so` 를 IMPORTED 로 링크 + JNI·샘플 공용 로직을 `libvulkancad.so` 로 |
 | `engine/src/main/cpp/android_jni.cpp` | JNI(`CadNative`) ↔ C API(`CAD_*`). ANativeWindow 로 AttachView/Tick/터치 |
-| `engine/src/main/cpp/android_stubs.cpp` | 데스크톱 UI 클래스(LotUiManager 등) no-op 스텁 (ImGui 없이) |
 | `app/.../MainActivity.kt` | ⭐ 테스트 앱 **진입점** — 툴바 + 렌더뷰 구성 |
 | `app/.../CadMobileBridge.kt` | 모바일 OS 기능(클립보드/사진/OCR) 연결 |
 | `robot/.../RobotActivity.kt` | 로봇 팔 화면 — 3D 뷰 + [재생]·[홈 자세]·[화면 맞춤] + 관절 슬라이더 |
-| `robot/src/main/cpp/robot_jni.cpp` | JNI(`RobotNative`) ↔ `RobotDemo_*`. 엔진 `.so` 에 같이 빌드된다(엔진 전역 상태 공유) |
+| `robot/src/main/cpp/robot_jni.cpp` | JNI(`RobotNative`) ↔ `RobotDemo_*`. `libvulkancad.so` 에 같이 빌드(엔진 상태는 엔진 `.so` 하나라 두 앱이 공유) |
 
 > Kotlin 패키지 `com.vulkancad.androidtest` 는 `engine` 모듈에도 그대로다 — JNI 함수 이름이 이 패키지에 묶여 있다.
 
@@ -48,8 +44,12 @@ MainActivity.onCreate()          에셋 추출 → nativeSetAssetPath → 툴바
 
 1. **Android Studio** + SDK Manager 에서:
    - **NDK (Side by side)**, **CMake**, **Android Emulator**, SDK Platform (API 34+)
-2. **VulkanSdk** — 레포 부모 폴더에 `../VulkanSdk/{Win|Apple|Linux}` (glm/GLFW 헤더용).
-   vulkan 헤더는 NDK 가 제공하므로 별도 불필요.
+2. **엔진 라이브러리** — 레포 루트에서 Releases 의 Android SDK 를 받아 `sdk/` 에 푼다:
+   ```bash
+   gh release download android-sdk-2026.10.05 -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'
+   unzip -o VulkanCAD-Android-SDK-*.zip -d sdk/      # → sdk/lib-android/{arm64-v8a,x86_64}/libVulkanCADCore.so
+   ```
+   Vulkan 은 Android 7.0+ 기기에 기본 포함 — 따로 설치할 것이 없다.
 3. **런타임 에셋** — 별도 준비가 필요 없다. Gradle 이 레포의 `sdk/` 에서 `models/ fonts/
    textures/` 를 APK assets 로 자동 복사한다. 셰이더는 라이브러리에 내장돼 있다.
 
@@ -79,7 +79,8 @@ cd samples/android_test
 ### 방법 2 — Android Studio
 
 1. `samples/android_test/` 를 **Open** → Gradle Sync
-   - ⚠️ `app/build.gradle.kts` 의 `ndkVersion` 을 **설치된 NDK 버전**으로 맞출 것
+   - NDK 버전은 설치된 것 중 최신을 자동으로 고른다(`engine/build.gradle.kts`)
+   - 실행 구성에서 `app`(테스트 앱) 또는 `robot`(로봇 팔)을 고른다
 2. 기기/에뮬레이터 선택 → ▶ **Run**
 
 ### 방법 3 — APK 만 빌드
@@ -112,25 +113,14 @@ $ADB shell screencap -p /sdcard/s.png && $ADB pull /sdcard/s.png   # 화면 캡�
 - **실제 기기** : 가상화 불필요. USB 디버깅만 켜면 됨.
 
 ### 검증 현황
-- ✅ NDK + CMake 로 `libvulkancad.so` 링크 성공 (Windows 호스트, x86_64)
-- ✅ `gradle assembleDebug` → `app-debug.apk` BUILD SUCCESSFUL
-- ✅ **에뮬레이터 실행 확인** (2026-09-02, macOS 호스트 / Pixel_7 arm64):
-  `run_android.sh` 로 빌드·설치·실행 → 그리드·좌표축·ViewCube·툴바 렌더 정상
+- ✅ 미리 빌드된 엔진 `.so`(엔진 b17c935, Release) 링크 → `app`·`robot` APK 빌드 (macOS 호스트)
+- ✅ **에뮬레이터 실행 확인** (2026-10-05, Pixel_7 arm64): 테스트 앱 · 로봇 팔(재생·슬라이더) 정상
 
-## ⚠️ 엔진 수정 후 안드로이드가 깨질 때
+## 엔진 라이브러리를 새로 만들 때 (엔진 개발자용)
 
-안드로이드는 **데스크톱과 다른 CMakeLists 를 쓰고 ImGui 가 없다.** 엔진 쪽을 고치면
-데스크톱은 멀쩡한데 안드로이드만 깨지는 일이 잦다. 증상별 대응:
-
-| 증상 | 원인 | 대응 |
-|------|------|------|
-| `FirstApp::*` 등 **대량 undefined symbol** | 엔진에 **새 소스 폴더**가 생겼는데 안드로이드 `CMakeLists.txt` 의 `file(GLOB ...)` 에 빠짐 | `engine/src/main/cpp/CMakeLists.txt` 의 GLOB 목록을 **데스크톱 `CMakeLists.txt` 와 대조**해 누락 폴더 추가 |
-| `fatal error: 'imgui.h' file not found` | 안드로이드는 `LOT_NO_IMGUI` 라 ImGui 헤더가 없는데, 그 파일이 **가드 없이** include | 해당 파일을 `#ifndef LOT_NO_IMGUI` 로 감싸고 `#ifdef LOT_NO_IMGUI` 쪽에 no-op 구현 (`lot_dimension_panel.cpp` 가 표준 예시) |
-| `LotUiManager::render ... does not match any declaration` | 데스크톱 UI 헤더의 **시그니처가 바뀌었는데** `android_stubs.cpp` 가 옛 시그니처 | 헤더 선언과 1:1로 맞춰 스텁 수정 |
-| 제외된 파일의 심볼 undefined (`saveModelFileDialog` 등) | `CMakeLists.txt` 제외 목록의 파일이 제공하던 함수가 새로 **호출되기 시작** | `android_stubs.cpp` 에 no-op 스텁 추가 — **실제로 undefined 로 뜬 것만** (안 뜬 걸 넣으면 중복 심볼) |
-
-> 팁: 에러는 한 번에 다 안 나온다. 고치고 다시 `./run_android.sh` → 다음 에러 → 반복.
-> 데스크톱 빌드(`cmake --build build`)도 함께 돌려 회귀가 없는지 확인할 것.
+`libVulkanCADCore.so` 는 엔진 레포의 `build_android.sh` 가 만든다(ABI 별 Release, 공개 C API 만 내보냄).
+엔진 레포를 이 레포 옆(`../3dEngine`)에 두고 실행하면 `sdk/lib-android/<ABI>/` 로 자동 복사된다.
+엔진을 고쳐 안드로이드 빌드가 깨질 때(새 소스 폴더·스텁 시그니처 등)의 대응도 엔진 레포 `android/` 쪽 일이다.
 
 ## 미구현 / 다음
 

@@ -72,3 +72,4 @@ sdk/*.lib
 sdk/*.pdb
 sdk/*.exp
 sdk/lib-ios-*/
+sdk/lib-android/      # Android 엔진 .so — Releases 에서 받는다 (엔진 build_android.sh 가 복사)
