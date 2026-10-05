@@ -314,10 +314,12 @@
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(SRCROOT)/../../sdk/lib-ios-device",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(SRCROOT)/../../sdk/lib-ios-sim",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
 				);
 				OTHER_LDFLAGS = (
@@ -358,10 +360,12 @@
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(SRCROOT)/../../sdk/lib-ios-device",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(SRCROOT)/../../sdk/lib-ios-sim",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
 				);
 				OTHER_LDFLAGS = (
@@ -525,10 +529,12 @@
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(SRCROOT)/../../sdk/lib-ios-device",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(SRCROOT)/../../sdk/lib-ios-sim",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
 				);
 				OTHER_LDFLAGS = (
@@ -569,10 +575,12 @@
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(SRCROOT)/../../sdk/lib-ios-device",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(SRCROOT)/../../sdk/lib-ios-sim",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
 					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
 				);
 				OTHER_LDFLAGS = (

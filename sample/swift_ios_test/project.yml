@@ -61,11 +61,15 @@ targetTemplates:
         # CMake 가 만든 정적 라이브러리 + MoltenVK 정적 lib — SDK 별 분기.
         #   시뮬레이터: sdk/lib-ios-sim    + MoltenVK ios-arm64_x86_64-simulator 슬라이스
         #   디바이스  : sdk/lib-ios-device + MoltenVK ios-arm64 슬라이스
+        #   MoltenVK 는 Vulkan SDK 의 "시스템 전역 설치" 위치(/usr/local/lib)를 먼저 본다 — 공개 레포를 받은 사람의 경로.
+        #   ../../../VulkanSdk 는 엔진 개발 PC 의 배치(엔진 레포 옆에 SDK 를 풀어 둔 경우).
         LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]:
           - "$(SRCROOT)/../../sdk/lib-ios-sim"
+          - "/usr/local/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator"
           - "$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator"
         LIBRARY_SEARCH_PATHS[sdk=iphoneos*]:
           - "$(SRCROOT)/../../sdk/lib-ios-device"
+          - "/usr/local/lib/MoltenVK.xcframework/ios-arm64"
           - "$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64"
         # 링크 순서 주의: 의존하는 VulkanCADCoreStatic 을 먼저, 그다음 manifold(피의존).
         # iconv: 엔진의 DXF 코드페이지 변환(dxf/lot_dxf_codepage — CP949 등 → UTF-8)이 libiconv 를 쓴다.

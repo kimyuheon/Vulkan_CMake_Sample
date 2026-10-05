@@ -20,7 +20,7 @@ iOS 정적 라이브러리는 둘 중 하나로 채웁니다.
 │   ├── VulkanCADCore.dll/.lib  Windows 라이브러리 (동봉)
 │   ├── libVulkanCADCore.dylib  macOS 라이브러리 (동봉, arm64 · macOS 14+)
 │   ├── libVulkanCADCore.so     Linux 라이브러리 (동봉)
-│   ├── lib-ios-sim/        iOS 정적 라이브러리 (시뮬레이터) — Releases 에서 받음
+│   ├── lib-ios-sim/        iOS 정적 라이브러리 (시뮬레이터) — Releases 에서 받음 (아래 참조)
 │   ├── lib-ios-device/     iOS 정적 라이브러리 (실기)       — Releases 에서 받음
 │   └── models/ textures/ fonts/    런타임 에셋
 └── sample/
@@ -75,18 +75,22 @@ DLL 과 `models/` 를 같이 꺼내 실행 파일 옆으로 복사합니다).
 Windows 는 링크에 import library(`.lib`)가 따로 필요합니다. 엔진을 Windows 에서 빌드하면
 `.dll` 과 함께 `sdk/` 에 들어갑니다.
 
-### iOS 정적 라이브러리는 별도 내려받기
+### iOS 정적 라이브러리는 Releases 에서 내려받기
 
-iOS 는 공유 라이브러리를 쓸 수 없어 정적 라이브러리를 링크하는데, 하나가 **216MB** 라
-GitHub 파일 한도(100MB)를 넘습니다. 그래서 레포에 없고 **Releases** 에 올려 둡니다.
+iOS 는 공유 라이브러리 대신 정적 라이브러리(시뮬레이터용·실기용 각 약 20MB)를 링크합니다.
+레포에는 넣지 않고 [Releases](https://github.com/kimyuheon/Vulkan_CMake_Sample/releases/tag/ios-sdk-2026.10.05) 에 올려 둡니다.
 
 ```bash
-# Releases 에서 받아 압축을 풀면 아래 두 폴더가 채워진다
-sdk/lib-ios-sim/      libVulkanCADCoreStatic.a  libmanifold.a
-sdk/lib-ios-device/   libVulkanCADCoreStatic.a  libmanifold.a
+# 레포 루트에서 — zip 을 sdk/ 에 풀면 아래 두 폴더가 채워진다
+gh release download ios-sdk-2026.10.05 -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'
+unzip -o VulkanCAD-iOS-SDK-*.zip -d sdk/
+#   sdk/lib-ios-sim/      libVulkanCADCoreStatic.a  libmanifold.a   (Apple Silicon 맥의 시뮬레이터, arm64)
+#   sdk/lib-ios-device/   libVulkanCADCoreStatic.a  libmanifold.a   (iPhone·iPad, arm64)
 ```
 
-iOS 샘플을 안 쓰신다면 받지 않아도 됩니다. 나머지 샘플은 레포만으로 빌드됩니다.
+`gh` 가 없으면 위 Releases 페이지에서 zip 을 받아 같은 곳에 풀면 됩니다.
+MoltenVK 는 Vulkan SDK 의 `MoltenVK.xcframework`(전역 설치 시 `/usr/local/lib`)를 정적 링크합니다.
+iOS 샘플을 안 쓰신다면 받지 않아도 됩니다.
 
 ### 런타임 에셋
 
@@ -104,7 +108,7 @@ iOS 샘플을 안 쓰신다면 받지 않아도 됩니다. 나머지 샘플은 �
 | **Ubuntu** | `build-essential cmake libvulkan-dev vulkan-tools` |
 | **Qt** | Qt 6 (`qml_test`) |
 | **macOS** | Xcode 15+, **Vulkan SDK — 설치할 때 "시스템 전역 설치"(System Global Installation)** 를 고를 것 (`/usr/local/lib` 에 로더·MoltenVK 가 들어간다) |
-| **iOS** | Xcode 15+, `xcodegen`, Releases 의 iOS 정적 라이브러리 (MoltenVK 는 앱에 정적 링크 — Vulkan SDK 의 `MoltenVK.xcframework` 필요) |
+| **iOS** | Xcode 15+, Releases 의 iOS 정적 라이브러리, Vulkan SDK(전역 설치 — `MoltenVK.xcframework` 를 정적 링크) |
 | **Android** | (준비 중) NDK, Android Studio 번들 JDK, 엔진 소스 |
 
 ### Ubuntu
