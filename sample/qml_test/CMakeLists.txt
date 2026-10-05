@@ -11,7 +11,7 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Gui Widgets)
 qt_standard_project_setup(REQUIRES 6.4)
 
 # ── 엔진 공유 라이브러리 위치 ──
-# 라이브러리는 **레포에 없다**(sdk/*.so|dll|dylib 는 .gitignore). 둘 중 하나로 채운 뒤 빌드한다:
+# 라이브러리는 공개용 스냅숏으로 sdk/ 에 들어 있다(평소 빌드 결과는 .gitignore). 없거나 새로 바꾸려면:
 #   1) 엔진 레포(../3dEngine)를 Release 로 빌드 — 엔진 CMake 가 sdk/ 로 자동 복사한다
 #   2) GitHub Releases 에서 받아 sdk/ 바로 아래에 둔다
 #
@@ -84,9 +84,14 @@ target_compile_definitions(qml_host PRIVATE
     VULKANCAD_DEFAULT_ASSET_PATH="${VULKANCAD_ASSET_PATH_CMAKE}")
 
 # Linux/macOS는 rpath로 공유 라이브러리를 찾는다. LD_LIBRARY_PATH가 필요 없다.
+# macOS 는 Vulkan 로더(libvulkan.1.dylib)가 OS 에 없고 레포에도 없다 — Vulkan SDK 의 전역 설치 위치도 넣는다.
+set(_qml_rpath "${VULKANCAD_CORE_DIR}")
+if(APPLE)
+    list(APPEND _qml_rpath "/usr/local/lib")
+endif()
 set_target_properties(qml_host PROPERTIES
-    BUILD_RPATH "${VULKANCAD_CORE_DIR}"
-    INSTALL_RPATH "${VULKANCAD_CORE_DIR}")
+    BUILD_RPATH "${_qml_rpath}"
+    INSTALL_RPATH "${_qml_rpath}")
 
 # Windows는 import library와 별도로 실제 DLL을 실행파일 옆에 복사해야 한다.
 if(WIN32)

@@ -1,5 +1,8 @@
 # VulkanCAD — Android 샘플 (Gradle + NDK)
 
+> ⚠️ **준비 중** — 지금 이 샘플은 엔진 **소스**(`../3dEngine`, 비공개)를 직접 컴파일합니다. 공개 레포만으로는 빌드되지 않습니다.
+> 미리 빌드한 `libVulkanCADCore.so` 를 링크하는 구조로 바꾸는 중입니다.
+
 Android 기기/에뮬레이터에서 VulkanCAD 엔진을 띄우는 최소 샘플.
 엔진 전체를 `libvulkancad.so` 로 크로스컴파일하고 `SurfaceView` 에 Vulkan 렌더한다.
 크로스플랫폼(Windows/macOS/Linux 호스트) 빌드 지원.

@@ -8,6 +8,9 @@ let projectRoot = packageDirectory
     .deletingLastPathComponent()
     .deletingLastPathComponent()
 let buildDirectory = projectRoot.appendingPathComponent("sdk").path
+// macOS 엔진(libVulkanCADCore.dylib)은 Vulkan 로더를 @rpath/libvulkan.1.dylib 로 찾는다. 레포엔 로더가 없으므로
+// Vulkan SDK 의 시스템 전역 설치 위치(/usr/local/lib)도 rpath 에 넣는다 — 없으면 clone 직후 실행 즉시 죽는다.
+let vulkanSDKLibDirectory = "/usr/local/lib"
 
 let package = Package(
     name: "VulkanCADSwiftApiTest",
@@ -35,7 +38,9 @@ let package = Package(
                     "-L\(buildDirectory)",
                     "-lVulkanCADCore",
                     "-Xlinker", "-rpath",
-                    "-Xlinker", buildDirectory
+                    "-Xlinker", buildDirectory,
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", vulkanSDKLibDirectory
                 ])
             ]
         ),
@@ -48,7 +53,9 @@ let package = Package(
                     "-L\(buildDirectory)",
                     "-lVulkanCADCore",
                     "-Xlinker", "-rpath",
-                    "-Xlinker", buildDirectory
+                    "-Xlinker", buildDirectory,
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", vulkanSDKLibDirectory
                 ])
             ]
         ),
@@ -69,7 +76,9 @@ let package = Package(
                     "-L\(buildDirectory)",
                     "-lVulkanCADCore",
                     "-Xlinker", "-rpath",
-                    "-Xlinker", buildDirectory
+                    "-Xlinker", buildDirectory,
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", vulkanSDKLibDirectory
                 ])
             ]
         ),
@@ -89,7 +98,9 @@ let package = Package(
                     "-L\(buildDirectory)",
                     "-lVulkanCADCore",
                     "-Xlinker", "-rpath",
-                    "-Xlinker", buildDirectory
+                    "-Xlinker", buildDirectory,
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", vulkanSDKLibDirectory
                 ])
             ]
         )
