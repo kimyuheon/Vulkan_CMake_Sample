@@ -55,14 +55,9 @@ if(WIN32)
     endforeach()
 else()
     # macOS/Linux 는 rpath 로 SDK 를 직접 가리킨다 — 복사가 필요 없다.
-    # macOS 는 Vulkan 로더가 OS·레포에 없다 — Vulkan SDK 전역 설치 위치(/usr/local/lib)도 찾게 한다.
-    set(_cpp_rpath "${VULKANCAD_LIB_DIR}")
-    if(APPLE)
-        list(APPEND _cpp_rpath "/usr/local/lib")
-    endif()
     set_target_properties(cpp_api_test PROPERTIES
-        BUILD_RPATH   "${_cpp_rpath}"
-        INSTALL_RPATH "${_cpp_rpath}")
+        BUILD_RPATH   "${VULKANCAD_LIB_DIR}"
+        INSTALL_RPATH "${VULKANCAD_LIB_DIR}")
     # 엔진은 상대 경로로 에셋을 연다. 실행 디렉토리에 없으면 SDK 를 쓰도록 알려 준다.
     target_compile_definitions(cpp_api_test PRIVATE
         VULKANCAD_DEFAULT_ASSET_PATH="${VULKANCAD_SDK}")

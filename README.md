@@ -2,11 +2,12 @@
 
 VulkanCAD 엔진을 여러 UI 프레임워크에서 호스팅하는 예제 모음입니다.
 헤더·에셋은 `sdk/` 에 들어 있습니다. **데스크톱 라이브러리 — Windows(`VulkanCADCore.dll` + `.lib`) ·
-macOS(`libVulkanCADCore.dylib`) · Linux(`libVulkanCADCore.so`) — 도 들어 있어** [Vulkan SDK](https://vulkan.lunarg.com/)만
-설치하면 clone 후 데스크톱 샘플을 바로 빌드·실행할 수 있습니다(아래 [플랫폼별 준비물](#플랫폼별-준비물)).
+macOS(`libVulkanCADCore.dylib`) · Linux(`libVulkanCADCore.so`) — 도 들어 있어** clone 만 하면 데스크톱 샘플을
+바로 빌드·실행할 수 있습니다. **Vulkan SDK 는 필요 없습니다** — Windows·Linux 는 GPU 드라이버의 Vulkan 을 쓰고,
+macOS 라이브러리에는 MoltenVK 가 들어 있습니다(아래 [플랫폼별 준비물](#플랫폼별-준비물)).
 모바일(iOS 정적 라이브러리 · Android `.so`)은 GitHub Releases 에서 받아 `sdk/` 바로 아래에 둡니다.
 
-(동봉된 데스크톱 바이너리는 공개용 스냅숏(Release — Windows·macOS 는 엔진 3f29209)으로, 평소 개발 중 빌드 결과는 git 이 추적하지 않습니다 — `.gitignore` 참고.
+(동봉된 데스크톱 바이너리는 공개용 스냅숏(Release — Windows·Linux 는 엔진 3f29209, macOS 는 db9c21d)으로, 평소 개발 중 빌드 결과는 git 이 추적하지 않습니다 — `.gitignore` 참고.
 안드로이드는 엔진 `.so` 를 iOS 처럼 Releases 에서 받습니다.)
 
 ```
@@ -15,7 +16,7 @@ macOS(`libVulkanCADCore.dylib`) · Linux(`libVulkanCADCore.so`) — 도 들어 �
 │   ├── include/            VulkanCAD_API.h — 공개 C API
 │   ├── csharp/             C# 선언 (헤더에서 자동 생성, Windows) — C# 앱은 이 *.cs 를 포함
 │   ├── VulkanCADCore.dll/.lib  Windows 라이브러리 (동봉)
-│   ├── libVulkanCADCore.dylib  macOS 라이브러리 (동봉, arm64 · macOS 14+)
+│   ├── libVulkanCADCore.dylib  macOS 라이브러리 (동봉, arm64 · macOS 14+, MoltenVK 내장)
 │   ├── libVulkanCADCore.so     Linux 라이브러리 (동봉)
 │   ├── lib-ios-sim/        iOS 정적 라이브러리 (시뮬레이터) — Releases 에서 받음 (아래 참조)
 │   ├── lib-ios-device/     iOS 정적 라이브러리 (실기)       — Releases 에서 받음
@@ -67,7 +68,7 @@ DLL 과 `models/` 를 같이 꺼내 실행 파일 옆으로 복사합니다).
 |----|------|------------------------------|
 | Windows | `VulkanCADCore.dll` + `VulkanCADCore.lib` | rpath 가 없어 **exe 옆에 복사**해야 함 (샘플이 자동으로 함) |
 | Linux | `libVulkanCADCore.so` | rpath 로 `sdk/` 를 직접 참조 — 복사 불필요 |
-| macOS | `libVulkanCADCore.dylib` | `@rpath` — `sdk/` 와 Vulkan SDK 설치 위치(`/usr/local/lib`) 를 참조. Vulkan 로더(`libvulkan.1.dylib`)는 OS 에도 레포에도 없어 **Vulkan SDK 설치가 필수** |
+| macOS | `libVulkanCADCore.dylib` | rpath 로 `sdk/` 를 직접 참조 — MoltenVK 가 정적으로 들어 있어 Vulkan 로더·SDK 불필요 |
 
 Windows 는 링크에 import library(`.lib`)가 따로 필요합니다. `sdk/VulkanCADCore.lib` 로 함께 들어 있습니다.
 
@@ -111,11 +112,11 @@ unzip -o VulkanCAD-Android-SDK-*.zip -d sdk/
 
 | | 필요한 것 |
 |---|---|
-| **공통** | [Vulkan SDK](https://vulkan.lunarg.com/) (Windows·Linux 는 GPU 드라이버만으로도 로더가 잡히지만 SDK 를 권장 — 검증 레이어 포함) |
+| **공통** | Vulkan 을 지원하는 GPU 드라이버 (macOS·iOS 는 MoltenVK 내장이라 불필요). [Vulkan SDK](https://vulkan.lunarg.com/) 는 **선택** — 검증 레이어로 디버깅할 때만 |
 | **Windows** | Visual Studio 2022 (MFC 워크로드), .NET 8 SDK (WPF·WinForms), 최신 GPU 드라이버 |
 | **Ubuntu** | `build-essential cmake libvulkan-dev vulkan-tools` |
 | **Qt** | Qt 6 (`qml_test`) |
-| **macOS** | Xcode 15+, **Vulkan SDK — 설치할 때 "시스템 전역 설치"(System Global Installation)** 를 고를 것 (`/usr/local/lib` 에 로더·MoltenVK 가 들어간다) |
+| **macOS** | Xcode 15+ (Vulkan SDK 불필요 — dylib 에 MoltenVK 내장, Apple Silicon) |
 | **iOS** | Xcode 15+, Releases 의 iOS SDK zip (엔진 + MoltenVK 정적 라이브러리 — Vulkan SDK 불필요) |
 | **Android** | Android Studio(NDK·CMake·Emulator), Releases 의 Android SDK(엔진 `.so`) — Vulkan 은 기기에 기본 포함 |
 
@@ -133,9 +134,7 @@ Qt 샘플은 `qt6-base-dev qt6-declarative-dev` 가 추가로 필요합니다.
 ### macOS
 
 ```bash
-# 1) Vulkan SDK 설치 (https://vulkan.lunarg.com/sdk/home#mac) — "System Global Installation" 체크
-ls /usr/local/lib/libvulkan.1.dylib /usr/local/share/vulkan/icd.d/   # 로더·MoltenVK 가 잡혔는지 확인
-# 2) clone 후 실행
+# clone 후 바로 — Vulkan SDK 설치 불필요 (sdk/libVulkanCADCore.dylib 에 MoltenVK 내장)
 cd sample/swift_api_test && swift run VulkanCADSamples
 ```
 

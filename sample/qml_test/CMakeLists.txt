@@ -79,14 +79,9 @@ target_compile_definitions(qml_host PRIVATE
     VULKANCAD_DEFAULT_ASSET_PATH="${VULKANCAD_ASSET_PATH_CMAKE}")
 
 # Linux/macOS는 rpath로 공유 라이브러리를 찾는다. LD_LIBRARY_PATH가 필요 없다.
-# macOS 는 Vulkan 로더(libvulkan.1.dylib)가 OS 에 없고 레포에도 없다 — Vulkan SDK 의 전역 설치 위치도 넣는다.
-set(_qml_rpath "${VULKANCAD_CORE_DIR}")
-if(APPLE)
-    list(APPEND _qml_rpath "/usr/local/lib")
-endif()
 set_target_properties(qml_host PROPERTIES
-    BUILD_RPATH "${_qml_rpath}"
-    INSTALL_RPATH "${_qml_rpath}")
+    BUILD_RPATH "${VULKANCAD_CORE_DIR}"
+    INSTALL_RPATH "${VULKANCAD_CORE_DIR}")
 
 # Windows는 import library와 별도로 실제 DLL을 실행파일 옆에 복사해야 한다.
 if(WIN32)
