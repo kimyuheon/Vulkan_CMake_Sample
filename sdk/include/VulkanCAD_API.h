@@ -50,7 +50,9 @@ CAD_API void CAD_OnKeyUp(int key, int modifiers);
  *
  * 엔진이 이미 시작한 swapchain render pass 안에서 외부 UI가 draw command를
  * 기록할 수 있게 빌린 Vulkan 컨텍스트를 전달한다. 모든 handle은 엔진 소유다.
- * 콜백은 handle을 파괴하거나 queue submit / present를 호출하면 안 된다.
+ * 콜백은 빌린 handle을 파괴하거나 present를 호출하면 안 된다.
+ * 외부 렌더러가 자체 텍스처 업로드 명령을 graphicsQueue에 제출할 경우
+ * 호스트의 렌더 명령과 동기화할 책임은 외부 렌더러에 있다.
  *
  * 콜백 반환값은 CAD_OVERLAY_CAPTURE_* 비트다. 이전 프레임 반환값을 다음 입력
  * 라우팅에 사용해, UI가 처리하는 포인터/키보드 입력이 CAD 뷰로 새지 않게 한다.
@@ -224,12 +226,31 @@ CAD_API bool CAD_RemoveUiItem(unsigned int id);
 CAD_API unsigned int CAD_RemoveUiItemsByOwner(unsigned int owner);
 /* 호스트가 메뉴·툴바를 직접 그릴 때 읽는다. index 는 등록 순서 = 화면 나열 순서. */
 CAD_API unsigned int CAD_GetUiItemCount(void);
+/* Positive height reserves the built-in ribbon region for an external overlay.
+ * Zero restores the original ImGui ribbon and plugin ribbon. */
+CAD_API void CAD_SetOverlayRibbonHeight(float logicalHeight);
+/* Logical Y coordinate immediately below the host menu bar. */
+CAD_API float CAD_GetOverlayRibbonTop(void);
 CAD_API unsigned int CAD_GetUiItemId(unsigned int index);
 CAD_API int CAD_GetUiItemKind(unsigned int index);        /* 실패 시 -1 */
 CAD_API int CAD_GetUiItemPath(unsigned int index, char* buf, int bufLen);
 CAD_API int CAD_GetUiItemTitle(unsigned int index, char* buf, int bufLen);
 CAD_API int CAD_GetUiItemCommand(unsigned int index, char* buf, int bufLen);
 CAD_API int CAD_GetUiItemIcon(unsigned int index, char* buf, int bufLen);
+
+/* LotUI ribbon controls owned by the host, not by a plugin DLL.
+ * kind: 5=checkbox, 6=slider. path is "tab/group". command runs after a
+ * user change; the command callback reads the new value by item id.
+ * A checkbox uses 0/1; its range arguments are ignored. A slider requires
+ * finite minimum < maximum and clamps the initial/current value.
+ * Plugins must remove their items and commands on unload.
+ */
+CAD_API unsigned int CAD_AddUiControl(int kind, const char* path,
+    const char* title, const char* command, double minimum, double maximum,
+    double value, unsigned int owner);
+CAD_API bool CAD_SetUiControlValue(unsigned int id, double value);
+CAD_API bool CAD_GetUiControlValue(unsigned int id, double* value,
+    double* minimum, double* maximum);
 
 /* ── 플러그인 로더 ────────────────────────────────────────
  *
@@ -1118,6 +1139,13 @@ CAD_API bool     CAD_SetBRepCut(uint32_t id, uint32_t cutIndex,
 CAD_API bool     CAD_SetBRepCutFromSketch(uint32_t id, uint32_t cutIndex,
                                           uint32_t sketchId,
                                           float depth, bool throughAll);
+// 컷·보스 지우기(솔리드웍스 피처 삭제처럼) — 여러 개를 한 번에 빼고 남은 것으로 한 번 다시 만든다. 그 피처만 쓰던 스케치도 지운다.
+// 번호는 CAD_GetBRepCutInfo / 보스 순서(지우기 전 번호 — 지운 뒤엔 뒤쪽 번호가 당겨진다). 되돌리기 한 단계.
+// 남은 것으로 모양을 못 만들면(보스를 지워 그 안 컷이 허공에 남음 등) 아무것도 안 바꾸고 false + CAD_GetLastError.
+CAD_API bool     CAD_RemoveBRepFeatures(uint32_t id, const uint32_t* cutIndices, uint32_t cutCount,
+                                        const uint32_t* bossIndices, uint32_t bossCount);
+CAD_API bool     CAD_RemoveBRepCut(uint32_t id, uint32_t cutIndex);     // 하나만 — CAD_RemoveBRepFeatures 와 같다
+CAD_API bool     CAD_RemoveBRepBoss(uint32_t id, uint32_t bossIndex);
 // 일반 Boolean 차집합이 B-Rep 기준체와 원통 커터로 만들어졌으면 타공 기록을 보존한다.
 // 중심·방향은 결과 객체 로컬 좌표, radius/height는 같은 좌표계의 수치다.
 typedef struct CAD_BooleanCylinderCutInfo {
@@ -1495,7 +1523,8 @@ CAD_API uint32_t CAD_CreateTube(float x, float y, float z, float outerRadius, fl
 /* 피처 치수 — 솔리드를 만든 치수(솔리드웍스 Instant3D 식). 상자: 가로·세로·높이 / 원기둥: 지름·높이 /
  * 돌출: 높이 + 단면·컷 스케치의 원 지름, 직사각형 가로·세로. 값은 월드 단위.
  * 일반 폴리선 단면(12꼭짓점까지)은 변마다 길이 — 바꾸면 그 변 끝 너머 꼭짓점을 같이 민다(STRETCH, 직각 유지).
- * kind: 0=가로 1=세로 2=높이 3=지름 4=변. sketchId = 값이 사는 스케치(0 = 솔리드 자체).
+ * kind: 0=가로 1=세로 2=높이 3=지름 4=변 5=위치(원 컷·원 보스 중심 — 바닥 단면 모서리에서 거리, 바꾸면 그 원 스케치를 옮긴다).
+ * sketchId = 값이 사는 스케치(0 = 솔리드 자체). 위치 치수는 크기 치수 뒤에 붙는다(기존 번호는 그대로). 모양을 못 만드는 값이면 false + CAD_GetLastError.
  * Set 은 재생성(스케치 치수는 스케치를 고쳐 피처가 다음 프레임에 따라온다), undo 1. 실패 false.
  * Visible = 선택한 솔리드 위에 파란 치수 표시(명령 fdim, 상태바 "치수") — 더블클릭하면 명령행이 새 값을 기다린다. */
 CAD_API void     CAD_SetFeatureDimensionsVisible(bool visible);
