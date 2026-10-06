@@ -60,6 +60,12 @@ namespace VulkanCAD
         public static extern uint CAD_GetUiItemCount();
 
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void CAD_SetOverlayRibbonHeight(float logicalHeight);
+
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern float CAD_GetOverlayRibbonTop();
+
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern uint CAD_GetUiItemId(uint index);
 
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -76,6 +82,17 @@ namespace VulkanCAD
 
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int CAD_GetUiItemIcon(uint index, byte[] buf, int bufLen);
+
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern uint CAD_AddUiControl(int kind, [MarshalAs(UnmanagedType.LPUTF8Str)] string path, [MarshalAs(UnmanagedType.LPUTF8Str)] string title, [MarshalAs(UnmanagedType.LPUTF8Str)] string command, double minimum, double maximum, double value, uint owner);
+
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool CAD_SetUiControlValue(uint id, double value);
+
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool CAD_GetUiControlValue(uint id, out double value, out double minimum, out double maximum);
 
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern uint CAD_LoadPlugins([MarshalAs(UnmanagedType.LPUTF8Str)] string dir);

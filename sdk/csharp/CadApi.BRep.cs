@@ -135,6 +135,18 @@ namespace VulkanCAD
         public static extern bool CAD_SetBRepCutFromSketch(uint id, uint cutIndex, uint sketchId, float depth, [MarshalAs(UnmanagedType.I1)] bool throughAll);
 
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool CAD_RemoveBRepFeatures(uint id, uint[] cutIndices, uint cutCount, uint[] bossIndices, uint bossCount);
+
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool CAD_RemoveBRepCut(uint id, uint cutIndex);
+
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool CAD_RemoveBRepBoss(uint id, uint bossIndex);
+
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern uint CAD_GetBooleanCylinderCutCount(uint id);
 
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
