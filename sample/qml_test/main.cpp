@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 #endif
     }
     if (!assets.isEmpty()) {
-        const QByteArray a = QDir(assets).absolutePath().toLocal8Bit();
+        const QByteArray a = QDir(assets).absolutePath().toUtf8();   // C API 경로는 UTF-8(한글 폴더 — toLocal8Bit 는 Windows 에서 ANSI)
         if (!CAD_SetRuntimeAssetPath(a.constData())) {
             qWarning("[qml] runtime asset path 설정 실패: %s\n"
                      "      모델/폰트를 못 찾으면 치수·문자 생성이 실패합니다.\n"

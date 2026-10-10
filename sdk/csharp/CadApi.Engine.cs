@@ -13,6 +13,13 @@ namespace LotCAD
 
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool CAD_SetUserDataPath([MarshalAs(UnmanagedType.LPUTF8Str)] string pathUtf8);
+
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int CAD_GetUserDataPath(byte[] buf, int bufLen);
+
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.I1)]
         public static extern bool CAD_CreateEngine();
 
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
