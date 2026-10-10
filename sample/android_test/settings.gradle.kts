@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "VulkanCADAndroid"
+rootProject.name = "LotCADAndroid"
 include(":engine", ":app", ":robot")

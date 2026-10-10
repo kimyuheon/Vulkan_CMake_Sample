@@ -1,9 +1,9 @@
 using System;
 using System.Windows.Forms;
 
-namespace VulkanCadWinForms
+namespace LotCadWinForms
 {
-    // WinForms 컨트롤의 HWND 에 엔진(VulkanCADCore.dll)을 붙이는 렌더 영역.
+    // WinForms 컨트롤의 HWND 에 엔진(LotCADCore.dll)을 붙이는 렌더 영역.
     // WPF 샘플의 VulkanHost(HwndHost) 와 같은 일을 하지만, WinForms 컨트롤은 처음부터 자기 HWND 가
     // 있으므로 자식 창을 따로 만들 필요가 없다.
     //  - OnHandleCreated: CAD_AttachView(Handle) → CAD_CreateEngine()  (API 계약 순서)

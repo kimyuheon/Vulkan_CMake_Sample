@@ -1,4 +1,4 @@
-#include "../../sdk/include/VulkanCAD_API.h"
+#include "../../sdk/include/LotCAD_API.h"
 
 #include <chrono>
 #include <cstdint>
@@ -7,11 +7,11 @@
 #include <thread>
 
 int main() {
-#ifdef VULKANCAD_DEFAULT_ASSET_PATH
+#ifdef LOTCAD_DEFAULT_ASSET_PATH
     // 엔진은 models/ fonts/ 를 상대 경로로 연다. macOS·Linux 는 에셋을 복사하지 않으므로(CMakeLists.txt)
     // 실행 폴더에 없으면 SDK 폴더를 알려 준다 — 없으면 빌드 폴더에서 실행할 때 CreateEngine 이 실패한다.
     if (!std::filesystem::exists("models"))
-        CAD_SetRuntimeAssetPath(VULKANCAD_DEFAULT_ASSET_PATH);
+        CAD_SetRuntimeAssetPath(LOTCAD_DEFAULT_ASSET_PATH);
 #endif
     std::cout << "[cpp_api_test] create engine" << std::endl;
     if (!CAD_CreateEngine()) {

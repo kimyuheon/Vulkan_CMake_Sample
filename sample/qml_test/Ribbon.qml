@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import VulkanCadQml
+import LotCadQml
 
 // 리본 — 엔진 ui/lot_ribbon.cpp 를 QML 로 옮긴 것.
 //

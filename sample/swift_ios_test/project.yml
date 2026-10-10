@@ -1,6 +1,6 @@
-name: VulkanCADSwiftiOSTest
+name: LotCADSwiftiOSTest
 options:
-  bundleIdPrefix: com.vulkancad
+  bundleIdPrefix: com.lotcad
   deploymentTarget:
     iOS: "15.0"
   developmentLanguage: en
@@ -20,9 +20,9 @@ settings:
     # DEVELOPMENT_TEAM: "XXXXXXXXXX"
 
 # 두 앱(테스트 앱·로봇 팔)이 공유하는 엔진 연결 설정 — 에셋 번들·헤더·정적 라이브러리·프레임워크.
-# 앱을 하나 더 만들 땐 targets 에 항목을 추가하고 templates: [VulkanCADApp] 만 붙이면 된다.
+# 앱을 하나 더 만들 땐 targets 에 항목을 추가하고 templates: [LotCADApp] 만 붙이면 된다.
 targetTemplates:
-  VulkanCADApp:
+  LotCADApp:
     type: application
     platform: iOS
     deploymentTarget: "15.0"
@@ -55,9 +55,9 @@ targetTemplates:
         # C API 헤더 위치 (modulemap 이 가리키는 ../api 풀어줘야 됨)
         HEADER_SEARCH_PATHS:
           - "$(SRCROOT)/../../sdk/include"
-          - "$(SRCROOT)/Sources/CVulkanCAD"
+          - "$(SRCROOT)/Sources/CLotCAD"
         SWIFT_INCLUDE_PATHS:
-          - "$(SRCROOT)/Sources/CVulkanCAD"
+          - "$(SRCROOT)/Sources/CLotCAD"
         # CMake 가 만든 정적 라이브러리 + MoltenVK 정적 lib — SDK 별 분기.
         #   시뮬레이터: sdk/lib-ios-sim    + MoltenVK ios-arm64_x86_64-simulator 슬라이스
         #   디바이스  : sdk/lib-ios-device + MoltenVK ios-arm64 슬라이스
@@ -71,11 +71,11 @@ targetTemplates:
           - "$(SRCROOT)/../../sdk/lib-ios-device"
           - "/usr/local/lib/MoltenVK.xcframework/ios-arm64"
           - "$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64"
-        # 링크 순서 주의: 의존하는 VulkanCADCoreStatic 을 먼저, 그다음 manifold(피의존).
+        # 링크 순서 주의: 의존하는 LotCADCoreStatic 을 먼저, 그다음 manifold(피의존).
         # iconv: 엔진의 DXF 코드페이지 변환(dxf/lot_dxf_codepage — CP949 등 → UTF-8)이 libiconv 를 쓴다.
         #   정적 라이브러리는 의존성을 못 실어 나르므로 앱이 직접 링크해야 한다(빠지면 Undefined symbol: _iconv).
         OTHER_LDFLAGS:
-          - "-lVulkanCADCoreStatic"
+          - "-lLotCADCoreStatic"
           - "-lmanifold"
           - "-lMoltenVK"
           - "-liconv"
@@ -83,7 +83,7 @@ targetTemplates:
         # MoltenVK 가 의존하는 시스템 프레임워크들
         OTHER_SWIFT_FLAGS:
           - "-Xcc"
-          - "-I$(SRCROOT)/Sources/CVulkanCAD"
+          - "-I$(SRCROOT)/Sources/CLotCAD"
     dependencies:
       - sdk: Metal.framework
       - sdk: QuartzCore.framework
@@ -93,12 +93,12 @@ targetTemplates:
       - sdk: CoreGraphics.framework
 
 targets:
-  VulkanCADSwiftiOSTest:
-    templates: [VulkanCADApp]
+  LotCADSwiftiOSTest:
+    templates: [LotCADApp]
     # 공유 스킴 — 받는 사람 Xcode 설정과 무관하게 스킴이 늘 보이게(xcshareddata 로 커밋)
     scheme: {}
     sources:
-      - path: Sources/VulkanCADSwiftiOSTest
+      - path: Sources/LotCADSwiftiOSTest
     info:
       path: Info.plist
       properties:
@@ -111,20 +111,20 @@ targets:
         UIRequiresFullScreen: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.vulkancad.iossample
+        PRODUCT_BUNDLE_IDENTIFIER: com.lotcad.iossample
 
   # 로봇 팔 샘플 — URDF 로봇을 관절 슬라이더로 움직인다.
   # 로직은 sample/shared/robot_demo (Android 와 공용), 화면은 Sources/RobotArm.
-  # 엔진 연결 코드(VulkanCADEngine·MetalView·ViewRepresentable)는 테스트 앱 것을 그대로 쓴다.
+  # 엔진 연결 코드(LotCADEngine·MetalView·ViewRepresentable)는 테스트 앱 것을 그대로 쓴다.
   RobotArmiOS:
-    templates: [VulkanCADApp]
+    templates: [LotCADApp]
     # 공유 스킴 — 받는 사람 Xcode 설정과 무관하게 스킴이 늘 보이게(xcshareddata 로 커밋)
     scheme: {}
     sources:
       - path: Sources/RobotArm
-      - path: Sources/VulkanCADSwiftiOSTest/VulkanCADEngine.swift
-      - path: Sources/VulkanCADSwiftiOSTest/VulkanCADMetalView.swift
-      - path: Sources/VulkanCADSwiftiOSTest/VulkanCADViewRepresentable.swift
+      - path: Sources/LotCADSwiftiOSTest/LotCADEngine.swift
+      - path: Sources/LotCADSwiftiOSTest/LotCADMetalView.swift
+      - path: Sources/LotCADSwiftiOSTest/LotCADViewRepresentable.swift
       - path: ../shared
         includes: ["robot_demo.*"]
     info:
@@ -138,6 +138,6 @@ targets:
         UIRequiresFullScreen: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.vulkancad.robotarm
+        PRODUCT_BUNDLE_IDENTIFIER: com.lotcad.robotarm
         SWIFT_OBJC_BRIDGING_HEADER: Sources/RobotArm/RobotArm-Bridging-Header.h
         CLANG_CXX_LANGUAGE_STANDARD: c++17

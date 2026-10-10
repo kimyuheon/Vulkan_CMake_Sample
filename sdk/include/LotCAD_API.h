@@ -1,0 +1,1558 @@
+#pragma once
+
+// LotCAD C API boundary rules:
+// - Expose only C-friendly types: bool, int, uint32_t, float, double, const char*, void* handles.
+// - Do not expose C++/STL/GLM/GLFW/Vulkan engine types.
+// - Do not return internal object pointers.
+// - Do not access FirstApp private members from the API implementation.
+// - Route mutating commands through FirstApp public request methods.
+
+#include <stdint.h>
+
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
+
+#if defined(_WIN32)
+    #if defined(LOTCAD_API_STATIC)
+        #define CAD_API
+    #elif defined(LOTCAD_API_EXPORTS)
+        #define CAD_API __declspec(dllexport)
+    #else
+        #define CAD_API __declspec(dllimport)
+    #endif
+#else
+    #define CAD_API __attribute__((visibility("default")))
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* 엔진 버전 "0.1.0-beta"(lot_version.h). 엔진을 만들기 전에도 된다. 반환 = 필요한 길이(널 제외), buf 가 짧으면 잘라 담는다. */
+CAD_API int  CAD_GetVersion(char* buf, int bufLen);
+CAD_API bool CAD_CreateEngine(void);
+CAD_API void CAD_DestroyEngine(void);
+CAD_API bool CAD_Tick(void);
+CAD_API bool CAD_ShouldClose(void);
+CAD_API void CAD_SetIgnoreCloseRequest(bool ignore);
+CAD_API bool CAD_SetRuntimeAssetPath(const char* path);
+CAD_API void CAD_AttachView(void* nativeHandle, int width, int height);
+CAD_API void CAD_ResizeView(int width, int height);
+CAD_API void CAD_DetachView(void);
+
+CAD_API void CAD_OnMouseDown(int button, double x, double y, int modifiers);
+CAD_API void CAD_OnMouseUp(int button, double x, double y, int modifiers);
+CAD_API void CAD_OnMouseMove(double x, double y);
+CAD_API void CAD_OnMouseWheel(double x, double y, double deltaX, double deltaY);
+CAD_API void CAD_OnKeyDown(int key, int modifiers);
+CAD_API void CAD_OnKeyUp(int key, int modifiers);
+
+/* ── 외부 UI 오버레이 ────────────────────────────────────────────────
+ *
+ * 엔진이 이미 시작한 swapchain render pass 안에서 외부 UI가 draw command를
+ * 기록할 수 있게 빌린 Vulkan 컨텍스트를 전달한다. 모든 handle은 엔진 소유다.
+ * 콜백은 빌린 handle을 파괴하거나 present를 호출하면 안 된다.
+ * 외부 렌더러가 자체 텍스처 업로드 명령을 graphicsQueue에 제출할 경우
+ * 호스트의 렌더 명령과 동기화할 책임은 외부 렌더러에 있다.
+ *
+ * 콜백 반환값은 CAD_OVERLAY_CAPTURE_* 비트다. 이전 프레임 반환값을 다음 입력
+ * 라우팅에 사용해, UI가 처리하는 포인터/키보드 입력이 CAD 뷰로 새지 않게 한다.
+ */
+typedef struct CAD_OverlayFrameInfo {
+    uint32_t structSize;
+    uint64_t physicalDevice;
+    uint64_t device;
+    uint64_t graphicsQueue;
+    uint64_t renderPass;
+    uint64_t commandBuffer;
+    uint32_t graphicsQueueFamily;
+    uint32_t frameIndex;
+    uint32_t frameCount;
+    uint32_t framebufferWidth;
+    uint32_t framebufferHeight;
+    int windowWidth;
+    int windowHeight;
+    float dpiScale;
+    double pointerX;
+    double pointerY;
+    uint32_t pointerButtons;
+    int modifiers;
+    uint32_t sampleCount;
+} CAD_OverlayFrameInfo;
+
+enum {
+    CAD_OVERLAY_CAPTURE_POINTER = 1u << 0,
+    CAD_OVERLAY_CAPTURE_KEYBOARD = 1u << 1
+};
+
+typedef uint32_t (*CAD_OverlayRenderFn)(
+    const CAD_OverlayFrameInfo* frame,
+    void* user);
+
+CAD_API void CAD_SetOverlayRenderCallback(
+    CAD_OverlayRenderFn callback,
+    void* user);
+
+typedef struct CAD_OverlayPointerInfo {
+    uint32_t structSize;
+    int windowWidth;
+    int windowHeight;
+    double x;
+    double y;
+    uint32_t buttons;
+    int modifiers;
+} CAD_OverlayPointerInfo;
+typedef uint32_t (*CAD_OverlayInputFn)(
+    const CAD_OverlayPointerInfo* pointer,
+    void* user);
+
+CAD_API void CAD_SetOverlayInputCallback(
+    CAD_OverlayInputFn callback,
+    void* user);
+
+// ── Win32 호스트(MFC 등) 편의용 키 입력 ──
+// 엔진 단축키는 GLFW 키코드 기준인데 Win32 는 VK_* 코드를 준다. WM_KEYDOWN/WM_KEYUP 의
+// nChar(VK 코드)를 그대로 넘기면 내부에서 GLFW 키코드로 변환 + Ctrl/Shift/Alt 수정자를
+// GetKeyState 로 자동 감지해 라우팅한다. (Windows 전용 — 호스트는 변환 신경 안 써도 됨)
+#if defined(_WIN32)
+CAD_API void CAD_OnKeyDownVK(int vkCode);
+CAD_API void CAD_OnKeyUpVK(int vkCode);
+#endif
+
+// 터치 입력 라우팅: (x,y) 에 Transform Gizmo 핸들이 있으면 1(true), 없으면 0.
+// 호출자(예: iOS)가 1손가락 드래그 시작 시 호출해 기즈모 조작(left) vs 궤도회전(right) 결정.
+CAD_API int  CAD_GizmoHitTest(double x, double y);
+// 기즈모 핸들 hit 허용범위를 터치용으로 확대 (앱 시작 시 한 번 호출).
+CAD_API void CAD_SetGizmoTouchMode(bool enabled);
+// OSnap(끝점/중점/중심…) 허용범위를 터치용으로 확대 — 12px → 18px (가상 커서 기준).
+// **선택 픽 반경도 같이 커진다** — 선·폴리선·치수(치수선/보조선/화살표/값 문자) 탭 10px → 30px.
+// 선택 탭은 손가락이 직접 짚으므로 3배 레티나 10pt 에 맞춘 값. 앱 시작 시 한 번 호출.
+CAD_API void CAD_SetSnapTouchMode(bool enabled);
+
+// 치수 **문자**를 줌과 무관하게 화면상 같은 크기로 그릴지 (기본 false).
+// 모바일에서 치수는 도면 요소보다 "측정 도구" 에 가깝다 — 줌아웃하면 글자가 같이 작아져
+// 값을 못 읽는 게 문제였다. 켜면 글자가 항상 읽히는 크기로 남는다(선·화살표는 그대로).
+// 데스크톱은 끄는 게 맞다 — 도면 출력에선 월드 크기여야 한다.
+// 매 프레임 비용은 없다(플래그를 정점에 굽는다). 전환 시 기존 치수를 한 번 다시 만든다.
+CAD_API void CAD_SetDimensionTextScreenFixed(bool enabled);
+CAD_API bool CAD_GetDimensionTextScreenFixed(void);
+// 진행 중인 치수 도구의 점 개수. 비활성이면 -1.
+// 모바일 커서 UI 의 [선택] 버튼 문구/종료 판단에 쓴다 — 클라이언트가 클릭을 세면
+// 엔진이 클릭을 거부하는 경우와 어긋나므로 반드시 엔진 값을 본다.
+CAD_API int  CAD_GetDimensionPointCount(void);
+// 진행 중인 도구의 안내 문구("첫 번째 점을 지정" 등). 도구가 없으면 빈 문자열.
+// 모바일 커서 UI 가 **도구 종류와 무관하게** 활성 여부/안내를 알기 위해 매 틱 폴링한다.
+// 반환: 복사한 길이(널 제외). buf 가 작으면 잘라서 복사한다.
+CAD_API int  CAD_GetPrompt(char* buf, int bufLen);
+
+CAD_API void CAD_RequestStartBoxSketch(void);
+CAD_API void CAD_RequestStartLineSketch(void);
+CAD_API void CAD_RequestStartRectangleSketch(void);
+CAD_API void CAD_RequestStartCircleSketch(void);
+CAD_API void CAD_RequestStartPolygonSketch(void);
+CAD_API void CAD_RequestCyclePolygonSides(void);
+/* ── 명령 실행 ────────────────────────────────────────────────────────────
+ *
+ * 엔진의 **모든 명령**을 이름으로 실행한다. 아래 CAD_RequestXxx 들은 자주 쓰는 것만
+ * 개별 함수로 뽑아 둔 것이고, 엔진에는 명령이 200개가 넘는다(trim / offset / fillet /
+ * ocr / navmap / imageattach …). 이 함수 하나면 그 전부가 열리고, 새 명령을 추가할
+ * 때마다 API 를 늘리지 않아도 된다.
+ *
+ *   CAD_ExecuteCommand("trim");        // 자르기
+ *   CAD_ExecuteCommand("offset");      // 오프셋
+ *   CAD_ExecuteCommand("2,3");         // 진행 중인 도구에 좌표/값 전달
+ *
+ * 이름은 하단 명령행에 치는 것과 **똑같다**(영문·짧은 별칭·한글 모두).
+ * 진행 중인 도구가 있으면 값 입력으로 전달된다 — 명령행과 완전히 같은 경로.
+ * 반환: 알 수 없는 이름이면 false. 값 입력으로 소비된 경우도 true.
+ */
+CAD_API bool CAD_ExecuteCommand(const char* name);
+
+/* ── 명령 등록 (플러그인) ─────────────────────────────────
+ *
+ * 플러그인이 **콘솔 명령을 추가**한다. 명령행이 이 엔진의 모든 기능 진입점이라,
+ * 이것만 있으면 플러그인이 "기능" 이 된다. ObjectARX 의 acedRegCmds 자리.
+ *
+ *   등록 후  명령행에 wall → 콜백 호출
+ *              CAD_ExecuteCommand("wall") 도 같은 경로
+ *
+ * name   조회 키. 대소문자를 안 가린다(한글 이름도 된다).
+ * title  메뉴·툴바에 들어갈 표시 이름. NULL 이면 name 을 쓴다.
+ * fn     콜백. **C 함수 포인터**라 C++/C#/Python 어디서든 같은 모양으로 쓴다.
+ * user   그대로 돌려받는다(플러그인 인스턴스 포인터 등).
+ * owner  플러그인 ID. 언로드할 때 이 값으로 묶어 한꺼번에 지운다. 0 = 소유자 없음.
+ *
+ * 실패 조건: 빈 이름 · fn 이 NULL · 이미 등록된 이름.
+ * ⚠️ 엔진 기본 명령(line/circle …)과 같은 이름은 등록도지만 불리지 않는다 —
+ *    기본 명령이 먼저 조회된다(플러그인이 기본 동작을 가로채는 것을 막는다).
+ * ⚠️ 콜백은 **엔진과 같은 스레드**에서 불린다 — 안에서 CAD_* 를 부릅니다.
+ *    콜백이 던진 예외는 엔진이 잡아 삼킨다(프레임 루프가 죽지 않게).
+ */
+typedef void (*CAD_CommandFn)(void* user);
+CAD_API bool CAD_RegisterCommand(const char* name, const char* title,
+                                 CAD_CommandFn fn, void* user, unsigned int owner);
+CAD_API bool CAD_UnregisterCommand(const char* name);
+/* 그 플러그인이 등록한 명령을 전부 제거. 반환 = 지운 개수. owner 0 은 아무것도 안 지운다.
+ * 언로드 경로에서 반드시 부른다 — 안 지우면 사라진 DLL 의 함수를 부르게 된다. */
+CAD_API unsigned int CAD_UnregisterCommandsByOwner(unsigned int owner);
+/* 등록된 명령 수 / i 번째 이름·표시이름 — 메뉴·리본을 그릴 때 호스트가 읽는다.
+ * buf 가 NULL 이거나 짧으면 필요한 길이(널문자 포함)를 반환한다. */
+CAD_API unsigned int CAD_GetRegisteredCommandCount(void);
+CAD_API int CAD_GetRegisteredCommandName(unsigned int index, char* buf, int bufLen);
+CAD_API int CAD_GetRegisteredCommandTitle(unsigned int index, char* buf, int bufLen);
+
+/* ── UI 등록 (플러그인) ───────────────────────────────────
+ *
+ * 플러그인은 UI 를 **직접 그리지 않는다.** (이름, 위치, 명령) 만 올리면 엔진이 그린다.
+ * 그래서 ImGui 버전에 묶이지 않고, C#/Python 플러그인도 같은 방식을 쓰며,
+ * **호스트 임베드(MFC/WPF)에서도 산다** — 호스트가 이 목록을 읽어 자기 메뉴로 그리면 된다.
+ *
+ * kind: 0=메뉴항목 1=구분선 2=툴바버튼 3=리본버튼 4=패널
+ * path: 위치. 구분자는 '/'.
+ *         메뉴 "건축" · "건축/가져오기"   툴바/리본 "건축/벽체"
+ *         패널은 도킹 위치를 여기 넣는다("left"/"right"/"bottom").
+ * command: 누르면 실행할 명령 이름. 명령행과 **같은 입구**로 들어간다.
+ *          구분선·패널은 NULL 가능. 그 외엓 비어 둘 수 없다 —
+ *          눌러도 아무 일이 안 생기는 항목은 등록 단계에서 막는다.
+ * icon: 짧은 글자/이모지. 지금은 글자로 보여주고 나중에 아이콘으로 바꾼다. NULL 가능.
+ * owner: 플러그인 ID. 언로드 시 이 값으로 묶어 한꺼번에 지운다.
+ *
+ * 반환 = 항목 id (0 이면 실패). 이 id 로 개별 제거한다.
+ * ⚠️ 패널은 **존재만** 등록된다 — 내용은 플러그인이 ImGui 후크로 그려야 하고,
+ *    그건 단독 실행 전용이다(호스트 임베드엔 ImGui 컨텍스트가 없다).
+ */
+CAD_API unsigned int CAD_AddUiItem(int kind, const char* path, const char* title,
+                                   const char* command, const char* icon, unsigned int owner);
+CAD_API bool CAD_RemoveUiItem(unsigned int id);
+CAD_API unsigned int CAD_RemoveUiItemsByOwner(unsigned int owner);
+/* 호스트가 메뉴·툴바를 직접 그릴 때 읽는다. index 는 등록 순서 = 화면 나열 순서. */
+CAD_API unsigned int CAD_GetUiItemCount(void);
+/* Positive height reserves the built-in ribbon region for an external overlay.
+ * Zero restores the original ImGui ribbon and plugin ribbon. */
+CAD_API void CAD_SetOverlayRibbonHeight(float logicalHeight);
+/* Logical Y coordinate immediately below the host menu bar. */
+CAD_API float CAD_GetOverlayRibbonTop(void);
+CAD_API unsigned int CAD_GetUiItemId(unsigned int index);
+CAD_API int CAD_GetUiItemKind(unsigned int index);        /* 실패 시 -1 */
+CAD_API int CAD_GetUiItemPath(unsigned int index, char* buf, int bufLen);
+CAD_API int CAD_GetUiItemTitle(unsigned int index, char* buf, int bufLen);
+CAD_API int CAD_GetUiItemCommand(unsigned int index, char* buf, int bufLen);
+CAD_API int CAD_GetUiItemIcon(unsigned int index, char* buf, int bufLen);
+
+/* LotUI ribbon controls owned by the host, not by a plugin DLL.
+ * kind: 5=checkbox, 6=slider. path is "tab/group". command runs after a
+ * user change; the command callback reads the new value by item id.
+ * A checkbox uses 0/1; its range arguments are ignored. A slider requires
+ * finite minimum < maximum and clamps the initial/current value.
+ * Plugins must remove their items and commands on unload.
+ */
+CAD_API unsigned int CAD_AddUiControl(int kind, const char* path,
+    const char* title, const char* command, double minimum, double maximum,
+    double value, unsigned int owner);
+CAD_API bool CAD_SetUiControlValue(unsigned int id, double value);
+CAD_API bool CAD_GetUiControlValue(unsigned int id, double* value,
+    double* minimum, double* maximum);
+
+/* ── 플러그인 로더 ────────────────────────────────────────
+ *
+ * 엔진은 시작할 때 실행 폴더의 plugins/ 를 자동으로 훑는다. 폴더가 없으면 그냥 넘어간다.
+ * 아래는 호스트가 다른 폴더를 더 올리거나, 쓰는 중에 하나를 내릴 때 쓴다.
+ *
+ * 플러그인은 plugin/lot_plugin_sdk.h 의 심볼 셋을 내보내야 한다:
+ *   CAD_PluginAbiVersion / CAD_PluginLoad / CAD_PluginUnload
+ * ABI 번호가 다르면 아예 올리지 않는다 — 엔진과 같은 컴파일러·런타임으로 빌드해야 한다.
+ *
+ * 언로드하면 그 플러그인이 올린 명령과 UI 항목이 **엔진이 알아서** 같이 지워진다.
+ */
+CAD_API unsigned int CAD_LoadPlugins(const char* dir);   /* 반환 = 성공한 개수 */
+CAD_API bool CAD_UnloadPlugin(unsigned int id);
+CAD_API unsigned int CAD_GetPluginCount(void);
+CAD_API unsigned int CAD_GetPluginId(unsigned int index);
+CAD_API int CAD_GetPluginName(unsigned int index, char* buf, int bufLen);
+
+/* ── 플러그인 엔티티 ───────────────────────────────────────────────────
+ *
+ * 새 객체 종류를 만들지 않는다. 플러그인이 **형상(메시)을 공급**하고, 객체에 **딱지**를 붙인다.
+ * 객체는 평범한 메시라 그리기·픽킹·저장이 전부 그대로 동작하고, 플러그인이 없는 곳에서
+ * 열어도 형상은 보인다. 딱지는 보존돼 나중에 플러그인이 있으면 도로 살아난다.
+ *
+ *   id = CAD_CreateMesh(xyz, nv, idx, ni, NULL);          // 형상
+ *   CAD_SetPluginTag(id, "ArchBuilder", "wall", json);   // 딱지
+ *   ... 값이 바뀌면 → CAD_ReplaceMesh(id, ...)           // 재생성
+ *
+ * .lot 을 열어 딱지 붙은 객체가 복원되면 CAD_SetOnPluginEntityLoaded 콜백으로 알려준다.
+ * 플러그인은 owner 가 자기 이름이면 data 를 읽어 살아 있는 엔티티로 넘겨받는다.
+ *
+ * 사용자가 그립·불리언·밀당·분해로 메시를 직접 고치면 정의와 형상이 어긋나므로 엔진이
+ * 먼저 묻고, "계속" 이면 딱지를 뗀다(그냥 메시가 된다). 호스트 임베드는 ImGui 가 없어
+ * CAD_SetOnConfirm 으로 대신 물어야 한다 — 안 달면 안전한 쪽(취소)으로 간다.
+ *
+ * xyz = 3*vertexCount, indices = 3*triangleCount. normals 는 NULL 가능(삼각형별 flat).
+ */
+CAD_API uint32_t CAD_CreateMesh(const float* xyz, unsigned int vertexCount,
+                                const unsigned int* indices, unsigned int indexCount,
+                                const float* normals);
+CAD_API bool CAD_ReplaceMesh(uint32_t id, const float* xyz, unsigned int vertexCount,
+                             const unsigned int* indices, unsigned int indexCount,
+                             const float* normals);
+CAD_API bool CAD_SetPluginTag(uint32_t id, const char* owner, const char* type, const char* data);
+CAD_API bool CAD_ClearPluginTag(uint32_t id);
+CAD_API bool CAD_HasPluginTag(uint32_t id);
+CAD_API int  CAD_GetPluginTagOwner(uint32_t id, char* buf, int bufLen);
+CAD_API int  CAD_GetPluginTagType (uint32_t id, char* buf, int bufLen);
+CAD_API int  CAD_GetPluginTagData (uint32_t id, char* buf, int bufLen);
+CAD_API void CAD_SetOnPluginEntityLoaded(void (*cb)(uint32_t id, const char* owner,
+                                                     const char* type, const char* data));
+/* 반환 true = 계속. 호스트 임베드(MFC/WPF)는 반드시 달 것 — 없으면 취소로 간다. */
+CAD_API void CAD_SetOnConfirm(bool (*cb)(const char* text));
+
+/* ── 엔티티 속성 (특성창) ──────────────────────────────────────────────
+ *
+ * 플러그인은 특성창을 직접 그리지 않는다. "두께는 0.05~2.0 실수" 라고 **말만** 하고
+ * 엔진이 슬라이더를 그린다. ImGui 버전에 안 묶이고, 호스트 임베드에서도 산다.
+ *
+ *   CAD_AddEntityProperty("HelloPlugin", "wall", "thick", "두께", 0, 0.05f, 2.0f, id);
+ *
+ * ⭐ 값은 딱지 data 에 **JSON 오브젝트**로 들어 있어야 한다. 엔진이 그 JSON 을 읽고 쓴다.
+ *    그래서 플러그인이 없어도 값이 보인다(그때는 읽기 전용 — 형상을 다시 만들 코드가 없다).
+ *
+ * kind: 0=실수 1=정수 2=참거짓 3=문자(읽기전용)
+ * minV/maxV: min>=max 면 범위 없음. 실패: 빈 이름 · 같은 (owner,type,key) 중복.
+ *
+ * 사용자가 값을 바꾸면 엔진이 딱지 JSON 을 갱신하고 CAD_SetOnPluginEntityChanged 를 부른다.
+ * 플러그인은 거기서 CAD_ReplaceMesh 로 형상을 다시 만든다.
+ */
+CAD_API bool CAD_AddEntityProperty(const char* owner, const char* type, const char* key,
+                                   const char* label, int kind, float minV, float maxV,
+                                   unsigned int pluginId);
+CAD_API unsigned int CAD_RemoveEntityPropertiesByOwner(unsigned int pluginId);
+CAD_API void CAD_SetOnPluginEntityChanged(void (*cb)(uint32_t id, const char* owner,
+                                                      const char* type, const char* data));
+
+/* ── 엔진 이벤트 구독 ──────────────────────────────────────────────────
+ *
+ * ⚠️ 위 CAD_SetOnXxx 계열은 **한 칸짜리**다 — 플러그인이 걸면 호스트 것을 덮어쓴다.
+ *    플러그인은 여러 개가 동시에 올라오므로 이쪽(목록)으로 구독한다. 둘 다 발화한다.
+ *
+ * kinds 는 비트 OR: 1=객체생성 2=객체삭제 4=선택변경 8=문서변경
+ *   생성/삭제 → id = 그 객체. 선택변경 → id = 0. 문서변경 → id = dirty ? 1 : 0.
+ *
+ * 반환 = 핸들(0 이면 실패). 언로드 때는 엔진이 pluginId 로 묶어 알아서 지운다.
+ * 콜백은 엔진과 같은 스레드에서 프레임 끝에 불린다 — 안에서 CAD_* 를 불러도 된다.
+ */
+typedef void (*CAD_EventFn)(int kind, uint32_t id, void* user);
+CAD_API unsigned int CAD_AddEventListener(int kinds, CAD_EventFn fn, void* user, unsigned int pluginId);
+CAD_API bool CAD_RemoveEventListener(unsigned int handle);
+
+/* ── 플러그인 패널 (ImGui 직접 그리기) ─────────────────────────────────
+ *
+ * 패널은 CAD_AddUiItem(kind 4) 로 등록하면 엔진이 창을 만들고, 그 **안을 플러그인이**
+ * ImGui 로 그린다. 메뉴·툴바·리본과 달리 이것만 플러그인이 ImGui 를 직접 부른다.
+ *
+ * ⚠️ 그래서 제약이 붙는다:
+ *    · 플러그인이 엔진과 **같은 ImGui 버전**을 컴파일해 넣어야 한다
+ *    · 아래 두 함수로 컨텍스트와 할당자를 받아 ImGui::SetCurrentContext /
+ *      ImGui::SetAllocatorFunctions 를 먼저 불러야 한다 — DLL 경계를 넘으면
+ *      ImGui 전역과 힙이 공유되지 않는다(ImGui 문서의 그 항목)
+ *    · **호스트 임베드(MFC/WPF)에선 안 뜬다** — 거기엔 ImGui 컨텍스트가 없다
+ *      (CAD_GetImGuiContext 가 NULL 을 돌려준다)
+ *
+ * 값 편집만 필요하면 CAD_AddEntityProperty(특성창) 가 이 제약을 전부 피한다.
+ * 그래서 패널은 "그래프·미리보기처럼 정말 직접 그려야 하는 것" 에만 쓰는 게 좋다.
+ *
+ *   void drawPanel(unsigned id, const char* title) { ImGui::Text("..."); }
+ *   ImGui::SetCurrentContext((ImGuiContext*)CAD_GetImGuiContext());
+ *   CAD_GetImGuiAllocators(&a, &f, &u); ImGui::SetAllocatorFunctions(a, f, u);
+ *   CAD_SetOnDrawPanel(&drawPanel);
+ */
+CAD_API void* CAD_GetImGuiContext(void);   /* ImGuiContext* — 호스트 임베드에선 NULL */
+CAD_API void  CAD_GetImGuiAllocators(void** allocFn, void** freeFn, void** userData);
+CAD_API void  CAD_SetOnDrawPanel(void (*cb)(unsigned int panelId, const char* title));
+
+/* ── 알림(콜백) ───────────────────────────────────────────────────────────
+ *
+ * 엔진 → 호스트 UI 방향의 알림. 이게 없으면 호스트는 **매 프레임 물어보는 수밖에**
+ * 없다(선택이 바뀌었는지 알려고 GetSelectedCount 를 계속 호출하는 식).
+ * 속성 패널·씬 트리·제목표시줄의 * 표시 같은 걸 붙이려면 사실상 필수다.
+ * ObjectARX 의 리액터(AcDbDatabaseReactor)와 같은 역할.
+ *
+ * ⚠️ 호출 시점은 **CAD_Tick 안**이다 — 프레임당 한 번, 엔진과 같은 스레드.
+ *    그래서 콜백 안에서 다른 CAD_* 를 불러도 안전하다.
+ *    변화가 **한 프레임에 여러 번** 나도 한 번으로 합쳐 알린다(UI 갱신엔 충분).
+ * nullptr 를 주면 해제된다.
+ */
+CAD_API void CAD_SetOnSelectionChanged(void (*cb)(void));
+CAD_API void CAD_SetOnObjectCreated  (void (*cb)(uint32_t id));
+CAD_API void CAD_SetOnObjectDeleted  (void (*cb)(uint32_t id));
+CAD_API void CAD_SetOnDocumentDirty  (void (*cb)(bool dirty));
+/* 하단 안내문(명령 프롬프트/임시 메시지)이 바뀔 때. 호스트 상태바에 그대로 띄우면 된다. */
+CAD_API void CAD_SetOnPrompt         (void (*cb)(const char* text));
+
+CAD_API void CAD_RequestStartExtrude(void);
+CAD_API void CAD_RequestStartArcSketch(void);
+CAD_API void CAD_RequestCycleArcMode(void);
+CAD_API void CAD_RequestStartPolylineSketch(void);
+CAD_API void CAD_RequestOpenFileDialog(void);
+CAD_API void CAD_RequestZoomExtents(void);
+CAD_API void CAD_RequestSelectAll(void);
+CAD_API void CAD_RequestDeleteSelected(void);
+CAD_API void CAD_RequestClearAll(void);
+CAD_API void CAD_RequestAddCube(void);
+CAD_API void CAD_RequestStartLightPlacement(void);
+CAD_API void CAD_RequestFocusSelected(void);
+CAD_API void CAD_RequestToggleProjection(void);
+CAD_API void CAD_RequestToggleDemoLighting(void);
+CAD_API void CAD_RequestCycleMaterial(void);
+CAD_API void CAD_RequestRemoveMaterial(void);
+CAD_API void CAD_RequestAdjustTextureScale(float delta);
+CAD_API void CAD_RequestAdjustLineWidth(float deltaPx);
+// viewType: 0=Front 1=Top 2=Right 3=Isometric 4=Left 5=Bottom 6=Back
+CAD_API void CAD_RequestSetView(int viewType);
+CAD_API void CAD_RequestSetProjection(bool ortho);
+
+// 임의 방향 시점 — 뷰큐브의 모서리(2면)/꼭짓점(3면)처럼 표준 6뷰가 아닌 방향에서 보기.
+// dir = 타겟에서 카메라를 향하는 월드 방향(정규화 불필요). 예: (1,-1,1)=앞·우·위 꼭짓점.
+CAD_API void CAD_RequestSetViewDirection(float dirX, float dirY, float dirZ);
+
+// 뷰 회전 피벗 (viewucs) — 작업평면 UCS 와 별개로, 화면을 돌릴 때의 중심/축을 지정한다.
+//   axis: -1=축 자유(피벗만 고정), 0=X 축 고정, 1=Y, 2=Z (축 고정 시 그 축 기준 턴테이블 회전)
+CAD_API void CAD_RequestSetViewPivot(float x, float y, float z, int axis);
+CAD_API void CAD_RequestClearViewPivot(void);
+// 현재 피벗 조회 — 설정돼 있으면 true. out 인자는 null 허용.
+CAD_API bool CAD_GetViewPivot(float* x, float* y, float* z, int* axis);
+
+// ── 문서 탭 (멀티 문서) ──────────────────────────────────────────────
+// 여러 파일을 동시에 열고 탭으로 전환한다. 호스트(WPF/Qt)가 **자기 탭 UI** 를 그릴 수 있도록
+// 목록 조회 + 전환/열기/닫기를 모두 노출한다. 전환은 상태 swap 이라 비용이 거의 없다.
+CAD_API int  CAD_GetDocumentCount(void);
+CAD_API int  CAD_GetActiveDocument(void);
+// 탭 라벨용 — 표시 이름(파일명 또는 "제목 없음"). 길이 반환, -1=실패. buf 는 null 허용(길이만 조회).
+CAD_API int  CAD_GetDocumentTitle(int index, char* outUtf8, int cap);
+CAD_API int  CAD_GetDocumentPath (int index, char* outUtf8, int cap);
+// 저장되지 않은 변경이 있는지 — 탭에 * 표시하거나 닫기 확인에 사용.
+CAD_API bool CAD_IsDocumentDirty(int index);
+// 새 빈 문서 추가 후 활성화. 반환 = 새 문서 인덱스.
+CAD_API int  CAD_NewDocument(const char* titleUtf8);
+// 파일을 새 탭으로 열기. 반환 = 문서 인덱스, 실패 -1.
+CAD_API int  CAD_OpenDocument(const char* pathUtf8);
+CAD_API bool CAD_ActivateDocument(int index);
+// 닫기 — 마지막 문서는 닫지 않고 내용을 비운다(항상 문서 1개 유지).
+CAD_API bool CAD_CloseDocument(int index);
+
+// ── Jig (오토캐드 AcEdJig 스타일) ────────────────────────────────────
+// 객체 id 를 물려 시작하면 그 객체가 **커서를 따라다니고**, 좌클릭에 그 자리로 확정된다
+// (undo 1스텝). ESC 로 원복. OSnap·직교 트랙킹(F8)·콘솔 값 입력이 그대로 적용된다.
+//   mode: 0=이동 1=회전 2=축척 3=복사
+//   회전/축척은 (px,py,pz) 가 피벗. 이동/복사는 무시하고 선택 전체의 시각 중심을 기준점으로 잡는다.
+// 반환 false = 유효한 객체가 없어 시작 못 함.
+CAD_API bool CAD_JigBegin(int mode, const uint32_t* ids, int count,
+                          float px, float py, float pz);
+CAD_API bool CAD_JigBeginOne(int mode, uint32_t id, float px, float py, float pz);
+// 상태 폴링 — 0=비활성 1=끌는 중 2=직전 확정됨 3=직전 취소됨 (2/3 은 1회만 반환).
+CAD_API int  CAD_JigState(void);
+CAD_API void CAD_JigCancel(void);
+
+// ── 변형(variant) Jig — 끌면서 Tab 으로 **형상 자체를 교체** ──────────
+// 후보 객체들을 미리 만들어 id 배열로 넘기면, 첫 후보가 커서를 따라오고 **Tab** 마다 다음 후보로
+// 갈아끼워진다(문 좌/우열림, 볼트 규격 등). 비활성 후보는 씬에서 잠시 빠져 보이지 않는다.
+//   확정 → 선택된 후보만 남고 나머지는 삭제 (AcEdJig 의 "성공 시에만 남긴다" 규약)
+//   취소 → 후보 전부 삭제 (임시 형상이라 씬에 남기지 않음)
+// 콜백이 필요 없어 C#/Qt 어디서든 그대로 쓸 수 있다.
+// 코드로 끌기 — 모바일(가상 커서 없이 버튼으로)·자동 시연. Jig 중이 아니면 false.
+//   MoveTo: 지그를 월드 점으로(OSnap 미적용). 이후 실제 마우스가 움직이면 다시 마우스를 따른다.
+//   Commit: 좌클릭과 같은 확정(undo 1). CAD_JigState 는 다음 폴링에 2.
+//   SetBasePoint: 이동·복사의 기준점(기본 = 선택 경계 상자 중심), 회전·축척은 피벗.
+//   GetDelta: 지금 미리보기 — 이동량(이동·복사, 직교 반영), 회전각(도), 배율. 인자는 NULL 가능.
+CAD_API bool CAD_JigMoveTo(float x, float y, float z);
+CAD_API bool CAD_JigCommit(void);
+CAD_API bool CAD_JigSetBasePoint(float x, float y, float z);
+CAD_API bool CAD_JigGetDelta(float* dx, float* dy, float* dz, float* angleDeg, float* scale);
+CAD_API bool CAD_JigBeginVariants(int mode, const uint32_t* ids, int count,
+                                  float px, float py, float pz);
+CAD_API bool CAD_JigNextVariant(void);   // Tab 과 동일 (호스트 버튼으로 전환할 때)
+CAD_API int  CAD_JigVariantIndex(void);  // 현재 후보 번호, -1 = 변형 Jig 아님
+CAD_API uint32_t CAD_JigVariantId(void); // 지금 끌고 있는 후보 id (없으면 0)
+CAD_API void CAD_RequestMoveSelected(float dirX, float dirY, float dirZ, float distance);
+CAD_API void CAD_RequestRotateSelected(float axisX, float axisY, float axisZ, float angleDeg);
+CAD_API void CAD_RequestScaleSelected(float factor);
+CAD_API void CAD_RequestCopySelected(float dirX, float dirY, float dirZ,
+                                     float distance, int count);
+CAD_API void CAD_RequestColorSelected(float r, float g, float b);
+
+CAD_API uint32_t CAD_CreateBox(float x, float y, float z,
+                               float sx, float sy, float sz);
+
+// origin = floor center; width/depth = interior clear size; all values are metres.
+// outWallIds must point to storage for 4 ids. Order: south, north, west, east.
+CAD_API bool CAD_CreateRoom(float originX, float originY, float originZ,
+                            float width, float depth, float height,
+                            float wallThickness, uint32_t* outWallIds);
+
+// rectBounds contains spaceCount groups of [minX,minY,maxX,maxY], local to origin.
+// Returns the total number of unique walls created and copies up to outCapacity ids.
+CAD_API uint32_t CAD_CreateFloorplan(float originX, float originY, float originZ,
+                                     const float* rectBounds, uint32_t spaceCount,
+                                     float height, float wallThickness,
+                                     uint32_t* outWallIds, uint32_t outCapacity);
+
+// type: 0=door, 1=window. roomBIndex >= 0 targets a shared wall;
+// roomBIndex < 0 uses side (0=south, 1=north, 2=west, 3=east).
+// alignment: 0=center, 1=start(west/south), 2=end(east/north).
+typedef struct CAD_FloorplanOpeningDesc {
+    int type;
+    uint32_t roomAIndex;
+    int32_t roomBIndex;
+    int side;
+    float width;
+    float height;
+    float sillHeight;
+    int alignment;
+    float offset;
+} CAD_FloorplanOpeningDesc;
+
+// Returns the number of solid wall pieces after openings are removed.
+CAD_API uint32_t CAD_CreateFloorplanWithOpenings(
+    float originX, float originY, float originZ,
+    const float* rectBounds, uint32_t spaceCount,
+    float height, float wallThickness,
+    const CAD_FloorplanOpeningDesc* openings, uint32_t openingCount,
+    uint32_t* outWallIds, uint32_t outCapacity);
+
+// ── 문자(Text) + 편집(textedit) — 모든 프론트엔드 공통 진입점 ──
+CAD_API uint32_t CAD_CreateText(float x, float y, float z,
+                                const char* utf8, float heightMM);
+// 선형 치수 — 측정점 p1/p2 + 치수선 위치점(dl) + 작업평면 법선(n). 반환=객체 id(0=실패).
+CAD_API uint32_t CAD_CreateDimension(float p1x, float p1y, float p1z,
+                                     float p2x, float p2y, float p2z,
+                                     float dlx, float dly, float dlz,
+                                     float nx, float ny, float nz);
+
+CAD_API bool     CAD_BeginTextEdit(uint32_t id);
+CAD_API bool     CAD_IsTextEditing(void);
+CAD_API void     CAD_TextEditInsert(const char* utf8);   // 커서 위치에 삽입(여러 글자 가능)
+CAD_API void     CAD_TextEditBackspace(void);
+CAD_API void     CAD_TextEditDelete(void);
+CAD_API void     CAD_TextEditMoveCaret(int delta);       // -1/+1 등
+CAD_API void     CAD_TextEditCommit(void);               // undo 적재 + 종료
+CAD_API void     CAD_TextEditCancel(void);               // 원복 + 종료
+CAD_API bool     CAD_SetTextContent(uint32_t id, const char* utf8);  // 비대화형 변경(undo)
+CAD_API int      CAD_GetTextContent(uint32_t id, char* outUtf8, int cap);  // 길이 반환, -1=실패
+
+/* 객체 하나를 JSON 한 줄로 — 종류·이름·레이어·색·변환·경계 + 종류별 기하.
+ * (line: start/end/length, polyline: points/closed, circle: center/radius/normal, arc: +startDeg/endDeg,
+ *  text: text/height/font, dimension: dimType/p1/p2/value, mesh: vertices/triangles/light)
+ * 단위 mm, 좌표 월드. 키 이름은 lot_object_json.h 한 곳에서 정하며 AI 선택 문맥·씬 요약과 같다.
+ * 반환 = 길이(널 제외), 없는 id/실패 = -1. outUtf8=NULL 이면 길이만(2회 호출 규약). */
+CAD_API int      CAD_GetObjectJson(uint32_t id, char* outUtf8, int cap);
+
+/* 이름으로 속성 하나 읽기·쓰기 — 키는 CAD_GetObjectJson 의 키와 같다.
+ *   공통    name, color, colorByLayer, visible, layer(이름|id), linetype(이름|id|"bylayer"), linetypeScale,
+ *           position, rotation[x,y,z,w], scale
+ *   line    start, end          polyline  points, closed        circle  center, radius
+ *   arc     center, radius, startDeg, endDeg                     text    text, height, font
+ *   dimension p1, p2, p3, dimLinePoint, precision                mesh    intensity(조명)
+ * Get: 값의 JSON 텍스트(예: 50.0 / [1,2,3] / "이름"), 반환=길이, 없으면 -1.
+ * Set: valueJson 은 JSON(따옴표 없는 글자는 문자열로 받음). 좌표·길이는 월드 mm. 딸린 모델을 다시 만들고
+ *      undo 한 단계로 남긴다. 실패(없는 키·형식 오류·잠긴 도면층) 면 false — 이유는 CAD_GetStatusMessage 가 아니라
+ *      CAD_GetLastError 로. */
+CAD_API int      CAD_GetObjectProperty(uint32_t id, const char* key, char* outUtf8, int cap);
+CAD_API bool     CAD_SetObjectProperty(uint32_t id, const char* key, const char* valueJson);
+/* 직전 CAD_SetObjectProperty 실패 이유(UTF-8). 성공 뒤엔 빈 문자열. */
+CAD_API int      CAD_GetLastError(char* outUtf8, int cap);
+
+/* 트랜잭션 — 여러 편집(생성·속성·삭제·이동…)을 되돌리기 **한 단계** 로 묶는다.
+ * Begin … End 사이의 CAD_Create·Set·Delete·SetObjectProperty 는 실행은 즉시 되고, End 에서 한 묶음으로
+ * undo 스택에 오른다(Ctrl+Z 한 번). Rollback 은 묶음을 되돌리고 버린다(미리보기 거절). 중첩 가능(깊이 셈).
+ * 열린 동안 CAD_Undo/Redo 는 false. name 은 UI 의 되돌리기 이름. */
+CAD_API void     CAD_BeginTransaction(const char* name);
+CAD_API bool     CAD_EndTransaction(void);
+CAD_API bool     CAD_RollbackTransaction(void);
+CAD_API int      CAD_TransactionDepth(void);
+
+/* 질의 — 필터 JSON 으로 객체 id 목록. 키는 전부 선택(AND):
+ *   {"kind":"circle"|["circle","arc"], "layer":"이름"|id, "name":"기둥*"(글롭), "selected":true, "visible":true,
+ *    "within":{"min":[x,y,z],"max":[x,y,z]}(상자 안), "intersects":{min,max}(겹침), "near":{"point":[x,y,z],"radius":r},
+ *    "pick":"largest"|"smallest"(통과한 것 중 하나), "limit":N}
+ * 반환 = 전체 개수(outIds=NULL/cap=0 이면 개수만 — 2회 호출 규약). 틀린 필터면 0 + CAD_GetLastError. */
+CAD_API uint32_t CAD_QueryObjects(const char* filterJson, uint32_t* outIds, uint32_t cap);
+/* 질의 결과를 선택으로 — 같은 필터 문법. additive=false 면 기존 선택을 비운다. 반환=고른 수, 틀린 필터면 0 + CAD_GetLastError.
+ * AI 의 edit_selected op="select" 와 같은 통로. */
+CAD_API uint32_t CAD_SelectByQuery(const char* filterJson, bool additive);
+/* 씬 요약 JSON — {"count","selected","units":"mm","bounds","kinds":{종류:수},"layers":[…],"objects":[요약…],"more"}.
+ * objects 는 앞에서 maxObjects 개(0 이면 50). 객체 상세는 CAD_GetObjectJson. 반환=길이, 실패 -1. */
+CAD_API int      CAD_GetSceneJson(char* outUtf8, int cap, int maxObjects);
+/* 선택 문맥 JSON — 사람이 화면에서 고른 것. AI 요청마다 자동으로 붙는 것과 같은 문자열.
+ * {"mode":"object|face|edge","view":"top|…","count":N,"objects":[CAD_GetObjectJson 과 같은 객체…],"more":n,
+ *  "face":{"id","normal","center","area","triangles"},"edge":{"id","a","b","length"}}  반환=길이, 실패 -1. */
+CAD_API int      CAD_GetSelectionContext(char* outUtf8, int cap);
+/* 선택한 면(면 선택 모드에서 클릭한 면)을 법선 방향으로 distance(mm, 양수=바깥) 밀어 새 메시로 — undo 1단계.
+ * 면 선택이 없으면 false. */
+CAD_API bool     CAD_PushPullSelectedFace(float distance);
+/* 선택한 평면의 볼록 면에 distance(mm) 폭의 안쪽 링을 만든다. distance=0 이면 자동 폭.
+ * 면 선택이 없거나 오목/다중 경계 면이면 false. undo 1단계. */
+CAD_API bool     CAD_InsetSelectedFace(float distance);
+
+/* ── 외부 연결(link) — 태그 추적 스크립트·로봇·머리 추적 같은 바깥 프로세스가 붙는 TCP 문 ───────────────────
+ * 127.0.0.1:port 에서 듣고, 줄 하나 = JSON 객체 하나("\n" 구분). 처리는 엔진 메인 스레드(다음 tick)에서.
+ *   {"type":"pose","id":"기둥A"|12,"x":..,"y":..,"yaw":90,"mode":"clamp"|"twin"}
+ *       id 는 객체 이름 또는 번호. (x,y) = 객체의 **월드 경계 중심**(원점 아님), 단위 = 도면 단위(mm). z 는 그대로.
+ *       yaw 는 도, 0 = +Y, 시계 방향 양수(내비 규약). 생략하면 향 유지.
+ *       mode 생략 시 CAD_LinkStart 의 clamp. clamp = 벽(다른 메시)에 막히면 벽 앞에 선다(도면이 진실),
+ *       twin = 그대로 비춘다(현실이 진실). 직전 위치와의 속도가 몸 크기의 0.3배/초를 넘으면 걷기 애니가 켜지고,
+ *       0.5초 동안 소식이 없으면 꺼진다.
+ *   {"type":"ping"}  →  엔진이 {"type":"pong"} 을 되돌린다.
+ * 명령행 `link [on|off|port N|clamp|twin]` 과 같은 것. 파이썬 예: tools/tag_tracker.py(AprilTag), tools/fake_pose.py.
+ * 로컬 전용 — 원격·토큰은 없다. */
+CAD_API bool     CAD_LinkStart(int port, bool clamp);       /* port 0 = 빈 포트를 고름(CAD_LinkPort 로 확인). 실패 false + CAD_GetLastError */
+CAD_API void     CAD_LinkStop(void);
+CAD_API int      CAD_LinkPort(void);                         /* 0 = 닫힘 */
+CAD_API bool     CAD_LinkSend(const char* jsonLine);         /* 붙은 클라이언트 전부에 한 줄(끝에 "\n" 붙임). 접속 없으면 false */
+/* 소켓 없이 호스트가 직접 위치를 넣는다(iOS ARKit·자체 추적기). pose 메시지와 같은 규약. yawDeg 에 NaN 을 주면 향 유지.
+ * 반환 = 적용됨. outBlocked 는 clamp 로 벽에 막혔는가(NULL 가능). */
+CAD_API bool     CAD_ApplyExternalPose(uint32_t id, float x, float y, float yawDeg, bool clamp, bool* outBlocked);
+
+/* 볼륨(CT/MR: .nrrd/.nhdr/.nii/.nii.gz) → 등가면 메시 객체. iso 는 값 문턱(NaN 이면 범위 중간, CT 뼈 ≈ 300, 피부 ≈ -300),
+ * step 은 복셀 건너뛰기(1=전부, 2=삼각형 1/4). 보통 mesh 객체(이름 "파일@iso")를 만들고 선택까지. 반환 id, 실패 0 + CAD_GetLastError. */
+CAD_API uint32_t CAD_CreateVolumeMesh(const char* path, float iso, int step);
+/* 의료 분할(라벨 볼륨: 정수 라벨 0..N 의 .nii/.nrrd, TotalSegmentator 등) → 라벨마다 색 메시 객체(해부 이름, 도면층 "분할:<파일>").
+ * step 0=자동. 반환 = 만든 객체 수, 실패 0 + CAD_GetLastError. 트랜잭션 한 단계. */
+CAD_API uint32_t CAD_CreateLabelMeshes(const char* path, int step);
+
+CAD_API uint32_t CAD_CreateLine(float x1, float y1, float z1,
+                                float x2, float y2, float z2);
+CAD_API uint32_t CAD_CreateCircle(float cx, float cy, float cz,
+                                  float radius,
+                                  float normalX, float normalY, float normalZ);
+
+/* ── 2D 스케치 구동 제약 ─────────────────────────────────────────────
+ * 화면에 그리는 CAD_CreateDimension(측정/주석)과 별개로 실제 선·원을 움직인다.
+ * point: 선 0=시작, 1=끝 / 원 0=중심. value 단위는 월드 mm.
+ * 단항 제약(수평/수직/반지름/직경)은 entityB=0, pointB=0.
+ */
+enum {
+    CAD_SKETCH_COINCIDENT = 0,
+    CAD_SKETCH_HORIZONTAL = 1,
+    CAD_SKETCH_VERTICAL   = 2,
+    CAD_SKETCH_CONCENTRIC = 3,
+    CAD_SKETCH_DISTANCE   = 4,
+    CAD_SKETCH_RADIUS     = 5,
+    CAD_SKETCH_DIAMETER   = 6,
+    CAD_SKETCH_PARALLEL      = 7,   /* 선 A·B */
+    CAD_SKETCH_PERPENDICULAR = 8,   /* 선 A·B */
+    CAD_SKETCH_EQUAL         = 9,   /* 선 두 개 = 같은 길이, 원 두 개 = 같은 반지름 */
+    CAD_SKETCH_FIXED         = 10,  /* pointA 0/1 = 그 점만, CAD_SKETCH_WHOLE_ENTITY = 객체 전체 */
+    CAD_SKETCH_ANGLE         = 11,  /* 선 A 에서 B 로 재는 부호 있는 각, value 단위 도(°) */
+    CAD_SKETCH_TANGENT       = 12,  /* 선–원 또는 원–원(외접/내접은 지금 모양에서 자동) */
+    CAD_SKETCH_DISTANCE_X    = 13,  /* 점 A→B 가로 거리(부호 있음, A 평면 right 축). 선 점 2 = 중점 */
+    CAD_SKETCH_DISTANCE_Y    = 14   /* 점 A→B 세로 거리(부호 있음, A 평면 up 축) */
+};
+#define CAD_SKETCH_WHOLE_ENTITY 255
+/* 구속 상태 — CAD_GetSketchDiagnosis 의 outStatus */
+enum {
+    CAD_SKETCH_UNDER     = 0,   /* 과소 구속: 자유도 남음 */
+    CAD_SKETCH_WELL      = 1,   /* 완전 구속 */
+    CAD_SKETCH_REDUNDANT = 2,   /* 과잉: 풀리지만 같은 조건이 겹침 */
+    CAD_SKETCH_CONFLICT  = 3,   /* 충돌: 동시에 만족 불가 */
+    CAD_SKETCH_INVALID   = 4    /* 잘못된 참조 */
+};
+typedef struct CAD_SketchConstraintInfo {
+    uint32_t id;
+    int type;
+    uint32_t entityA;
+    int pointA;
+    uint32_t entityB;
+    int pointB;
+    float value;
+    bool driving;
+    bool enabled;
+} CAD_SketchConstraintInfo;
+CAD_API uint32_t CAD_AddSketchConstraint(int type,
+                                         uint32_t entityA, int pointA,
+                                         uint32_t entityB, int pointB,
+                                         float value);
+CAD_API bool CAD_SetSketchConstraintValue(uint32_t constraintId, float value);
+CAD_API bool CAD_RemoveSketchConstraint(uint32_t constraintId);
+CAD_API bool CAD_SolveSketchConstraints(void);
+CAD_API uint32_t CAD_GetSketchConstraintCount(void);
+/* 반환=필요한 전체 개수. outIds/capacity가 작으면 앞부분만 복사한다. */
+CAD_API uint32_t CAD_GetSketchConstraintIds(uint32_t* outIds, uint32_t capacity);
+CAD_API bool CAD_GetSketchConstraintInfo(uint32_t constraintId, CAD_SketchConstraintInfo* outInfo);
+/* 이 선·원과 제약으로 이어진 묶음의 자유도·구속 상태. 형상은 바꾸지 않는다.
+ * outProblemIds 에는 충돌(또는 중복) 제약 id — 반환 = 필요한 전체 개수, capacity 만큼만 복사. 실패 시 -1. */
+CAD_API int CAD_GetSketchDiagnosis(uint32_t entityId, int* outDof, int* outStatus,
+                                   uint32_t* outProblemIds, uint32_t capacity);
+/* 마지막 제약 추가·값 편집이 충돌로 실패했을 때 부딪친 제약 id 들. 반환 = 전체 개수. */
+CAD_API uint32_t CAD_GetLastSketchConflict(uint32_t* outIds, uint32_t capacity);
+
+CAD_API uint32_t CAD_CreatePolygon(float cx, float cy, float cz,
+                                   float radius,
+                                   int sides,
+                                   float normalX, float normalY, float normalZ,
+                                   float firstVertexDirX,
+                                   float firstVertexDirY,
+                                   float firstVertexDirZ);
+CAD_API uint32_t CAD_CreateArc(float startX, float startY, float startZ,
+                               float throughX, float throughY, float throughZ,
+                               float endX, float endY, float endZ);
+CAD_API uint32_t CAD_CreatePolyline(const float* xyz,
+                                    uint32_t pointCount,
+                                    bool closed);
+CAD_API uint32_t CAD_CreateRectangle(float x0, float y0, float z0,
+                                     float x2, float y2, float z2);
+CAD_API uint32_t CAD_CreateExtrude(uint32_t sourceId, float height);
+CAD_API bool CAD_DeleteObject(uint32_t id);
+CAD_API bool CAD_SelectObject(uint32_t id, bool additive);
+CAD_API void CAD_ClearSelection(void);
+CAD_API uint32_t CAD_GetObjectCount(void);
+CAD_API bool CAD_GetPosition(uint32_t id, float* x, float* y, float* z);
+CAD_API bool CAD_SetPosition(uint32_t id, float x, float y, float z);
+CAD_API bool CAD_GetScale(uint32_t id, float* sx, float* sy, float* sz);
+CAD_API bool CAD_SetScale(uint32_t id, float sx, float sy, float sz);
+CAD_API bool CAD_GetRotationAxisAngle(uint32_t id,
+                                      float* axisX, float* axisY, float* axisZ,
+                                      float* angleRadians);
+CAD_API bool CAD_SetRotationAxisAngle(uint32_t id,
+                                      float axisX, float axisY, float axisZ,
+                                      float angleRadians);
+
+// ── 위치 + 회전을 한 호출로 (쿼터니언) ──
+// 외부가 매 프레임 자세를 밀어넣는 경로 — 로봇 관절, 모션캡처, 시뮬레이터, ROS Pose.
+// SetPosition + SetRotationAxisAngle 을 따로 부르면 호출이 두 배가 되고, 두 호출
+// 사이에 프레임이 끼면 "옮겨졌지만 아직 안 돌아간" 한 프레임이 보인다.
+//
+// ⚠️ 쿼터니언 성분 순서는 **(qx, qy, qz, qw)** — ROS geometry_msgs/Quaternion 과 동일.
+//    (glm::quat 생성자는 (w,x,y,z) 순이라 내부에서 바꿔 넣는다. 혼동 주의)
+// 정규화는 엔진이 한다. 길이 0 / NaN 이면 대입하지 않고 false.
+//
+// 좌표계 참고 — 엔진은 ROS(REP-103)와 같은 Z-up 우수좌표계라 축 변환이 필요 없다.
+// 다만 전방 축이 다르다: ROS +X 전방, 엔진 +Y 전방 → 필요하면 yaw 90도만 보정.
+CAD_API bool CAD_SetTransform(uint32_t id,
+                              float x, float y, float z,
+                              float qx, float qy, float qz, float qw);
+CAD_API bool CAD_GetTransform(uint32_t id,
+                              float* x, float* y, float* z,
+                              float* qx, float* qy, float* qz, float* qw);
+
+// ── 관절 로봇 (URDF) ──
+// URDF 는 ROS 의 로봇 정의 포맷이지만 파일 자체는 XML 이라 **ROS 없이도** 읽고 그린다.
+// 좌표계도 맞는다 — URDF 와 이 엔진 둘 다 Z-up 우수좌표계·미터라 축 변환이 없다.
+//
+//   uint32_t r = CAD_LoadUrdf("models/demo_arm.urdf");   // 0 = 실패, 아니면 로봇 인덱스+1
+//   CAD_SetJointValue(r, CAD_FindJoint(r, "joint_elbow"), 0.7f);   // 라디안
+//
+// 조인트는 1자유도다 — URDF <axis> 가 축이고 값은 그 축의 회전각(revolute, 라디안)
+// 또는 이동거리(prismatic, 미터). 한계가 있으면 엔진이 잘라 넣는다.
+//
+// 로봇 핸들은 **1부터** — 0 을 실패로 쓰기 위해서다. 내부 인덱스 = handle-1.
+// 지원 형상: box / cylinder / sphere. mesh(STL/DAE) 링크는 아직 건너뛴다.
+CAD_API uint32_t CAD_LoadUrdf(const char* path);
+CAD_API uint32_t CAD_GetRobotCount(void);
+CAD_API uint32_t CAD_GetJointCount(uint32_t robot);
+// 조인트 이름 → 인덱스. 없으면 -1. (ROS 는 이름으로 오므로 필요)
+CAD_API int      CAD_FindJoint(uint32_t robot, const char* jointName);
+CAD_API int      CAD_GetJointName(uint32_t robot, int jointIdx, char* outUtf8, int cap);
+// 값 대입/조회. 반환은 한계로 잘린 **실제 적용값**.
+CAD_API float    CAD_SetJointValue(uint32_t robot, int jointIdx, float value);
+CAD_API float    CAD_GetJointValue(uint32_t robot, int jointIdx);
+// ── 여러 관절을 한 번에 ──
+// ROS 의 sensor_msgs/JointState 는 관절 전부를 한 메시지에 담아 초당 수십 번 보낸다.
+// 하나씩 넣으면 관절 수만큼 계층 트리를 다시 푸느라 헛일을 한다 — 여기선 **마지막에 한 번만** 푼다.
+// 반환: 실제로 적용된 개수(범위 밖·고정 조인트는 건너뜀).
+CAD_API uint32_t CAD_SetJointValues(uint32_t robot, const int* jointIdx,
+                                    const float* values, uint32_t count);
+// 이름으로 받는 판 — ROS 는 인덱스가 아니라 이름으로 온다. JointState 콜백에 그대로 꽂힌다.
+//   CAD_SetJointValuesByName(r, msg.name.data(), msg.position.data(), msg.name.size());
+CAD_API uint32_t CAD_SetJointValuesByName(uint32_t robot, const char* const* names,
+                                          const float* values, uint32_t count);
+// 한계와 종류(0=fixed 1=revolute 2=continuous 3=prismatic). hasLimit=false 면 lower/upper 무의미.
+CAD_API bool     CAD_GetJointInfo(uint32_t robot, int jointIdx,
+                                  int* outType, float* outLower, float* outUpper, bool* outHasLimit);
+// 축/종류 지정 — 엔진 안에서 리깅 (URDF 로 읽은 값을 바꿔 보기).
+// 축은 길이 0 이면 무시하고 false. 내부에서 정규화한다.
+CAD_API bool     CAD_SetJointAxis(uint32_t robot, int jointIdx, float x, float y, float z);
+CAD_API bool     CAD_GetJointAxis(uint32_t robot, int jointIdx, float* x, float* y, float* z);
+// type: 0=fixed 1=revolute 2=continuous 3=prismatic.
+// 종류가 바뀌면 한계는 버린다 — 각도(라디안)와 길이(미터)는 단위가 달라 그대로 쓰면 위험하다.
+CAD_API bool     CAD_SetJointType(uint32_t robot, int jointIdx, int type);
+// 축의 **위치**(피벗). 부모 링크 좌표 기준. 방향만으로는 어디를 중심으로 도는지 못 정한다.
+CAD_API bool     CAD_SetJointOrigin(uint32_t robot, int jointIdx, float x, float y, float z);
+CAD_API bool     CAD_GetJointOrigin(uint32_t robot, int jointIdx, float* x, float* y, float* z);
+// 링크 이름 → 그 링크의 씬 객체 ID (형상 없는 링크는 0). 색/재질 변경 등에 사용.
+CAD_API uint32_t CAD_GetLinkObject(uint32_t robot, const char* linkName);
+// 씬에서 로봇 전부 제거.
+CAD_API void     CAD_ClearRobots(void);
+
+// ── 런타임 리깅 — URDF 없이 씬 객체를 부모-자식으로 붙이기 ──
+// "큐브 9개로 로봇 만들기". 붙여도 부품은 제자리에 그대로 있는다(월드 변환을 계층으로 옮김).
+// type: 0=고정 1=회전 2=연속회전 3=직선. axis 는 붙일 때의 축 방향.
+// pivot(월드) = 축의 **위치**. usePivot=false 면 자식이 있는 자리를 쓴다.
+// 회전 중심이 부품 중심이라는 법이 없다 — 문 경첩은 모서리에 있다.
+CAD_API bool     CAD_RigAttach(uint32_t parentObj, uint32_t childObj,
+                               float axisX, float axisY, float axisZ, int type,
+                               float pivotX, float pivotY, float pivotZ, bool usePivot);
+// 이 부품과 그 **아래 가지 전체**를 떼어낸다. 각자 보이는 자리를 유지한다.
+CAD_API bool     CAD_RigDetach(uint32_t obj);
+// 이 객체가 속한 로봇 핸들 (0 = 안 붙어 있음).
+CAD_API uint32_t CAD_GetObjectRobot(uint32_t obj);
+
+// ── 폴리선 정점 목록 (PEDIT 대응) ──
+// 닫기·열기·반전·정점 삽입/삭제는 전부 "정점 목록을 바꾸는 일" 이라, 하위 명령마다
+// 함수를 늘리는 대신 목록을 통째로 읽고 쓰게 한다. 호스트가 받아서 고쳐 되돌려주면 된다.
+//
+//   uint32_t n = CAD_GetPolylinePoints(id, NULL, 0, NULL);   // 개수 질의
+//   float* buf = malloc(n * 3 * sizeof(float));
+//   bool closed = false;
+//   CAD_GetPolylinePoints(id, buf, n, &closed);
+//   ... 고친 뒤 ...
+//   CAD_SetPolylinePoints(id, buf, n, closed);               // undo 1스텝으로 적재
+//
+// xyz 는 3 × count 개 float. 좌표는 객체 로컬 (그립/스케치와 같은 공간).
+// Set 은 정점이 2개 미만이면 실패. Polyline 이 아닌 객체는 0 / false.
+CAD_API uint32_t CAD_GetPolylinePoints(uint32_t id, float* outXyz, uint32_t cap, bool* outClosed);
+CAD_API bool     CAD_SetPolylinePoints(uint32_t id, const float* xyz, uint32_t count, bool closed);
+
+// ── 점군 (라이다 / 스캐너) ──
+// 생성과 갱신이 분리돼 있다. 센서는 초당 수십 번 갱신하는데, 그때마다 객체를 지웠다
+// 만들면 ID 가 바뀌어 선택·트랜스폼이 매번 풀린다. 한 번 만들고 계속 Update 한다.
+//
+//   uint32_t pc = CAD_CreatePointCloud();
+//   // 매 스캔마다
+//   CAD_UpdatePointCloud(pc, xyz, rgba, count);
+//
+// xyz  : 3 × count 개의 float (x,y,z 반복). 객체 로컬 좌표 — 센서 위치/자세는
+//        CAD_SetTransform 으로 따로 준다(점을 미리 변환하지 말 것. 그러면 매 프레임
+//        count 개를 CPU 에서 곱해야 한다).
+// rgba : 4 × count 개의 uint8. NULL 이면 객체 색으로 단색 표시(LaserScan 처럼 색이 없는 소스).
+// count: 점 개수. 0 이면 비운다.
+//
+// ⚠️ 규모 전제: **수만~수십만 점**. 수백만 점(측량 스캔)은 옥트리 LOD 가 있어야 하고,
+//    그건 이 API 위에 얹을 별도 레이어다 — 함수 모양은 그때도 바뀌지 않는다.
+// 갱신은 GPU 스톨 없이 host-visible 버퍼 memcpy 로 처리된다(매 프레임 호출해도 안전).
+CAD_API uint32_t CAD_CreatePointCloud(void);
+// Particle presets: 0 fire, 1 smoke, 2 sparks. Inserted stopped.
+// unitsPerMeter = 1 for metre drawings, 1000 for millimetre drawings.
+// Call on the engine thread, outside CAD_Tick (same rule as CAD_CreateBox).
+CAD_API uint32_t CAD_CreateParticleEmitter(int preset, float x, float y, float z, float unitsPerMeter);
+// Load a LotCAD v1 JSON preset (not Unity/Unreal/Effekseer), create stopped.
+// UTF-8 path. Invalid/unsupported file returns 0; never modifies the source file.
+CAD_API uint32_t CAD_CreateParticleEmitterFromPreset(const char* path, float x, float y, float z, float unitsPerMeter);
+// state: 0 pause (preserves particles), 1 play/resume, 2 reset/stop.
+CAD_API bool CAD_SetParticlePlayback(uint32_t id, int state);
+// Settings — JSON schema v1 of particle_preset_io.h (version, unit, style, rate, lifetime, speed, radius, spread,
+// size, acceleration, start_color, end_color, capacity, seed). Get returns unit "m". Set accepts a partial object:
+// only the given keys change (unit "mm" converts the given length keys). Undo 1 step. Fail: false + CAD_GetLastError.
+CAD_API int      CAD_GetParticleSettingsJson(uint32_t id, char* out, int cap);   // length, -1 = not an emitter
+CAD_API bool     CAD_SetParticleSettingsJson(uint32_t id, const char* json);
+CAD_API uint32_t CAD_GetParticleLiveCount(uint32_t id);                          // 0 = none / not an emitter
+// Preset library — effects/*.json sorted by name, loaded on first use (no panel needed, works on iOS).
+// Path is absolute UTF-8, ready for CAD_CreateParticleEmitterFromPreset. Effekseer files are not listed.
+CAD_API uint32_t CAD_GetParticlePresetCount(void);
+CAD_API int      CAD_GetParticlePresetName(uint32_t index, char* out, int cap);  // -1 = out of range
+CAD_API int      CAD_GetParticlePresetPath(uint32_t index, char* out, int cap);  // -1 = out of range
+// Save an emitter's settings as a v1 preset (UTF-8 path, folders created). Saving into effects/ refreshes the list.
+CAD_API bool     CAD_SaveParticlePreset(uint32_t id, const char* path);
+
+// ── 노드 트리·도면층 창 — ImGui 패널이 안 뜨는 호스트(WinForms·WPF·Qt·모바일)가 자기 트리·목록을 그릴 때 ──
+// 장면이 바뀔 때마다(객체 추가·삭제·이름·보이기·도면층 …) 커지는 번호 — 같으면 다시 안 읽어도 된다(폴링용).
+CAD_API uint64_t CAD_GetSceneRevision(void);
+// 노드 트리 — 엔진 패널과 같은 구성(파일 → glTF/FBX 노드 계층 → 객체 → 피처·가공 기록). 평평한 배열 + 부모 번호:
+// {"revision","nodes":[{"index","key","kind":"scene|file|node|object|feature","label","parent"(-1 = 뿌리),"depth","children":[…],
+//   "total","shown"(아래 객체 수·보이는 수),  객체 줄만: "objectId"(1 이상),"objectKind","visible","selected","locked"(bool),"layerId","layer"}]}
+//   objectKind = 문자열, CAD_GetObjectJson 의 "kind" 와 같다: "mesh" "line" "polyline" "circle" "arc" "text" "dimension"
+//   "pointcloud" "particle" "effect" "hatch" (모르는 종류 "unknown"). 객체 id 는 늘 1 이상(0 = 없음/실패).
+// 클릭·보이기·이름 바꾸기는 기존 함수로: CAD_SelectObject · CAD_SetObjectVisible · CAD_SetObjectName(묶음 줄은 children 의 objectId 들).
+CAD_API int      CAD_GetSceneTreeJson(char* out, int cap);
+// 도면층 창 — 한 번에: {"revision","layers":[{"id","name","visible","locked","color":[r,g,b],"opacity","linetypeId","linetype",
+//   "objectCount","selectedCount"(,"fixed":true — 도면층 0)}]}. 바꾸기는 기존 CAD_SetLayer*·CAD_RenameLayer·CAD_CreateLayer·CAD_AssignSelectedToLayer.
+CAD_API int      CAD_GetLayersJson(char* out, int cap);
+
+// ── 객체 스냅·직교·극좌표 — 상태바 버튼(객체스냅·직교(F8)·극좌표(F10))과 같은 설정. 명령 osnap/ortho/polar [on|off] 과도 같다.
+// 모드 비트: CAD_OSNAP_END 1 · MID 2 · CEN 4 · FACE 8(면 중심) · NODE 16(점) · QUA 32(사분점) · INT 64(교차) · PER 128(수직) · TAN 256(접선) · NEA 512(근처)
+CAD_API bool     CAD_SetOSnapEnabled(bool on);
+CAD_API bool     CAD_GetOSnapEnabled(void);
+CAD_API bool     CAD_SetOSnapModes(uint32_t mask);
+CAD_API uint32_t CAD_GetOSnapModes(void);
+CAD_API void     CAD_SetOrthoEnabled(bool on);
+CAD_API bool     CAD_GetOrthoEnabled(void);
+CAD_API bool     CAD_SetPolarTracking(bool on, float incrementDeg);   // incrementDeg <= 0 = 지금 값 유지(기본 45°, 1~90)
+CAD_API bool     CAD_GetPolarTracking(float* incrementDeg);           // 켜짐 여부, incrementDeg NULL 가능
+
+// ── 평면도 이미지 → 벽 (AI 없이) ───────────────────────────────────────
+// 추출은 장면을 바꾸지 않는다. widthMm = 도면 전체 폭(벽 중심선, mm), 0 이면 문 폭 900mm 로 축척 추정.
+// 출력 JSON(mm, 좌하단 원점·Y 위): {"widthMm","depthMm","walls":[{"x1","y1","x2","y2","thicknessMm","exterior"}],
+//   "outerThicknessMm","innerThicknessMm","scaleEstimated","doorCount","imageWidthMm","imageOrigin":[x,y],"summary"}
+//   — imageWidthMm/imageOrigin = 이미지 **전체**의 실폭·좌하단(바닥에 깔 때). 실패 -1 + CAD_GetLastError. 2회 호출 규약.
+CAD_API int  CAD_FloorplanExtractFromImage(const char* path, float widthMm, char* outJson, int cap);
+// rgba = 4바이트 × w × h(행 우선, 위에서 아래) — 모바일 카메라·사진 선택기용.
+CAD_API int  CAD_FloorplanExtractFromRgba(const unsigned char* rgba, int w, int h, float widthMm, char* outJson, int cap);
+// 벽 그래프 → 3D 벽. segs = [x1,y1,x2,y2,thickness] × count, **단위 m**(CAD_CreateFloorplan 과 같음), 축에 나란한 벽만.
+// thickness <= 0 이면 defaultThickness. 반환 = 만든 벽 수, outIds 에 최대 cap 개. undo 1.
+CAD_API uint32_t CAD_CreateWallGraph(float ox, float oy, float oz, const float* segs, uint32_t count,
+                                     float height, float defaultThickness, uint32_t* outIds, uint32_t cap);
+// 편의 — 이미지에서 벽을 찾아 m 로 세우고, underlayImage 면 원본을 같은 축척으로 바닥에(AI create_wall_graph 와 같음).
+CAD_API uint32_t CAD_CreateFloorplanFromImage(const char* path, float widthMm, float height, bool underlayImage,
+                                              uint32_t* outIds, uint32_t cap);
+
+// ── 내비(경로 주행) — 패널·마우스 없이. 패널과 같은 규약: agentId 0 = 체크된 것 전부(없으면 고른 줄).
+//   agentId = 대상의 대표 객체 id(차체·바퀴처럼 조각 모델은 가장 큰 조각). 단위 = 장면 단위(m 장면이면 m, mm 도면이면 mm).
+// 지도 — paramsJson: {"cellSize","agentRadius","minZ","maxZ","margin","maxCells"} 중 준 키만 자동값 위에 덮음. NULL/"" = 자동.
+CAD_API bool     CAD_NavBuildMap(const char* paramsJson);
+CAD_API void     CAD_NavShowGrid(bool on);
+// 대상 — 장면 객체를 주행 대상으로. 반환 agentId(0 실패). 자동 수집(뼈·바퀴 클립)된 대상도 Remove/Clear 하면 다시 안 들어온다.
+CAD_API uint32_t CAD_NavAddAgent(uint32_t objectId, bool isVehicle);
+CAD_API uint32_t CAD_NavAddSelected(void);                 // 반환 = 추가된 수
+CAD_API bool     CAD_NavRemoveAgent(uint32_t agentId);
+CAD_API void     CAD_NavClearAgents(void);
+// {"speed","scanRange","radius"(0=자동),"showRays","checked","isVehicle"} 중 준 키만.
+CAD_API bool     CAD_NavSetAgentParams(uint32_t agentId, const char* json);
+// 목적지 — 경로 계획까지(출발은 Start). 길이 없으면 false + CAD_GetLastError.
+CAD_API bool     CAD_NavSetGoal(uint32_t agentId, float x, float y, float z);
+CAD_API bool     CAD_NavStart(uint32_t agentId);
+CAD_API bool     CAD_NavStop(uint32_t agentId);
+CAD_API bool     CAD_NavReset(uint32_t agentId);          // 정지·경로 삭제·출발 자리로
+// {"grid":{"ready","showing","w","h","cellSize","origin","blockedCells","totalCells"},"activeAgent",
+//  "agents":[{"agentId","name","isVehicle","checked","active","hasGoal","goal","driving","pathPoints","pathIndex","pathLength",
+//             "position"(몸통 중심),"yaw"(도, 0=+Y 시계 — CAD_ApplyExternalPose 와 같음),"arrived","speed","scanRange","radius","showRays"}]}
+CAD_API int      CAD_NavGetStateJson(char* out, int cap);
+// 경로 점 [x,y] × n — 반환 = 점 수(outXY NULL/cap 0 이면 개수만, 2회 호출). cap = 점 개수 단위(배열은 float cap×2 칸).
+CAD_API uint32_t CAD_NavGetPath(uint32_t agentId, float* outXY, uint32_t cap);
+
+// ── AI ─────────────────────────────────────────────────────────────
+// 엔드포인트 — 모바일은 원격 서버. url 예 "http://192.168.0.10:8080"(OpenAI 호환 /v1/chat/completions), model = 서버가 쓰는 이름(NULL = 안 보냄).
+//   설정 뒤 서버 확인에 1초쯤 — 준비 전 Submit 은 false + CAD_GetLastError.
+CAD_API bool CAD_AiSetEndpoint(const char* url, const char* model);
+CAD_API bool CAD_AiStartLocalServer(void);        // 데스크톱 전용(helperAI llama-server), 모바일 false + GetLastError
+// 비동기 요청 — 결과 액션은 다음 틱들에서 트랜잭션 하나로 적용(AI 창과 같음). 처리 중이거나 준비 전이면 false.
+CAD_API bool CAD_AiSubmit(const char* prompt);
+CAD_API bool CAD_AiSubmitWithImage(const char* prompt, const char* imagePath);
+CAD_API int  CAD_AiGetStatus(void);               // 0 idle 1 busy 2 done 3 error (2·3 은 한 번만)
+CAD_API int  CAD_AiGetLastAnswer(char* out, int cap);   // 모델의 답 문장(질문엔 액션 없이 이것만)
+CAD_API int  CAD_AiGetNotes(char* out, int cap);        // 액션별 결과 줄(\n 구분)
+CAD_API void CAD_AiCancel(void);                  // 진행 중 답을 버리고 대기 액션도 지움
+// 동기 — 호스트가 자기 LLM(Claude API 등)으로 받은 액션 JSON(배열 또는 {"actions":[…]}, lot_ai_prompt.h 계약)을 바로.
+//   MCP ai_actions 와 같은 처리 + 되돌리기 한 단계. 반환 = notes 길이(2회 호출), 실패 -1 + GetLastError.
+CAD_API int  CAD_RunAiActionsJson(const char* actionsJson, char* outNotes, int cap);
+// MCP 도구를 TCP 없이 직접 — CAD_GetMcpToolsJson 짝. 결과 = MCP content JSON. 실패 -1.
+CAD_API int  CAD_McpCall(const char* toolName, const char* argsJson, char* out, int cap);
+
+// ── 실시간 단면 — 셰이더가 잘라 보여 준다(보기 상태, undo 없음). 패널(section 명령)과 같은 상태라 둘이 같이 움직인다.
+//   mode 0 끄기 1 평면(axis 위치 pos 보다 큰 쪽을 자름, flip 이면 반대) 2 슬라이스(pos 중심 thickness 두께만 남김) 3 상자(SetSectionBox).
+//   axis 0 X 1 Y 2 Z. thickness 는 슬라이스에만(0 이하면 지금 값 유지). 틀린 값 false.
+CAD_API bool CAD_SetSection(int mode, int axis, float pos, bool flip, float thickness);
+CAD_API bool CAD_SetSectionBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);   // 상자 값만(켜기는 SetSection(3,…))
+CAD_API void CAD_SetSectionOptions(bool showArrows, bool selectedOnly);
+// {"mode","modeName","axis","pos","flip","thickness","box":{"min","max"},"showArrows","selectedOnly","sceneBounds":{"min","max"}} — sceneBounds = 슬라이더 범위
+CAD_API int  CAD_GetSectionStateJson(char* out, int cap);
+// 지금 평면 단면 → 2D 윤곽(편집 가능한 폴리선, includeBehind 면 뒤쪽 회색 참조선 1개 더)을 모델 오른쪽 XY 평면에. 반환 = 만든 객체 수, undo 1.
+CAD_API uint32_t CAD_ExtractSectionTo2D(bool includeBehind);
+
+// ── 도면 뷰(3D → 2D, 솔리드웍스 Drawing 식) — 뷰는 장면 객체가 아니라 CAD_GetObjectIds 에 안 나온다. 좌표 = 도면 평면(월드 XY, mm).
+// 3D 를 고치면 따라온다(연관). 만들기·지우기·옮기기는 undo 1. 실패 0/false + CAD_GetLastError.
+// CreateDrawingViews: 정면·평면·우측면(3각법) + 등각(0.6배), 모델 치수 자동. 반환 = 만든 뷰 수(4). ids 없으면(count 0) 보이는 솔리드 전부.
+CAD_API uint32_t CAD_CreateDrawingViews(const uint32_t* ids, uint32_t count, float scale);
+// 단면도 A-A — 정투상 뷰를 가로지르는 선(첫 점 → 둘째 점), 보는 쪽 = 선의 왼쪽. 반환 = 뷰 id.
+CAD_API uint32_t CAD_CreateSectionView(float ax, float ay, float bx, float by);
+// 상세도 — 정투상 뷰 위 원(중심·반지름)을 factor 배(0 이면 2)로 도면 오른쪽에. 반환 = 뷰 id.
+CAD_API uint32_t CAD_CreateDetailView(float cx, float cy, float radius, float factor);
+// 뷰 옮기기 — 3각법 정렬 유지(평면도는 위아래, 우측면도는 좌우, 정면도는 매달린 뷰·단면도와 함께).
+CAD_API bool     CAD_MoveDrawingView(uint32_t viewId, float dx, float dy);
+CAD_API void     CAD_ClearDrawingViews(void);
+// 뷰 목록 JSON — [{"id","name","kind":"base|section|detail","dir","up","origin","scale","hidden","dims","sources",
+// "parent","label"(단면·상세),"bounds":{"min":[x,y],"max":[x,y]}}] — bounds = 뷰가 차지하는 자리(선 + 모델 치수 + 이름). 2회 호출 규약.
+CAD_API int      CAD_GetDrawingViewsJson(char* out, int cap);
+// Load an Effekseer .efkefc/.efk with referenced resources. Inserted stopped.
+// CAD_SetParticlePlayback also controls these objects. Files embed in .lot.
+CAD_API uint32_t CAD_CreateExternalEffect(const char* path,float x,float y,float z,float unitsPerMeter);
+CAD_API bool     CAD_UpdatePointCloud(uint32_t id,
+                                      const float* xyz,
+                                      const unsigned char* rgba,
+                                      uint32_t count);
+// 화면 픽셀 크기 (1~64 로 클램프). 기본 2.
+CAD_API bool     CAD_SetPointCloudSize(uint32_t id, float pointSizePx);
+CAD_API uint32_t CAD_GetPointCloudCount(uint32_t id);
+
+CAD_API uint32_t CAD_GetSelectedCount(void);
+CAD_API bool CAD_GetSelectedObjectId(uint32_t index, uint32_t* id);
+
+// ── 객체 조회/대입 (ObjectARX 스타일) ──
+// 전체 객체 ID 열거 — outIds 에 최대 cap 개 채우고 총 개수 반환. cap=0/outIds=NULL → 개수만 질의.
+// (2단계: 먼저 개수 질의 → 버퍼 할당 → 다시 호출)
+CAD_API uint32_t CAD_GetObjectIds(uint32_t* outIds, uint32_t cap);
+// 종류: 0=Mesh 1=Line 2=Polyline 3=Circle 4=Arc 5=Text 6=Dimension
+//       7=PointCloud 8=ParticleEmitter, 없으면 -1.
+CAD_API int      CAD_GetObjectKind(uint32_t id);
+CAD_API bool     CAD_ObjectExists(uint32_t id);
+// 이름 — 씬 안에서 **유일**해야 한다. 중복이면 false (이름은 사람과 외부 API 가
+// 부품을 가리키는 유일한 수단이라, 겹치면 어느 쪽인지 알 수 없다). 빈 이름은 허용.
+CAD_API bool     CAD_SetObjectName(uint32_t id, const char* utf8);
+// Viewport visibility; hidden objects remain in the document but cannot be picked/snapped.
+CAD_API bool     CAD_SetObjectVisible(uint32_t id, bool visible);
+CAD_API bool     CAD_IsObjectVisible(uint32_t id); // false for missing IDs
+// Document layers. 0 is the always-visible, unlocked default layer.
+CAD_API uint32_t CAD_CreateLayer(const char* name);
+// RGB in [0,1]. Layer 0 has fixed white ByLayer color.
+CAD_API bool CAD_SetLayerColor(uint32_t id,float r,float g,float b);
+CAD_API bool CAD_GetLayerColor(uint32_t id,float* r,float* g,float* b);
+CAD_API bool CAD_SetObjectColorByLayer(uint32_t id,bool enabled);
+CAD_API int CAD_GetObjectColorByLayer(uint32_t id); // 0=individual, 1=ByLayer, -1=missing
+CAD_API uint32_t CAD_SetSelectedColorByLayer(bool enabled);
+CAD_API bool CAD_GetObjectEffectiveColor(uint32_t id,float* r,float* g,float* b);
+/* 불투명도 0..1 (1 = 불투명). 객체 것 × 도면층 것이 화면에 쓰인다 — 메시(채움)에만, 선·문자는 그대로.
+   객체 것은 되돌리기 1단계. 이름 기반 속성 "opacity" 와 같은 값. Get 은 없으면 -1. */
+CAD_API bool  CAD_SetObjectOpacity(uint32_t id, float opacity);
+CAD_API float CAD_GetObjectOpacity(uint32_t id);
+CAD_API bool  CAD_SetLayerOpacity(uint32_t id, float opacity);
+CAD_API float CAD_GetLayerOpacity(uint32_t id);
+CAD_API uint32_t CAD_SetSelectedOpacity(float opacity);   /* 선택 전부, 되돌리기 1단계 → 바뀐 수 */
+CAD_API uint32_t CAD_GetLayerIds(uint32_t* out, uint32_t capacity); // required count, includes 0
+CAD_API int CAD_GetLayerName(uint32_t id, char* out, int capacity);
+CAD_API bool CAD_RenameLayer(uint32_t id, const char* name);
+CAD_API bool CAD_SetLayerVisible(uint32_t id, bool visible);
+CAD_API bool CAD_IsLayerVisible(uint32_t id);
+CAD_API bool CAD_SetLayerLocked(uint32_t id, bool locked);
+CAD_API bool CAD_IsLayerLocked(uint32_t id);
+
+// ── 선종류 (파선·숨은선·중심선…) ──
+// AutoCAD .lin 규칙: 무늬 요소 양수=선, 음수=빈칸, 0=점. 단위는 도면 단위(m).
+// id 0 = Continuous(실선, 항상 있음). 표준 8종은 id 1..8 로 고정:
+//   1 Dashed  2 Hidden  3 Center  4 Phantom  5 Dot  6 DashDot  7 Divide  8 Border
+// 사용자 정의는 100 부터. 객체 값 CAD_LINETYPE_BYLAYER = 도면층 것을 따른다(기본).
+// 선·폴리선·원·호에만 보인다 — 메시·문자·치수는 항상 실선.
+#define CAD_LINETYPE_BYLAYER 0xFFFFFFFFu
+// 사용자 선종류 추가. 요소 1..8개, 선(양수 또는 점)이 하나는 있어야 한다. 실패 0.
+CAD_API uint32_t CAD_CreateLinetype(const char* name, const float* pattern, int count, const char* description);
+CAD_API uint32_t CAD_GetLinetypeIds(uint32_t* out, uint32_t capacity);        // 필요한 개수, 0(Continuous) 포함
+CAD_API int      CAD_GetLinetypeName(uint32_t id, char* out, int capacity);   // 이름 길이, 없으면 -1
+CAD_API int      CAD_GetLinetypePattern(uint32_t id, float* out, int capacity); // 요소 수, 없으면 -1
+CAD_API bool     CAD_SetObjectLinetype(uint32_t objectId, uint32_t linetypeId);  // CAD_LINETYPE_BYLAYER 허용
+CAD_API bool     CAD_GetObjectLinetype(uint32_t objectId, uint32_t* out);
+CAD_API bool     CAD_SetObjectLinetypeScale(uint32_t objectId, float scale);     // 객체별 축척(CELTSCALE)
+CAD_API bool     CAD_GetObjectLinetypeScale(uint32_t objectId, float* out);
+CAD_API uint32_t CAD_SetSelectedLinetype(uint32_t linetypeId);                  // 바뀐 객체 수
+CAD_API bool     CAD_SetLayerLinetype(uint32_t layerId, uint32_t linetypeId);   // 도면층 0 은 실선 고정
+CAD_API bool     CAD_GetLayerLinetype(uint32_t layerId, uint32_t* out);
+CAD_API bool     CAD_SetLinetypeScale(float scale);                              // 전역 LTSCALE
+CAD_API float    CAD_GetLinetypeScale(void);
+CAD_API bool CAD_SetObjectLayer(uint32_t objectId, uint32_t layerId);
+CAD_API int CAD_GetObjectLayer(uint32_t objectId); // -1 for missing objects
+CAD_API uint32_t CAD_AssignSelectedToLayer(uint32_t layerId);
+CAD_API int      CAD_GetObjectName(uint32_t id, char* outUtf8, int cap);   // 길이 반환, -1=실패
+CAD_API uint32_t CAD_FindObjectByName(const char* utf8);                   // 0 = 없음
+CAD_API bool     CAD_GetColor(uint32_t id, float* r, float* g, float* b);
+CAD_API bool     CAD_SetColor(uint32_t id, float r, float g, float b);
+// 월드 AABB (min/max). GetCenter = 0.5*(min+max). 대형 임포트 메시는 AABB 폴백으로 유효.
+CAD_API bool     CAD_GetBoundsWorld(uint32_t id,
+                                    float* minX, float* minY, float* minZ,
+                                    float* maxX, float* maxY, float* maxZ);
+CAD_API bool     CAD_GetCenterWorld(uint32_t id, float* x, float* y, float* z);
+
+// 자체 Mini B-Rep 정보. featureType: 0=Box, 1=Cylinder, 2=Extrude.
+// volume/surfaceArea는 객체의 현재 축척·회전을 반영한 월드 값이다.
+// 임포트 메시나 아직 B-Rep으로 복원하지 않은 Boolean 결과는 false.
+// 원통 차집합 결과의 타공 편집 가능 여부는 CAD_GetBooleanCylinderCutCount로 조회한다.
+typedef struct CAD_BRepInfo {
+    int32_t featureType;
+    uint32_t vertexCount;
+    uint32_t edgeCount;
+    uint32_t faceCount;
+    double volume;
+    double surfaceArea;
+} CAD_BRepInfo;
+CAD_API bool     CAD_GetBRepInfo(uint32_t id, CAD_BRepInfo* outInfo);
+
+// B-Rep 생성 파라미터. 사용하지 않는 필드는 0이다.
+// dimensions는 객체 transform.scale과 별개인 로컬 원본 치수다.
+typedef struct CAD_BRepParameters {
+    int32_t featureType;
+    float dimensionsX;
+    float dimensionsY;
+    float dimensionsZ;
+    float radius;
+    float height;
+    float directionX;
+    float directionY;
+    float directionZ;
+} CAD_BRepParameters;
+CAD_API bool     CAD_GetBRepParameters(uint32_t id, CAD_BRepParameters* outParams);
+CAD_API bool     CAD_SetBRepBoxDimensions(uint32_t id, float x, float y, float z);
+CAD_API bool     CAD_SetBRepCylinderDimensions(uint32_t id, float radius, float height);
+CAD_API bool     CAD_SetBRepExtrudeHeight(uint32_t id, float height);
+// 안정적인 B-Rep face id 조회. surfaceType: 0=Plane, 1=Cylinder. 원점/법선은 월드 좌표.
+typedef struct CAD_BRepFaceInfo {
+    uint32_t faceId;
+    int32_t surfaceType;
+    float originX, originY, originZ;
+    float normalX, normalY, normalZ;
+} CAD_BRepFaceInfo;
+CAD_API bool     CAD_GetBRepFaceInfo(uint32_t id, uint32_t faceId, CAD_BRepFaceInfo* outInfo);
+// 지정 면을 바깥쪽으로 이동한다. 박스 평면은 반대편 면을 고정하고,
+// 원통 옆면(surfaceType=1)은 반지름을 변경하며, 돌출체 옆면은 프로파일 변을 평행 이동한다.
+// distance는 월드 단위다.
+CAD_API bool     CAD_PushPullBRepFace(uint32_t id, uint32_t faceId, float distance);
+// Extrude 솔리드에 편집 가능한 포켓/관통 컷을 추가한다.
+// profileXYZ는 객체 로컬 좌표의 폐프로파일(pointCount*3)이며 캡과 평행한 평면에 둔다.
+// 엔진이 아래 기준면으로 투영한다. throughAll=true이면 depth를 무시한다.
+// 외곽에 닿거나 다른 컷과 겹치는 프로파일은 false를 반환한다.
+enum { CAD_MAX_BREP_PROFILE_POINTS = 2048 };
+CAD_API bool     CAD_CutExtrudeBRep(uint32_t id,
+                                    const float* profileXYZ,
+                                    uint32_t pointCount,
+                                    float depth,
+                                    bool throughAll);
+// 기존 닫힌 2D 스케치를 프로파일로 사용한다. 스케치의 월드 변환을 대상 솔리드의
+// 로컬 좌표로 자동 변환하므로 화면에서 그린 사각형·원·폴리선을 바로 사용할 수 있다.
+CAD_API bool     CAD_CutExtrudeFromSketch(uint32_t id,
+                                          uint32_t sketchId,
+                                          float depth,
+                                          bool throughAll);
+// 보스(더하는 돌출) — Extrude 솔리드의 캡 안쪽에 폐프로파일을 쌓는다(피처 기록에 남아 치수·재생성이 된다).
+// height > 0 = 위 캡에서 위로, < 0 = 아래 캡에서 아래로. 발자국이 외곽에 닿거나 같은 쪽 보스와 겹치거나
+// 기존 컷 테두리를 가로지르면 false. 이미 있던 관통 컷은 보스까지 관통한다.
+CAD_API bool     CAD_BossExtrudeBRep(uint32_t id,
+                                     const float* profileXYZ,
+                                     uint32_t pointCount,
+                                     float height);
+// 닫힌 스케치로 — 스케치가 가까운 캡(위/아래) 쪽으로 height(양수) 만큼. 스케치가 바뀌면 다시 만든다.
+CAD_API bool     CAD_BossExtrudeFromSketch(uint32_t id,
+                                           uint32_t sketchId,
+                                           float height);
+CAD_API uint32_t CAD_GetBRepBossCount(uint32_t id);
+// 보스 높이 읽기·바꾸기(부호 = 위/아래). 바꾸기는 undo 1.
+CAD_API bool     CAD_GetBRepBossHeight(uint32_t id, uint32_t bossIndex, float* outHeight);
+CAD_API bool     CAD_SetBRepBossHeight(uint32_t id, uint32_t bossIndex, float height);
+typedef struct CAD_BRepCutInfo {
+    uint32_t cutIndex;
+    uint32_t pointCount;
+    float depth;
+    bool throughAll;
+} CAD_BRepCutInfo;
+CAD_API uint32_t CAD_GetBRepCutCount(uint32_t id);
+CAD_API bool     CAD_GetBRepCutInfo(uint32_t id, uint32_t cutIndex, CAD_BRepCutInfo* outInfo);
+// 필요한 점 개수를 반환한다. outXYZ가 null이거나 capacity가 작으면 복사하지 않는다.
+CAD_API uint32_t CAD_GetBRepCutProfile(uint32_t id, uint32_t cutIndex,
+                                       float* outXYZ, uint32_t capacity);
+// 기존 컷의 프로파일과 관통/포켓 깊이를 교체한다. cutIndex는 GetBRepCutInfo의 값이다.
+// profileXYZ는 대상 솔리드의 객체 로컬 좌표이며, 임포트한 폐폴리라인 좌표도 사용할 수 있다.
+CAD_API bool     CAD_SetBRepCut(uint32_t id, uint32_t cutIndex,
+                                const float* profileXYZ, uint32_t pointCount,
+                                float depth, bool throughAll);
+// 닫힌 엔진 스케치(직접 그린 형상 또는 DXF 등에서 변환한 형상)로 기존 컷을 교체한다.
+CAD_API bool     CAD_SetBRepCutFromSketch(uint32_t id, uint32_t cutIndex,
+                                          uint32_t sketchId,
+                                          float depth, bool throughAll);
+// 컷·보스 지우기(솔리드웍스 피처 삭제처럼) — 여러 개를 한 번에 빼고 남은 것으로 한 번 다시 만든다. 그 피처만 쓰던 스케치도 지운다.
+// 번호는 CAD_GetBRepCutInfo / 보스 순서(지우기 전 번호 — 지운 뒤엔 뒤쪽 번호가 당겨진다). 되돌리기 한 단계.
+// 남은 것으로 모양을 못 만들면(보스를 지워 그 안 컷이 허공에 남음 등) 아무것도 안 바꾸고 false + CAD_GetLastError.
+CAD_API bool     CAD_RemoveBRepFeatures(uint32_t id, const uint32_t* cutIndices, uint32_t cutCount,
+                                        const uint32_t* bossIndices, uint32_t bossCount);
+CAD_API bool     CAD_RemoveBRepCut(uint32_t id, uint32_t cutIndex);     // 하나만 — CAD_RemoveBRepFeatures 와 같다
+CAD_API bool     CAD_RemoveBRepBoss(uint32_t id, uint32_t bossIndex);
+// 일반 Boolean 차집합이 B-Rep 기준체와 원통 커터로 만들어졌으면 타공 기록을 보존한다.
+// 중심·방향은 결과 객체 로컬 좌표, radius/height는 같은 좌표계의 수치다.
+typedef struct CAD_BooleanCylinderCutInfo {
+    uint32_t cutIndex;
+    float centerX, centerY, centerZ;
+    float axisX, axisY, axisZ;
+    float radius;
+    float height;
+} CAD_BooleanCylinderCutInfo;
+CAD_API uint32_t CAD_GetBooleanCylinderCutCount(uint32_t id);
+CAD_API bool     CAD_GetBooleanCylinderCutInfo(uint32_t id, uint32_t cutIndex,
+                                               CAD_BooleanCylinderCutInfo* outInfo);
+CAD_API bool     CAD_SetBooleanCylinderCut(uint32_t id, uint32_t cutIndex,
+                                           float centerX, float centerY, float centerZ,
+                                           float axisX, float axisY, float axisZ,
+                                           float radius, float height);
+// B-Rep 정의로 렌더 메시 캐시를 강제 재생성한다. 곡면 분할은 3~512로 제한된다.
+CAD_API bool     CAD_RebuildBRepMesh(uint32_t id, uint32_t curvedSegments);
+
+/* ── 측정 ─────────────────────────────────────────────────────────────────
+ *
+ * 호스트 상태바에 "길이 3,600" / "면적 12.5" 를 띄우려면 필요하다.
+ * **월드 좌표로** 잰다 — 축척이 걸린 객체도 화면에 보이는 값과 맞는다.
+ *
+ * 길이: 선/폴리선 = 변의 합(닫혀 있으면 마지막→첫 변 포함), 원 = 2πr, 호 = rθ.
+ * 면적: 닫힌 폴리선 = 신발끈 공식(3D 평면판), 원 = πr², 호 = 부채꼴.
+ * 메시·문자·점군은 false (그 종류엔 정의되지 않는다).
+ */
+/* ── 내보내기 ─────────────────────────────────────────────────────────────
+ *
+ * **확장자로 포맷이 정해진다** — .stl .dxf .glb .obj .lot
+ * 전에는 CAD_ExportObj 하나뿐이라 나머지 포맷을 호스트에서 쓸 수가 없었다.
+ * selectedOnly=true 면 선택된 것만(선택이 비었으면 실패).
+ * 대화상자를 띄우지 않으므로 경로는 호스트가 정한다.
+ */
+CAD_API bool     CAD_ExportFile(const char* path, bool selectedOnly);
+
+/* ── 클립보드 (모바일용) ──────────────────────────────────────────────────
+ *
+ * 데스크톱은 ImGui 백엔드가 OS 클립보드로 연결해 주지만, iOS/안드로이드는 그게 없다.
+ * 클립보드가 Swift 의 UIPasteboard / Kotlin 의 ClipboardManager 쪽에 있어서
+ * C++ 에서 직접 못 만진다. 그래서 **호스트가 대신 처리**한다.
+ *
+ *   복사      : 엔진이 복사할 때 등록한 콜백이 불린다 → 호스트가 OS 클립보드에 넣는다
+ *   붙여넣기  : 호스트가 CAD_PasteText 로 밀어 넣는다 (엔진이 물어보지 않는다)
+ *
+ * 붙여넣기를 "미는" 이유: 엔진이 동기로 물어보면 호스트가 돌려주는 문자열의 수명을
+ * 누가 책임지는지가 애매해진다. 모바일 UX 도 "붙여넣기 버튼을 누른다" 라 미는 쪽이 맞다.
+ * 데스크톱에서도 등록하면 이쪽이 우선한다(임베드 앱이 자기 정책을 쓰고 싶을 때).
+ */
+CAD_API void     CAD_SetOnCopyText(void (*cb)(const char* utf8));
+CAD_API void     CAD_PasteText(const char* utf8);
+
+/* ── 이미지 붙이기 ────────────────────────────────────────────────────────
+ *
+ * 도면 밑에 깔 이미지(평면도 사진 등)를 XY 평면에 붙인다.
+ * 엔진의 imageattach 명령은 **파일 대화상자를 띄우므로 모바일에서 못 쓴다** —
+ * 호스트가 사진 앱(PHPicker / Intent)에서 고른 뒤 여기로 넘긴다.
+ *
+ *   FromFile   : 경로로. 데스크톱·모바일 공통.
+ *   FromMemory : RGBA8 픽셀을 직접. 사진 앱이 경로 대신 데이터를 주는 경우
+ *                (iOS PHPicker 가 그렇다) 파일로 떨구지 않고 바로 넘길 수 있다.
+ *
+ * widthWorld = 0 이면 긴 변이 10 단위가 되게 자동. 종횡비는 항상 보존한다.
+ * 반환: 만들어진 객체 id (실패 0).
+ */
+CAD_API uint32_t CAD_AttachImageFromFile(const char* pathUtf8, float widthWorld,
+                                         float originX, float originY, float originZ);
+CAD_API uint32_t CAD_AttachImageFromMemory(const unsigned char* rgba, int width, int height,
+                                           const char* displayName, float widthWorld,
+                                           float originX, float originY, float originZ);
+
+/* ── OCR 결과 주입 (모바일용) ─────────────────────────────────────────────
+ *
+ * 모바일은 **OS 내장 OCR 을 쓴다** — iOS Vision, 안드로이드 ML Kit.
+ * Tesseract(45MB)를 올릴 이유가 없고, 내장 쪽이 한글·혼합 글자에서 더 정확하다.
+ * 다만 둘 다 Swift/Kotlin API 라 C++ 에서 부르기 번거로우므로, **호스트가 인식하고
+ * 결과만 넘긴다.** 그 뒤 흐름(네모 표시 → 드래그로 줄 고르기 → 커서 배치)은
+ * 데스크톱과 완전히 같다.
+ *
+ * imageId : CAD_AttachImage* 로 붙인 이미지
+ * 사각형  : 그 **이미지의 픽셀 좌표**(좌상단 원점). Vision 의 정규화 좌표를 쓰면
+ *           호스트에서 픽셀로 바꿔 넘겨야 한다.
+ * 호출 순서대로 = 읽는 순서. "시작~끝 사이 전부" 선택이 이 순서를 따른다.
+ *
+ *   CAD_BeginOcrLines(imageId);
+ *   CAD_AddOcrLine("거실 3600", 29, 29, 192, 64);
+ *   CAD_EndOcrLines();          // 여기서 화면에 네모가 뜬다
+ */
+CAD_API void     CAD_BeginOcrLines(uint32_t imageId);
+CAD_API void     CAD_AddOcrLine(const char* utf8, int x0, int y0, int x1, int y1);
+CAD_API void     CAD_EndOcrLines(void);
+
+CAD_API bool     CAD_GetLength(uint32_t id, float* outLength);
+CAD_API bool     CAD_GetArea  (uint32_t id, float* outArea);
+/* 선택 전체의 길이·면적 합. 선택이 비었거나 잴 게 없으면 0 을 돌려준다. */
+CAD_API float    CAD_GetSelectionLength(void);
+CAD_API float    CAD_GetSelectionArea(void);
+
+// ── 대화형 픽 (AutoLISP getpoint / ObjectARX acedGetEntsel 대응) ──
+// 비동기: Begin 후 사용자가 클릭할 때까지 대기. 호스트가 매 프레임 bool 폴링.
+//   IsPicking=true            → 대기 중
+//   IsPicking=false + Try=true  → 완료 (좌표/엔티티 소비)
+//   IsPicking=false + Try=false → 취소(ESC)
+// EntSel 은 빈 곳/비객체 클릭을 통과 안 시킴(유효 객체만 완료). Point 는 어디든 좌표 반환.
+CAD_API void CAD_BeginGetPoint(const char* prompt);
+CAD_API void CAD_BeginGetEntSel(const char* prompt);
+CAD_API bool CAD_IsPicking(void);
+// 완료됐으면 true(1회 소비) + 좌표(+EntSel 은 outId). Point 는 outId=0. 대기/취소면 false.
+CAD_API bool CAD_TryGetPickResult(float* x, float* y, float* z, uint32_t* outId);
+CAD_API void CAD_CancelPick(void);
+
+// ── 내보내기 (Export) ──
+// selectedOnly=false → 씬 전체, true → 선택 객체만. 월드 좌표로 baking. 성공 시 true.
+CAD_API bool CAD_ExportObj(const char* path, bool selectedOnly);
+
+// ── 저장 / 내보내기 / 가져오기 ──────────────────────────────────────────
+// 확장자로 갈린다. 엔진 안의 분기(saveByExtension / loadModelFromPath)를 그대로 쓴다 —
+// 호스트가 포맷을 판별해 다른 함수를 고를 필요가 없고, 새 포맷이 붙어도 API 는 그대로다.
+//
+// CAD_SaveAs  : .lot(프로젝트) · .stl · .dxf · .obj · .glb/.gltf
+//               .lot 은 씬 전체(선·솔리드·로봇·문서 상태)를 담는 네이티브 형식이고,
+//               나머지는 내보내기다. selectedOnly=true 면 선택 객체만.
+//               점군도 .lot 에 담긴다(2026-09 부터). 다만 파일이 커진다 — 점당 21.3B.
+// CAD_OpenFile: .lot · .obj · .stl · .dxf · .ply(점군) · .gltf/.glb · .fbx (static meshes)
+//               **현재 문서에 추가**한다(새 탭을 만들지 않음). 새 탭으로 열려면
+//               CAD_OpenDocument 를 쓴다.
+//
+// 둘 다 실패 시 false 를 반환하고 사유는 CAD_GetStatusMessage 로 읽는다.
+CAD_API bool CAD_SaveAs(const char* pathUtf8, bool selectedOnly);
+CAD_API bool CAD_OpenFile(const char* pathUtf8);
+
+// Static mesh component selection, main thread. Mode: 0 object, 1 face, 2 edge.
+// Pick ray is in world coordinates. Face output contains triangle numbers (not corners).
+// GetSelectedFaceTriangles returns required count; writes up to capacity if out != NULL.
+CAD_API bool CAD_SetSubobjectSelectionMode(int mode);
+CAD_API int CAD_GetSubobjectSelectionMode(void);
+CAD_API bool CAD_PickSubobject(float ox, float oy, float oz, float dx, float dy, float dz);
+CAD_API uint32_t CAD_GetSubobjectSelectionId(void);
+CAD_API uint32_t CAD_GetSelectedFaceTriangles(uint32_t* out, uint32_t capacity);
+// 현재 선택 면이 B-Rep 면이면 안정적인 face id, 아니면 -1.
+CAD_API int32_t CAD_GetSelectedBRepFaceId(void);
+// endpoints6 = {ax,ay,az,bx,by,bz}, world coordinates. False if no selected edge.
+CAD_API bool CAD_GetSelectedEdge(float* endpoints6);
+
+// ── 편집 명령 ───────────────────────────────────────────────────────────
+// 전부 **현재 선택**에 적용되고 각각 undo 1스텝으로 들어간다. 화면 클릭이 필요 없는
+// (인자만으로 결정되는) 명령들만 여기 노출한다 — 트림/연장/오프셋 방향처럼 커서가 있어야
+// 뜻이 정해지는 것들은 대화형이라 별도 픽 API(CAD_BeginGetPoint 등)를 거쳐야 한다.
+
+// 로프트 — 선택된 **닫힌 단면 2개 이상**을 축 순서로 이어 솔리드 생성.
+// 단면이 지그재그로 놓여 순서를 직접 주고 싶으면 화면에서 클릭 순서로 지정해야 한다.
+CAD_API bool CAD_Loft(void);
+
+// 셸 — 선택 솔리드의 속을 비우고 두께만 남긴다. thickness<=0 이면 크기에 맞춰 자동.
+CAD_API bool CAD_Shell(float thickness);
+
+// 분해(EXPLODE) — 선택 객체를 구성 요소로 쪼갠다.
+//   문자                → 글리프 윤곽선 폴리선
+//   폴리선/사각형/다각형 → 개별 선분 (닫힌 도형은 마지막↔첫 정점 구간까지)
+// 선·원·호는 더 쪼갤 수 없어 그대로 남는다. keepOriginal=true 면 원본을 지우지 않는다.
+// 여러 종류가 섞여 있어도 undo 는 한 번이다. 쪼갤 것이 하나도 없으면 false.
+CAD_API bool CAD_Explode(bool keepOriginal);
+
+// 모서리 필렛/챔퍼 — 선택 솔리드의 볼록 모서리를 굴리거나(fillet) 깎는다(chamfer).
+// distance<=0 이면 객체 크기에 맞춰 자동.
+CAD_API bool CAD_EdgeFillet(float distance);
+CAD_API bool CAD_EdgeChamfer(float distance);
+
+// 직사각형 배열 — cols(가로 개수) × rows(세로 개수), dx/dy 간격(음수 = 반대 방향).
+// 원본이 (0,0) 칸을 차지하므로 실제 생성 개수는 cols*rows-1.
+// 평면은 활성 뷰에서 정해진다 (Top=XY, Front=XZ, Right=YZ).
+CAD_API bool CAD_ArrayRect(int cols, int rows, float dx, float dy);
+
+// 원형 배열 — count = **원본 포함** 총 개수, angleDeg = 총 채움 각(360 = 한 바퀴).
+// center = 회전 중심(월드), rotateItems=false 면 항목 방향을 유지한 채 위치만 옮긴다.
+// 회전축은 활성 뷰의 평면 법선이다.
+CAD_API bool CAD_ArrayPolar(int count, float angleDeg,
+                            float centerX, float centerY, float centerZ,
+                            bool rotateItems);
+
+// ── 멀티뷰포트 (화면 분할) ──
+// layout: 0=Single(단일) 1=Dual(좌우) 2=Triple 3=Quad(2x2)
+CAD_API void CAD_SetViewportLayout(int layout);
+CAD_API int  CAD_GetViewportLayout(void);
+// 활성(클릭) 뷰포트 칸 인덱스 0~3.
+CAD_API void CAD_SetActiveViewport(int index);
+CAD_API int  CAD_GetActiveViewport(void);
+
+// ── Revolve 도구 ──
+CAD_API void CAD_RequestStartRevolve(void);
+
+// ── Undo / Redo ──
+CAD_API void CAD_Undo(void);
+CAD_API void CAD_Redo(void);
+CAD_API bool CAD_CanUndo(void);
+CAD_API bool CAD_CanRedo(void);
+
+// ── 뷰/표시 상태 토글 ──
+CAD_API void CAD_SetGridEnabled(bool enabled);
+CAD_API void CAD_SetDemoLighting(bool enabled);
+// style: 0=Shaded 1=ShadedEdge 2=Wireframe 3=WireframeEdge 4=HiddenLine
+CAD_API void CAD_SetVisualStyle(int style);
+
+// 선택 하이라이트 스타일: 0=Silhouette(JFA 외곽선), 1=Edge(feature edge 노란색, CAD 방식)
+CAD_API void CAD_SetSelectionStyle(int style);
+CAD_API int  CAD_GetSelectionStyle(void);
+
+// 호버 강조 — 마우스가 올라간 객체를 연한 하늘색 엣지로 표시(선택은 노란색).
+// 기본 켬. 도면 작업 중 시선 분산이 싫거나 초대형 씬에서 부담될 때 끌 수 있다.
+CAD_API void CAD_SetHoverHighlight(bool enabled);
+CAD_API bool CAD_GetHoverHighlight(void);
+// 현재 커서 아래 객체 id (없으면 0). 호스트가 상태바·툴팁에 이름을 띄우는 용도.
+CAD_API unsigned int CAD_GetHoveredObject(void);
+
+// 호버 표시 스타일 — 색(0~1) + 선 두께(px, 0.5~10 로 클램프).
+// ⚠️ 두께는 GPU 가 wide line 을 지원할 때만 반영된다(미지원 기기는 1px 고정).
+CAD_API void CAD_SetHoverStyle(float r, float g, float b, float width);
+// 선택 표시 두께 (색은 노란색 고정 — CAD 관례).
+CAD_API void CAD_SetSelectionLineWidth(float width);
+
+// 벽 충돌 (Walk / 캐릭터 모드). 끄면 벽을 통과한다.
+// ⚠️ 정적 지오메트리 대상의 캐릭터 충돌이지 물리엔진이 아니다 — 물체는 떨어지지 않는다.
+CAD_API void CAD_SetCollisionEnabled(bool enabled);
+CAD_API bool CAD_GetCollisionEnabled(void);
+
+// 명령 프롬프트(현재 대화형 도구 안내). buf 에 UTF-8 로 복사, 반환=문자열 길이(널 제외).
+// 호스트가 자기 상태바에 표시하려고 매 프레임 폴링. buf/bufLen 0 이면 길이만 반환.
+CAD_API int  CAD_GetStatusMessage(char* buf, int bufLen);
+
+// 일회성 안내 (몇 초 뒤 스스로 사라짐). 프롬프트와 **다른 값**이다 —
+// 프롬프트는 "지금 뭘 해야 하는지"(상시), 이쪽은 "방금 왜 안 됐는지"(일시).
+//   예: "각도: 선을 클릭하세요", "선: 커서를 방향으로 옮긴 뒤 거리를 입력하세요"
+// 없거나 만료됐으면 빈 문자열(길이 0). 데스크톱은 ImGui 상태바가 그리지만 모바일은
+// 표시할 곳이 없어 이게 유일한 경로다 — 안 띄우면 클릭이 씹힌 것처럼 보인다.
+CAD_API int  CAD_GetTransientMessage(char* buf, int bufLen);
+
+// ── 3D 불리언 (CSG) ──
+// **요청형**(예전부터 있던 셋) — 반환값 없음, 다음 프레임에 실행. 결과 id·실패를 알 수 없다.
+// Union/Intersection 은 **부른 순간의 선택**(메시만)이 대상. keepOriginals=false 면 원본 삭제(되돌리기 한 단계).
+// 결과가 필요하거나 여러 번 이어 부를 땐 아래 바로 실행형(CAD_BooleanUnionIds …)을 쓴다.
+CAD_API void CAD_BooleanUnion(bool keepOriginals);
+CAD_API void CAD_BooleanIntersection(bool keepOriginals);
+// Difference: union(baseIds) − union(subtractIds). id 배열 + 개수 전달.
+CAD_API void CAD_BooleanDifference(const uint32_t* baseIds, uint32_t baseCount,
+                                   const uint32_t* subtractIds, uint32_t subtractCount,
+                                   bool keepOriginals);
+
+// **바로 실행형**(2026-10-04) — 부르면 그 자리에서 계산하고 결과를 돌려준다. 선택과 무관(넘긴 id 만),
+// 한 프레임에 여러 번 이어 불러도 된다. 공통 규칙:
+//   · 입력을 먼저 전부 검사 — 없는 id·메시 아님·잠긴 도면층·닫히지 않은 메시·중복(기준과 빼는 쪽 사이 포함)이
+//     하나라도 있으면 **아무것도 바꾸지 않고** 0, 이유는 CAD_GetLastError.
+//   · 결과(들) 추가 + 원본 삭제(keepOriginals=false) = 되돌리기 한 단계. 끝나면 결과만 선택된다.
+//   · 결과는 첫 원본(기준)의 이름·도면층·색·금속·불투명도를 이어받는다(텍스처는 안 이어받음 — UV 없음).
+//   · 여러 개는 한 번에 계산(Manifold BatchBoolean) — 순서 무관.
+// 합집합 — ids 2개 이상 → 한 객체(떨어져 있어도 한 객체에 덩어리 여럿). 결과 id, 실패 0.
+CAD_API uint32_t CAD_BooleanUnionIds(const uint32_t* ids, uint32_t count, bool keepOriginals);
+// 교집합 — ids 2개 이상 **모두의** 공통 부분(A∩B∩C). 공통 부분이 없으면 0. 결과 id, 실패 0.
+CAD_API uint32_t CAD_BooleanIntersectionIds(const uint32_t* ids, uint32_t count, bool keepOriginals);
+// 차집합 — 기준 baseIds 에서 cutIds 전부를 뺀다.
+//   perBase=false: union(기준) − union(빼는 것) → 결과 1개(기준들이 한 덩어리로 합쳐짐, 오토캐드 SUBTRACT 와 같음)
+//   perBase=true : 기준마다 따로(판 3장에 같은 구멍 → 판 3장). 통째로 깎여 사라진 기준은 결과가 없다.
+// 반환 = 결과 개수(실패 0), outIds 에 cap 개까지 결과 id. outIds=NULL 이면 개수만.
+CAD_API uint32_t CAD_BooleanSubtract(const uint32_t* baseIds, uint32_t baseCount,
+                                     const uint32_t* cutIds, uint32_t cutCount,
+                                     bool keepOriginals, bool perBase,
+                                     uint32_t* outIds, uint32_t cap);
+
+/* ── 2026-09-24 추가 — 타원·스플라인·지시선, 2D 편집(늘이기·길이조정·끊기), 3D(간섭·메시 검사/수리·필렛 기록·3D 배열/정렬·프리미티브) ──
+ * 명령 문자열(CAD_ExecuteCommand("ellipse") …)로도 되지만 이쪽은 클릭 없이 값으로, 결과를 돌려받는다. 좌표는 월드(mm), 전부 되돌리기 한 단계. */
+
+/* 타원 — 중심, 장축 반벡터(중심→장축 끝, 길이 = 장반경), 단축비(0<ratio≤1), 평면 법선(0,0,0 이면 +Z). 실패 0. */
+CAD_API uint32_t CAD_CreateEllipse(float cx, float cy, float cz,
+                                   float majorX, float majorY, float majorZ,
+                                   float ratio,
+                                   float normalX, float normalY, float normalZ);
+/* 맞춤점을 지나는 스플라인 — fitXYZ = count*3, closed = 닫힌(주기) 스플라인. 열린 것은 2점, 닫힌 것은 3점 이상. 실패 0. */
+CAD_API uint32_t CAD_CreateSpline(const float* fitXYZ, uint32_t count, bool closed);
+/* 지시선 — 화살촉 → 꺾임 점 + 글(UTF-8, 여러 줄은 \n). textHeight<=0 이면 2.5. 평면은 XY. 실패 0. */
+CAD_API uint32_t CAD_CreateLeader(float tipX, float tipY, float tipZ,
+                                  float bendX, float bendY, float bendZ,
+                                  const char* textUtf8, float textHeight);
+
+/* 늘이기 — XY 교차 창(월드) 안의 편집점을 (dx,dy,dz) 만큼. 창 판정은 z 를 보지 않는다. 반환 = 걸린 객체 수. */
+CAD_API uint32_t CAD_StretchWindowXY(float minX, float minY, float maxX, float maxY, float dx, float dy, float dz);
+/* 길이조정 — mode 0 = 증분, 1 = 퍼센트, 2 = 전체 길이. atStart = 시작 쪽 끝. 선·열린 폴리선·호. */
+CAD_API bool     CAD_Lengthen(uint32_t id, int mode, float value, bool atStart);
+/* 끊기 — 두 점(객체 위로 투영) 사이를 지운다. 같은 점이면 둘로 나눈다. 결과는 새 객체들(원본 삭제). */
+CAD_API bool     CAD_BreakObject(uint32_t id, float x1, float y1, float z1, float x2, float y2, float z2);
+
+/* 간섭 검사 — ids 가 null/1개 이하면 보이는 솔리드 전부. createObjects = 겹친 덩어리를 "간섭" 층에 만든다.
+ * out 에 cap 개까지 채우고(부피 큰 순), 반환 = 전체 간섭 쌍 수. */
+typedef struct CAD_InterferenceInfo {
+    uint32_t objectA, objectB;
+    double volume;          /* 겹친 부피(월드 단위³) */
+    uint32_t resultId;      /* createObjects 일 때 만든 덩어리 id, 아니면 0 */
+} CAD_InterferenceInfo;
+CAD_API uint32_t CAD_CheckInterference(const uint32_t* ids, uint32_t count, bool createObjects,
+                                       CAD_InterferenceInfo* out, uint32_t cap);
+
+/* 메시 검사 — 모델 로컬 단위. ok = 닫힘·바깥향·결함 없음. 메시가 아니면 false. */
+typedef struct CAD_MeshCheckInfo {
+    uint32_t triangles, vertices, degenerate, duplicates;
+    uint32_t openEdges, nonManifoldEdges, flippedEdges, holes, components;
+    bool closed, ok;
+    double volume, area;
+} CAD_MeshCheckInfo;
+CAD_API bool     CAD_CheckMesh(uint32_t id, CAD_MeshCheckInfo* out);
+/* 메시 수리 — ids 의 메시(null 이면 보이는 메시 전부)를 붙이기·퇴화/중복 제거·방향 통일·구멍 메움. 반환 = 고친 객체 수. */
+CAD_API uint32_t CAD_RepairMeshes(const uint32_t* ids, uint32_t count, bool fillHoles);
+// 구멍 메우기 방식 지정판 — curvedFill: 둘레 곡면을 따라 둥글게(CAD_RepairMeshes 기본) / false = 평평하게.
+CAD_API uint32_t CAD_RepairMeshesEx(const uint32_t* ids, uint32_t count, bool fillHoles, bool curvedFill);
+// 메시 매끈하게(토빈 — 부피가 거의 안 준다, 모서리는 둥글어진다). ids 가 비면 선택 메시(없으면 보이는 메시 전부). undo 1. 반환: 바꾼 개수.
+CAD_API uint32_t CAD_SmoothMeshes(const uint32_t* ids, uint32_t count, int iterations);
+// 삼각형 줄이기(QEM) — ratio = 남길 비율(0~1 사이). 경계 윤곽은 거의 그대로. undo 1. 반환: 바꾼 개수(0 = 대상 없음/범위 밖).
+CAD_API uint32_t CAD_DecimateMeshes(const uint32_t* ids, uint32_t count, double ratio);
+// 틈 꿰매기 — tolerance(모델 로컬 단위) 안의 경계 점을 붙이고 T 이음을 쪼개 잇는다. 0 = 자동(대각선의 0.1%). 이미 닫힌 메시는 건너뜀.
+CAD_API uint32_t CAD_StitchMeshes(const uint32_t* ids, uint32_t count, float tolerance);
+// 두께 주기 — 열린 메시를 법선 방향으로 thickness 만큼 두껍게 해 닫힌 솔리드로(음수 = 반대쪽, 0 은 거부). 닫힌 메시는 건너뜀.
+CAD_API uint32_t CAD_ThickenMeshes(const uint32_t* ids, uint32_t count, double thickness);
+// 다시 나누기(등방 리메시) — edgeLength = 목표 모서리 길이(0 = 지금 평균). 경계·날카로운 모서리(45°↑)는 그대로.
+CAD_API uint32_t CAD_RemeshMeshes(const uint32_t* ids, uint32_t count, double edgeLength);
+
+/* 모서리 가공 기록 — B-Rep 솔리드에 필렛/모따기 하나를 더한다(스케치가 바뀌어도 다시 적용).
+ * allEdges = 볼록 모서리 전부, 아니면 brepEdge(B-Rep 선 모서리 id). distance = 모델 로컬 단위. 안 먹으면 false(변화 없음). */
+CAD_API bool     CAD_AddEdgeBevel(uint32_t id, bool fillet, float distance, bool allEdges, uint32_t brepEdge);
+CAD_API uint32_t CAD_GetEdgeBevelCount(uint32_t id);
+
+/* 3D 배열 — 현재 선택을 월드 X(열)·Y(행)·Z(층) 격자로. 생성 = cols*rows*levels - 1. */
+CAD_API bool     CAD_Array3DRect(int cols, int rows, int levels, float dx, float dy, float dz);
+/* 3D 원형 배열 — 현재 선택을 두 점(a→b) 축 둘레로. count = 원본 포함 총 개수. */
+CAD_API bool     CAD_Array3DPolar(int count, float angleDeg,
+                                  float ax, float ay, float az, float bx, float by, float bz, bool rotateItems);
+/* 3D 정렬 — ids 를 점 pairs 쌍(1~3)으로. src/dst = pairs*3. 1 = 이동, 2 = 방향, 3 = 방향까지. 반환 = 옮긴 객체 수. */
+CAD_API uint32_t CAD_Align3D(const uint32_t* ids, uint32_t count, const float* srcXYZ, const float* dstXYZ, int pairs);
+
+/* 솔리드 — 밑면 중심(월드) 위에 +Z 로 선다. 실패 0.
+ *   쐐기 sx·sy 밑면, sz 높이 / 피라미드 외접 반지름·높이·변 수(3~64)·윗면 반지름(0 = 뾰족) / 관 바깥·안 반지름·높이 */
+CAD_API uint32_t CAD_CreateWedge(float x, float y, float z, float sx, float sy, float sz);
+CAD_API uint32_t CAD_CreatePyramid(float x, float y, float z, float radius, float height, int sides, float topRadius);
+/* 구·원기둥·원뿔·토러스 — (x,y,z) = 밑면 중심(구·토러스는 바닥에 닿는 점), 축 = +Z. 닫힌 메시, 선택 + undo 1. 잘못된 크기면 0. */
+CAD_API uint32_t CAD_CreateSphere(float x, float y, float z, float radius);
+CAD_API uint32_t CAD_CreateCylinder(float x, float y, float z, float radius, float height);
+CAD_API uint32_t CAD_CreateCone(float x, float y, float z, float radius, float height);
+CAD_API uint32_t CAD_CreateTorus(float x, float y, float z, float majorRadius, float minorRadius);   /* minor < major */
+/* 해치 — 닫힌 폴리선·사각형·원 ids(같은 평면이면 한 객체, 안쪽 루프 = 구멍). pattern: SOLID ANSI31~38 NET LINE DOTS BRICK STEEL CROSS
+ * (null/빈 = ANSI31), scale > 0, angleDeg. 선택이 새 해치로 바뀐다. 반환 = 해치 id, 실패 0. */
+CAD_API uint32_t CAD_CreateHatch(const uint32_t* ids, uint32_t count, const char* pattern, float scale, float angleDeg);
+/* 도면 출력 — path 확장자로 .pdf(벡터)/.png(래스터). 지금 뷰 방향, 흰 종이. paperW/H mm(0 = A3 가로 420×297), pngLongSidePx(0 = 4000).
+ * selectedOnly = 선택만, monochrome = 흑백. 3D 메시·이미지는 아직 안 나온다. */
+CAD_API bool     CAD_Plot(const char* path, bool selectedOnly, bool monochrome, float paperW, float paperH, int pngLongSidePx);
+/* 분해도·조립 설명서 — AI 액션 explode·MCP 도구 explode_view 와 같은 창구. argsJson = {"op":"status|solve|auto|clear|amount|play|back|
+ * part|spin|balloons|bom|manual", ids, id, t, seconds, turns, dir[3], distance, step, show, path, paper}. 결과 JSON(ok·error·t·steps·parts·items…)
+ * 을 outUtf8 에(cap 바이트, null 이면 길이만). 반환 = 길이, 실패 -1. manual 은 여러 프레임 작업 — status 의 manual_busy 로 끝을 본다. */
+CAD_API int      CAD_ExplodeView(const char* argsJson, char* outUtf8, int cap);
+/* MCP 도구 목록(JSON 배열) — 엔진을 만들지 않아도 된다. LotCAD --mcp 브리지가 앱이 꺼져 있을 때 목록을 보여 주는 데 쓴다.
+ * 반환 = 길이, 실패 -1. */
+CAD_API int      CAD_GetMcpToolsJson(char* outUtf8, int cap);
+/* 오프셋·대칭·자르기·연장 — 클릭 대신 점을 값으로(도구와 같은 계산, 전부 undo 1). 좌표는 월드.
+ * outIds/outCapacity 는 새 객체 id 받을 곳(null 이면 안 받음). 반환 = 새로 만든 개수.
+ *   CAD_Offset : 선·원·호·폴리선을 distance(>0) 만큼 (sx,sy,sz) 쪽으로 평행 복제.
+ *   CAD_Mirror : 미러선 (x1..z1)→(x2..z2) 과 작업 평면 법선 (nx,ny,nz)(0,0,0 = 지금 작업 평면)이 이루는 면으로 반사 복제.
+ *                선·원·호·폴리선·메시. deleteOriginals = 원본 지움.
+ *   CAD_Trim / CAD_Extend : 대상 하나, (px,py,pz) = 지울 부분 / 늘릴 끝 가까운 점. 경계 ids(0개 = 씬의 선·폴리선 전부).
+ *                원·호는 제 평면, 선·폴리선은 (nx,ny,nz)(0 = 지금 작업 평면)에 투영해 교차. 못 하면 false(변화 없음). */
+CAD_API uint32_t CAD_Offset(const uint32_t* ids, uint32_t count, float distance, float sx, float sy, float sz,
+                            uint32_t* outIds, uint32_t outCapacity);
+CAD_API uint32_t CAD_Mirror(const uint32_t* ids, uint32_t count, float x1, float y1, float z1, float x2, float y2, float z2,
+                            float nx, float ny, float nz, bool deleteOriginals, uint32_t* outIds, uint32_t outCapacity);
+CAD_API bool     CAD_Trim(uint32_t id, float px, float py, float pz, const uint32_t* boundaryIds, uint32_t boundaryCount,
+                          float nx, float ny, float nz);
+CAD_API bool     CAD_Extend(uint32_t id, float px, float py, float pz, const uint32_t* boundaryIds, uint32_t boundaryCount,
+                            float nx, float ny, float nz);
+CAD_API uint32_t CAD_CreateTube(float x, float y, float z, float outerRadius, float innerRadius, float height);
+/* 피처 치수 — 솔리드를 만든 치수(솔리드웍스 Instant3D 식). 상자: 가로·세로·높이 / 원기둥: 지름·높이 /
+ * 돌출: 높이 + 단면·컷 스케치의 원 지름, 직사각형 가로·세로. 값은 월드 단위.
+ * 일반 폴리선 단면(12꼭짓점까지)은 변마다 길이 — 바꾸면 그 변 끝 너머 꼭짓점을 같이 민다(STRETCH, 직각 유지).
+ * kind: 0=가로 1=세로 2=높이 3=지름 4=변 5=위치(원 컷·원 보스 중심 — 바닥 단면 모서리에서 거리, 바꾸면 그 원 스케치를 옮긴다).
+ * sketchId = 값이 사는 스케치(0 = 솔리드 자체). 위치 치수는 크기 치수 뒤에 붙는다(기존 번호는 그대로). 모양을 못 만드는 값이면 false + CAD_GetLastError.
+ * Set 은 재생성(스케치 치수는 스케치를 고쳐 피처가 다음 프레임에 따라온다), undo 1. 실패 false.
+ * Visible = 선택한 솔리드 위에 파란 치수 표시(명령 fdim, 상태바 "치수") — 더블클릭하면 명령행이 새 값을 기다린다. */
+CAD_API void     CAD_SetFeatureDimensionsVisible(bool visible);
+CAD_API bool     CAD_GetFeatureDimensionsVisible(void);
+CAD_API uint32_t CAD_GetFeatureDimensionCount(uint32_t id);
+CAD_API bool     CAD_GetFeatureDimension(uint32_t id, uint32_t index, int* outKind, float* outValue, uint32_t* outSketchId);
+CAD_API bool     CAD_SetFeatureDimension(uint32_t id, uint32_t index, float value);
+/* 스윕 — 닫힌 단면(원·사각형·닫힌 폴리선) id 를 열린 경로(폴리선·선) id 를 따라 쓸어 솔리드. 단면은 경로 시작점으로
+ * 옮겨지고 경로 방향에 맞게 돌려진다(어디에 그렸든 된다). 새 솔리드는 선택되고 undo 1. 실패 0. */
+CAD_API uint32_t CAD_Sweep(uint32_t profileId, uint32_t pathId);
+/* 회전체 — 단면 스케치(폴리선·원·사각형) id 를 축 (x1,y1,z1)→(x2,y2,z2) 둘레로 360°, segments 분할(0 = 32).
+ * 새 솔리드는 선택되고 undo 1. 스윕과 같이 피처 기록이 남아 단면을 고치면 다시 만들어진다(피처 치수로도). 실패 0. */
+CAD_API uint32_t CAD_Revolve(uint32_t profileId, float x1, float y1, float z1, float x2, float y2, float z2, int segments);
+/* 재질 — textures/ 의 파일 이름(확장자 없이, 예 "wood_oak_veneer"). 이름에 metal·steel 이 들면 금속 셰이딩.
+ * nameUtf8 이 null/"" 이면 재질 빼기. 재질 패널 클릭과 같다(앱과 같이 undo 없음). 없는 이름·id 는 false. */
+CAD_API bool     CAD_ApplyMaterial(uint32_t id, const char* nameUtf8);
+CAD_API uint32_t CAD_GetMaterialCount(void);
+CAD_API int      CAD_GetMaterialName(uint32_t index, char* buf, int bufLen);   /* UTF-8 길이, 범위 밖이면 빈 문자열 */
+/* 화면 캡처 → PNG(창 전체). clean = 그리드·뷰큐브 없이. 한 프레임 그려 파일이 생겼는지까지 확인하고 돌아온다
+ * (엔진 틱 안 — 플러그인 콜백 등 — 에서 불리면 요청만 남기고 다음 프레임에 찍는다, true = 요청됨). AI 가 결과를 눈으로 볼 때. */
+CAD_API bool     CAD_CaptureViewport(const char* pathUtf8, bool clean);
+/* 카메라 — 지금 궤도 중심 둘레로 (ax,ay,az) 축 angleDeg 만큼 돌리기. 턴테이블 = (0,0,1). */
+CAD_API void     CAD_OrbitCamera(float ax, float ay, float az, float angleDeg);
+/* 상태줄 임시 안내(시연 자막 등). seconds <= 0 이면 지금 문구를 지운다. */
+CAD_API void     CAD_ShowMessage(const char* textUtf8, float seconds);
+
+#ifdef __cplusplus
+}
+#endif

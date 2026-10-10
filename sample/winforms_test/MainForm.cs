@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace VulkanCadWinForms
+namespace LotCadWinForms
 {
     // WPF 샘플(MainWindow.xaml)과 같은 화면 — 메뉴 · 툴바(그리기/편집/뷰) · 왼쪽 정보 · 렌더 영역 · 상태바.
     // 디자이너 파일 없이 코드로만 만든다(한 파일에서 전체가 보이게).
@@ -28,7 +28,7 @@ namespace VulkanCadWinForms
 
         public MainForm()
         {
-            Text = "VulkanCAD — WinForms 호스트";
+            Text = "LotCAD — WinForms 호스트";
             ClientSize = new Size(1120, 740);
             BackColor = Bg;
             Font = new Font("맑은 고딕", 9.5f);
@@ -188,7 +188,7 @@ namespace VulkanCadWinForms
                 Dock = DockStyle.Left, Width = 230, BackColor = Bg, FlowDirection = FlowDirection.TopDown,
                 WrapContents = false, Padding = new Padding(14),
             };
-            side.Controls.Add(new Label { Text = "VulkanCAD", AutoSize = true, ForeColor = ColorTranslator.FromHtml("#F0F0F0"),
+            side.Controls.Add(new Label { Text = "LotCAD", AutoSize = true, ForeColor = ColorTranslator.FromHtml("#F0F0F0"),
                                           Font = new Font("맑은 고딕", 12f, FontStyle.Bold) });
             side.Controls.Add(new Label { Text = "WinForms 호스트 샘플", AutoSize = true, ForeColor = TextDim,
                                           Font = new Font("맑은 고딕", 8.25f), Margin = new Padding(3, 1, 3, 0) });

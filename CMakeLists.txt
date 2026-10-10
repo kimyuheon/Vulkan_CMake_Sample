@@ -1,4 +1,4 @@
-# VulkanCAD 샘플 — 최상위 CMake.
+# LotCAD 샘플 — 최상위 CMake.
 #
 # 이걸 여는 목적은 하나다: **IDE 로 레포째 열기.** Qt Creator 는 CMakeLists.txt 를
 # 그대로 프로젝트로 읽으므로, 이 파일 하나면 샘플 전체가 한 프로젝트로 열린다.
@@ -12,7 +12,7 @@
 # Android(Gradle) 는 그 생태계의 도구가 자연스러워서 여기 넣지 않는다.
 
 cmake_minimum_required(VERSION 3.21)
-project(VulkanCADSamples LANGUAGES CXX)
+project(LotCADSamples LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

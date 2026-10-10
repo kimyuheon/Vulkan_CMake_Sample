@@ -25,12 +25,12 @@ EMU="$SDK/emulator/emulator"
 ADB="$SDK/platform-tools/adb"
 # 실행할 앱 — 기본은 테스트 앱(app), --robot 이면 로봇 팔(robot). 둘 다 :engine 모듈을 쓴다.
 MODULE="app"
-PKG="com.vulkancad.androidtest"
+PKG="com.lotcad.androidtest"
 ACT="$PKG/.MainActivity"
 if [ "$1" = "--robot" ]; then
     shift
     MODULE="robot"
-    PKG="com.vulkancad.robotarm"
+    PKG="com.lotcad.robotarm"
     ACT="$PKG/.RobotActivity"
 fi
 

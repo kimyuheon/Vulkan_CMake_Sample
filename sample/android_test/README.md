@@ -1,7 +1,7 @@
-# VulkanCAD — Android 샘플 (Gradle + NDK)
+# LotCAD — Android 샘플 (Gradle + NDK)
 
-Android 기기/에뮬레이터에서 VulkanCAD 엔진을 띄우는 샘플.
-엔진은 **미리 빌드된 `libVulkanCADCore.so`**(Releases)를 링크만 하고, 이 레포에서는 JNI·샘플 로직만 컴파일한다.
+Android 기기/에뮬레이터에서 LotCAD 엔진을 띄우는 샘플.
+엔진은 **미리 빌드된 `libLotCADCore.so`**(Releases)를 링크만 하고, 이 레포에서는 JNI·샘플 로직만 컴파일한다.
 `SurfaceView` 에 Vulkan 으로 렌더한다. 크로스플랫폼(Windows/macOS/Linux 호스트) 빌드 지원.
 
 ## 구조
@@ -12,24 +12,24 @@ Gradle 모듈 3개 — 엔진 연결은 `engine` 한 곳에만 두고, 앱 모�
 
 | 모듈 | 내용 |
 |------|------|
-| `engine` | 미리 빌드된 엔진 `.so` + JNI(`libvulkancad.so`), 렌더 뷰·런타임 에셋 (Android 라이브러리) |
-| `app` | 기본 테스트 앱 — 그리기·치수·파일 열기 (`com.vulkancad.androidtest`) |
-| `robot` | 🆕 로봇 팔 샘플 — URDF 관절 슬라이더 (`com.vulkancad.robotarm`). 로직은 [`../shared/robot_demo`](../shared) (iOS·macOS 와 공용) |
+| `engine` | 미리 빌드된 엔진 `.so` + JNI(`liblotcad.so`), 렌더 뷰·런타임 에셋 (Android 라이브러리) |
+| `app` | 기본 테스트 앱 — 그리기·치수·파일 열기 (`com.lotcad.androidtest`) |
+| `robot` | 🆕 로봇 팔 샘플 — URDF 관절 슬라이더 (`com.lotcad.robotarm`). 로직은 [`../shared/robot_demo`](../shared) (iOS·macOS 와 공용) |
 
 | 파일 | 역할 |
 |------|------|
 | `run_android.sh` | 에뮬레이터 실행 + 빌드 + 설치 + 앱 실행 (한 방에). `--robot` 이면 로봇 팔 앱 |
 | `engine/.../VulkanSurfaceView.kt` | SurfaceView + Choreographer(vsync) Tick + 터치. `onEngineReady`·`onBeforeTick` 훅 |
-| `engine/.../CadNative.kt` | JNI 선언 + `System.loadLibrary("vulkancad")` |
+| `engine/.../CadNative.kt` | JNI 선언 + `System.loadLibrary("lotcad")` |
 | `engine/.../EngineAssets.kt` | APK assets → filesDir 추출 + 엔진 에셋 경로 지정 (앱마다 onCreate 에서 한 번) |
-| `engine/src/main/cpp/CMakeLists.txt` | `sdk/lib-android/<ABI>/libVulkanCADCore.so` 를 IMPORTED 로 링크 + JNI·샘플 공용 로직을 `libvulkancad.so` 로 |
+| `engine/src/main/cpp/CMakeLists.txt` | `sdk/lib-android/<ABI>/libLotCADCore.so` 를 IMPORTED 로 링크 + JNI·샘플 공용 로직을 `liblotcad.so` 로 |
 | `engine/src/main/cpp/android_jni.cpp` | JNI(`CadNative`) ↔ C API(`CAD_*`). ANativeWindow 로 AttachView/Tick/터치 |
 | `app/.../MainActivity.kt` | ⭐ 테스트 앱 **진입점** — 툴바 + 렌더뷰 구성 |
 | `app/.../CadMobileBridge.kt` | 모바일 OS 기능(클립보드/사진/OCR) 연결 |
 | `robot/.../RobotActivity.kt` | 로봇 팔 화면 — 3D 뷰 + [재생]·[홈 자세]·[화면 맞춤] + 관절 슬라이더 |
-| `robot/src/main/cpp/robot_jni.cpp` | JNI(`RobotNative`) ↔ `RobotDemo_*`. `libvulkancad.so` 에 같이 빌드(엔진 상태는 엔진 `.so` 하나라 두 앱이 공유) |
+| `robot/src/main/cpp/robot_jni.cpp` | JNI(`RobotNative`) ↔ `RobotDemo_*`. `liblotcad.so` 에 같이 빌드(엔진 상태는 엔진 `.so` 하나라 두 앱이 공유) |
 
-> Kotlin 패키지 `com.vulkancad.androidtest` 는 `engine` 모듈에도 그대로다 — JNI 함수 이름이 이 패키지에 묶여 있다.
+> Kotlin 패키지 `com.lotcad.androidtest` 는 `engine` 모듈에도 그대로다 — JNI 함수 이름이 이 패키지에 묶여 있다.
 
 안드로이드엔 `main()` 이 없다 — **`MainActivity.onCreate()` 가 시작점**이고, 흐름은:
 
@@ -47,7 +47,7 @@ MainActivity.onCreate()          에셋 추출 → nativeSetAssetPath → 툴바
 2. **엔진 라이브러리** — 레포 루트에서 Releases 의 Android SDK 를 받아 `sdk/` 에 푼다:
    ```bash
    gh release download android-sdk-2026.10.05 -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'
-   unzip -o VulkanCAD-Android-SDK-*.zip -d sdk/      # → sdk/lib-android/{arm64-v8a,x86_64}/libVulkanCADCore.so
+   unzip -o LotCAD-Android-SDK-*.zip -d sdk/      # → sdk/lib-android/{arm64-v8a,x86_64}/libLotCADCore.so
    ```
    Vulkan 은 Android 7.0+ 기기에 기본 포함 — 따로 설치할 것이 없다.
 3. **런타임 에셋** — 별도 준비가 필요 없다. Gradle 이 레포의 `sdk/` 에서 `models/ fonts/
@@ -94,8 +94,8 @@ cd samples/android_test
 
 ```bash
 ADB=~/Library/Android/sdk/platform-tools/adb
-$ADB shell pidof com.vulkancad.androidtest      # 살아있으면 pid 출력
-$ADB logcat -d | grep -iE "vulkancad|FATAL"     # 엔진/크래시 로그
+$ADB shell pidof com.lotcad.androidtest      # 살아있으면 pid 출력
+$ADB logcat -d | grep -iE "lotcad|FATAL"     # 엔진/크래시 로그
 $ADB shell screencap -p /sdcard/s.png && $ADB pull /sdcard/s.png   # 화면 캡처
 ```
 
@@ -118,7 +118,7 @@ $ADB shell screencap -p /sdcard/s.png && $ADB pull /sdcard/s.png   # 화면 캡�
 
 ## 엔진 라이브러리를 새로 만들 때 (엔진 개발자용)
 
-`libVulkanCADCore.so` 는 엔진 레포의 `build_android.sh` 가 만든다(ABI 별 Release, 공개 C API 만 내보냄).
+`libLotCADCore.so` 는 엔진 레포의 `build_android.sh` 가 만든다(ABI 별 Release, 공개 C API 만 내보냄).
 엔진 레포를 이 레포 옆(`../3dEngine`)에 두고 실행하면 `sdk/lib-android/<ABI>/` 로 자동 복사된다.
 엔진을 고쳐 안드로이드 빌드가 깨질 때(새 소스 폴더·스텁 시그니처 등)의 대응도 엔진 레포 `android/` 쪽 일이다.
 

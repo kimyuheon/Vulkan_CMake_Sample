@@ -1,21 +1,21 @@
-﻿// 자동 생성 — 직접 고치지 말 것. 원본: VulkanCAD_API.h
+﻿// 자동 생성 — 직접 고치지 말 것. 원본: LotCAD_API.h
 // 생성기: tools/gen_csharp_binding.py (엔진 빌드의 SDK 내보내기 단계에서 Windows 일 때만 실행)
 
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace VulkanCAD
+namespace LotCAD
 {
     /// <summary>
-    /// VulkanCAD C API (VulkanCAD_API.h) 선언. 함수 이름은 헤더와 같다. 영역별로 CadApi.&lt;영역&gt;.cs 에 나뉘어 있다.
+    /// LotCAD C API (LotCAD_API.h) 선언. 함수 이름은 헤더와 같다. 영역별로 CadApi.&lt;영역&gt;.cs 에 나뉘어 있다.
     /// <para>콜백(delegate)을 넘길 땐 그 delegate 객체를 필드 등에 **붙잡아 두어야** 한다 —
     /// 지역 변수로만 두면 GC 가 거둬 엔진이 사라진 함수를 부르게 된다.</para>
     /// </summary>
     public static partial class CadApi
     {
-        /// <summary>엔진 DLL 이름(VulkanCADCore.dll). exe 옆이나 PATH 에 있어야 한다.</summary>
-        public const string Dll = "VulkanCADCore";
+        /// <summary>엔진 DLL 이름(LotCADCore.dll). exe 옆이나 PATH 에 있어야 한다.</summary>
+        public const string Dll = "LotCADCore";
 
         /// <summary>
         /// 문자열을 버퍼로 돌려주는 함수(char* buf, int cap)를 읽는다. 예:

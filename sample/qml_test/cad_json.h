@@ -6,7 +6,7 @@
 // 그만큼 버퍼를 잡아 다시 부른다. 길이를 모른 채 고정 버퍼로 부르면 긴 결과가 잘린다
 // (도면 뷰 목록은 뷰마다 치수·출처가 붙어 금방 수 KB 가 된다).
 
-#include "../../sdk/include/VulkanCAD_API.h"
+#include "../../sdk/include/LotCAD_API.h"
 
 #include <QByteArray>
 #include <QJsonDocument>

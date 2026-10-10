@@ -1,13 +1,13 @@
 // JNI 브릿지 — Kotlin RobotNative(object) ↔ 공용 로봇 로직(sample/shared/robot_demo).
-// 패키지: com.vulkancad.robotarm → Java_com_vulkancad_robotarm_RobotNative_<method>
-// 엔진 .so(libvulkancad)에 같이 빌드된다 — :engine 의 CMakeLists.txt 참고.
+// 패키지: com.lotcad.robotarm → Java_com_lotcad_robotarm_RobotNative_<method>
+// 엔진 .so(liblotcad)에 같이 빌드된다 — :engine 의 CMakeLists.txt 참고.
 #include <jni.h>
 
 #include "robot_demo.h"
 
 extern "C" {
 
-#define JNI(ret, name) JNIEXPORT ret JNICALL Java_com_vulkancad_robotarm_RobotNative_##name
+#define JNI(ret, name) JNIEXPORT ret JNICALL Java_com_lotcad_robotarm_RobotNative_##name
 
 JNI(jboolean, load)(JNIEnv*, jobject) { return RobotDemo_Load() ? JNI_TRUE : JNI_FALSE; }
 

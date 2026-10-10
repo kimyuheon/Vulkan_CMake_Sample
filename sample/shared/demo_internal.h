@@ -2,7 +2,7 @@
 // 플랫폼에는 안 보인다(demo_kit.h 의 C API 만 보인다).
 #pragma once
 
-#include "VulkanCAD_API.h"
+#include "LotCAD_API.h"
 
 #include <algorithm>
 #include <cmath>

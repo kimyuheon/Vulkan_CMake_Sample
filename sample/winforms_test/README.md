@@ -1,7 +1,7 @@
-# VulkanCAD — WinForms 호스트 샘플 (.NET 8)
+# LotCAD — WinForms 호스트 샘플 (.NET 8)
 
-WinForms 창 안에 VulkanCAD 엔진을 임베드하는 최소 샘플. `wpf_test` 와 같은 화면·같은 기능이고,
-`VulkanCADCore.dll` 의 C API 를 P/Invoke 로 호출한다. `CadApi.cs` 는 WPF 샘플과 같은 파일(네임스페이스만 다름).
+WinForms 창 안에 LotCAD 엔진을 임베드하는 최소 샘플. `wpf_test` 와 같은 화면·같은 기능이고,
+`LotCADCore.dll` 의 C API 를 P/Invoke 로 호출한다. `CadApi.cs` 는 WPF 샘플과 같은 파일(네임스페이스만 다름).
 
 WPF 와 다른 점은 하나 — WinForms 컨트롤은 처음부터 자기 HWND 가 있어서 `HwndHost` 로 자식 창을 따로 만들 필요 없이
 **컨트롤의 `Handle` 을 그대로 엔진에 넘긴다.**
@@ -10,7 +10,7 @@ WPF 와 다른 점은 하나 — WinForms 컨트롤은 처음부터 자기 HWND 
 
 | 파일 | 역할 |
 |------|------|
-| `CadApi.cs` | `VulkanCADCore.dll` 의 `CAD_*` P/Invoke 선언 (wpf_test 와 동일) |
+| `CadApi.cs` | `LotCADCore.dll` 의 `CAD_*` P/Invoke 선언 (wpf_test 와 동일) |
 | `VulkanPanel.cs` | 렌더 영역 `Control` — `OnHandleCreated` 에서 `CAD_AttachView(Handle)` → `CAD_CreateEngine`, `WndProc` 에서 마우스/키 라우팅 |
 | `MainForm.cs` | 메뉴 · 툴바(그리기/편집/뷰) · 왼쪽 정보 · 상태바 (디자이너 없이 코드로) + 유휴 루프 → `CAD_Tick` |
 | `Program.cs` | 진입점 (`ApplicationConfiguration.Initialize` — 고DPI PerMonitorV2) |
@@ -34,8 +34,8 @@ dotnet build -c Debug
 dotnet run -c Debug
 ```
 
-post-build 이 `../../sdk` 의 `VulkanCADCore.dll` + `models/ textures/ fonts/` 를 출력 폴더로 복사한다
-(`CadCoreBuildDir` 로 경로 조정). 실행 파일은 `bin/Debug/net8.0-windows/VulkanCadWinForms.exe`.
+post-build 이 `../../sdk` 의 `LotCADCore.dll` + `models/ textures/ fonts/` 를 출력 폴더로 복사한다
+(`CadCoreBuildDir` 로 경로 조정). 실행 파일은 `bin/Debug/net8.0-windows/LotCadWinForms.exe`.
 
 ## WinForms 에서 챙긴 것
 

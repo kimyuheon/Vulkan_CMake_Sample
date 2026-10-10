@@ -4,14 +4,14 @@ import QtQuick.Layouts
 // 네이티브 메뉴 — 별도 최상위 창으로 떠서 3D 네이티브 자식 창에 가리지 않는다.
 // (QtQuick.Controls 의 Menu 는 QQuickWindow 안에 그려져 뷰 뒤로 숨는다)
 import Qt.labs.platform as Platform
-import VulkanCadQml
+import LotCadQml
 
 ApplicationWindow {
     id: win
     width: 1280
     height: 800
     visible: true
-    title: "VulkanCAD — Qt6 Cross-platform Host"
+    title: "LotCAD — Qt6 Cross-platform Host"
 
     // 어느 기능 패널을 오른쪽에 띄울지. 0 닫힘 1 도면 2 단면.
     //

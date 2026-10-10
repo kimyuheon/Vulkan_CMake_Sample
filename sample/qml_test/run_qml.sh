@@ -4,10 +4,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ENGINE_BUILD="${VULKANCAD_ENGINE_BUILD:-$(cd "$SCRIPT_DIR/../../build" && pwd)}"
+ENGINE_BUILD="${LOTCAD_ENGINE_BUILD:-$(cd "$SCRIPT_DIR/../../build" && pwd)}"
 
 cmake -S "$SCRIPT_DIR" -B "$SCRIPT_DIR/build" \
-    -DVULKANCAD_ENGINE_BUILD="$ENGINE_BUILD"
+    -DLOTCAD_ENGINE_BUILD="$ENGINE_BUILD"
 cmake --build "$SCRIPT_DIR/build"
 
 exec "$SCRIPT_DIR/build/qml_host"

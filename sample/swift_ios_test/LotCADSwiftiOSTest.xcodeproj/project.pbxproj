@@ -1,0 +1,640 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01EC03993777D8BF8CB0DC85 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41C0823CA289F7DEBB70400 /* ContentView.swift */; };
+		209A73FB2EFE9B494BACDDA1 /* LotCADMetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C993F2241329D73D5D398129 /* LotCADMetalView.swift */; };
+		2EE281D101ECFAF86ACD550F /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8F9EA42600A218246839107 /* UIKit.framework */; };
+		32F7C3FF700D67B79D77DD42 /* LotCADApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A77A7C9B4F63E006F36827 /* LotCADApp.swift */; };
+		4688016984FBDEFA2B4A2699 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8F9EA42600A218246839107 /* UIKit.framework */; };
+		5168E3FA213FC5F1C4DE54E8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */; };
+		5E0E95972BE71EEEB19E123B /* LotCADViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA05E1C7B577DD8E334F7CBE /* LotCADViewRepresentable.swift */; };
+		5FC01CBDB469D96B600287AE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */; };
+		606E90158F5B31B160B2CED4 /* RobotArmApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17AA7F79CA1729D595DE4B9 /* RobotArmApp.swift */; };
+		616F982DA9591D5AE489E6E8 /* models in Resources */ = {isa = PBXBuildFile; fileRef = 2CD40DEC4A67A98991CA9AB2 /* models */; };
+		63833AB06A0ED6105EF66CAD /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D46E00F8242E58F496654B0F /* QuartzCore.framework */; };
+		6808FC7385156DF3DEDC8F39 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C8D9F9F82DA118419C0CDB5 /* Metal.framework */; };
+		6B19AA701E6AFEEC2F9E0494 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = EE5F47F52BA04457BB1935A0 /* fonts */; };
+		711451FC58384C25CC521CB7 /* robot_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 35E55DE8697743CCF0004996 /* robot_demo.cpp */; };
+		8B2FCC163B93CD789C308E5E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */; };
+		8D3BC11374CA1CA984657499 /* textures in Resources */ = {isa = PBXBuildFile; fileRef = 5CB36480FB34CA02A5A9DDD4 /* textures */; };
+		9DEDBDB4471EA1BB792CA5A3 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C8D9F9F82DA118419C0CDB5 /* Metal.framework */; };
+		A8986A91111F751793A3AB4D /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DFF8B3C20B860620BABFADA /* IOSurface.framework */; };
+		AE49CA76C39F6E45FFF5A8CC /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = EE5F47F52BA04457BB1935A0 /* fonts */; };
+		AF40CB3C02E29C4DAB1D0B77 /* textures in Resources */ = {isa = PBXBuildFile; fileRef = 5CB36480FB34CA02A5A9DDD4 /* textures */; };
+		C274B7FD29433EA12C05CF96 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */; };
+		C4BECCB965B69B1BD4859F86 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DFF8B3C20B860620BABFADA /* IOSurface.framework */; };
+		CB6BB25720E8930A7065A778 /* RobotArmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6F10D64FB967D2473878C9F /* RobotArmView.swift */; };
+		D1D1D2F920B6F458AAF7F92E /* LotCADViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA05E1C7B577DD8E334F7CBE /* LotCADViewRepresentable.swift */; };
+		D708002C184D4FA1F91C7B46 /* LotCADEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436FFAC8CE6FD6070CFC1D8E /* LotCADEngine.swift */; };
+		E3FB72A13E7F3192CAA4D3E2 /* LotCADMobileBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CCCDC45A52961EBCBD8F76 /* LotCADMobileBridge.swift */; };
+		E4760A15DD948FFC5F878614 /* LotCADMetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C993F2241329D73D5D398129 /* LotCADMetalView.swift */; };
+		ECA3D92025D04E6E0E59C605 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D46E00F8242E58F496654B0F /* QuartzCore.framework */; };
+		ECA813B3D207A1735A243C6A /* models in Resources */ = {isa = PBXBuildFile; fileRef = 2CD40DEC4A67A98991CA9AB2 /* models */; };
+		FCC853ECC04D0D9494A6E6C2 /* LotCADEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436FFAC8CE6FD6070CFC1D8E /* LotCADEngine.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		206AB7291DA76BD268019F8F /* RobotArm-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RobotArm-Bridging-Header.h"; sourceTree = "<group>"; };
+		2CD40DEC4A67A98991CA9AB2 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; name = models; path = ../../sdk/models; sourceTree = SOURCE_ROOT; };
+		35E55DE8697743CCF0004996 /* robot_demo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = robot_demo.cpp; sourceTree = "<group>"; };
+		3E6412FCBB642EE33664DBB5 /* robot_demo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = robot_demo.h; sourceTree = "<group>"; };
+		436FFAC8CE6FD6070CFC1D8E /* LotCADEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LotCADEngine.swift; sourceTree = "<group>"; };
+		5CB36480FB34CA02A5A9DDD4 /* textures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = textures; path = ../../sdk/textures; sourceTree = SOURCE_ROOT; };
+		8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		8C8D9F9F82DA118419C0CDB5 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		8DFF8B3C20B860620BABFADA /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
+		97A60E215C3FB285B001989B /* LotCADSwiftiOSTest.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LotCADSwiftiOSTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		990D7EB8126DC7D54DDC9E46 /* RobotArmiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RobotArmiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B6F10D64FB967D2473878C9F /* RobotArmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RobotArmView.swift; sourceTree = "<group>"; };
+		B8F9EA42600A218246839107 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		B9CCCDC45A52961EBCBD8F76 /* LotCADMobileBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LotCADMobileBridge.swift; sourceTree = "<group>"; };
+		BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		C41C0823CA289F7DEBB70400 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		C5A77A7C9B4F63E006F36827 /* LotCADApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LotCADApp.swift; sourceTree = "<group>"; };
+		C993F2241329D73D5D398129 /* LotCADMetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LotCADMetalView.swift; sourceTree = "<group>"; };
+		D46E00F8242E58F496654B0F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		DA05E1C7B577DD8E334F7CBE /* LotCADViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LotCADViewRepresentable.swift; sourceTree = "<group>"; };
+		EE5F47F52BA04457BB1935A0 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../../sdk/fonts; sourceTree = SOURCE_ROOT; };
+		F17AA7F79CA1729D595DE4B9 /* RobotArmApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RobotArmApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5DB872F2E090BE4B2D629CF7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9DEDBDB4471EA1BB792CA5A3 /* Metal.framework in Frameworks */,
+				ECA3D92025D04E6E0E59C605 /* QuartzCore.framework in Frameworks */,
+				5FC01CBDB469D96B600287AE /* Foundation.framework in Frameworks */,
+				2EE281D101ECFAF86ACD550F /* UIKit.framework in Frameworks */,
+				C4BECCB965B69B1BD4859F86 /* IOSurface.framework in Frameworks */,
+				C274B7FD29433EA12C05CF96 /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		69D692A3EE799D93F8582CD4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6808FC7385156DF3DEDC8F39 /* Metal.framework in Frameworks */,
+				63833AB06A0ED6105EF66CAD /* QuartzCore.framework in Frameworks */,
+				5168E3FA213FC5F1C4DE54E8 /* Foundation.framework in Frameworks */,
+				4688016984FBDEFA2B4A2699 /* UIKit.framework in Frameworks */,
+				A8986A91111F751793A3AB4D /* IOSurface.framework in Frameworks */,
+				8B2FCC163B93CD789C308E5E /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		04D8890DA44CA876D938119C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				990D7EB8126DC7D54DDC9E46 /* RobotArmiOS.app */,
+				97A60E215C3FB285B001989B /* LotCADSwiftiOSTest.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4C160129E4752A804B1889EF /* RobotArm */ = {
+			isa = PBXGroup;
+			children = (
+				206AB7291DA76BD268019F8F /* RobotArm-Bridging-Header.h */,
+				F17AA7F79CA1729D595DE4B9 /* RobotArmApp.swift */,
+				B6F10D64FB967D2473878C9F /* RobotArmView.swift */,
+			);
+			name = RobotArm;
+			path = Sources/RobotArm;
+			sourceTree = "<group>";
+		};
+		60E339B10DC3B7C08EDD69A6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BBB1F39C5E435EA2296294BE /* CoreGraphics.framework */,
+				8AC2B7FA2ACF57500074BFD2 /* Foundation.framework */,
+				8DFF8B3C20B860620BABFADA /* IOSurface.framework */,
+				8C8D9F9F82DA118419C0CDB5 /* Metal.framework */,
+				D46E00F8242E58F496654B0F /* QuartzCore.framework */,
+				B8F9EA42600A218246839107 /* UIKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		8CCEA42428D97EF0DB493A90 /* LotCADSwiftiOSTest */ = {
+			isa = PBXGroup;
+			children = (
+				C41C0823CA289F7DEBB70400 /* ContentView.swift */,
+				C5A77A7C9B4F63E006F36827 /* LotCADApp.swift */,
+				436FFAC8CE6FD6070CFC1D8E /* LotCADEngine.swift */,
+				C993F2241329D73D5D398129 /* LotCADMetalView.swift */,
+				B9CCCDC45A52961EBCBD8F76 /* LotCADMobileBridge.swift */,
+				DA05E1C7B577DD8E334F7CBE /* LotCADViewRepresentable.swift */,
+			);
+			name = LotCADSwiftiOSTest;
+			path = Sources/LotCADSwiftiOSTest;
+			sourceTree = "<group>";
+		};
+		E9568A0171C01A606D970137 = {
+			isa = PBXGroup;
+			children = (
+				EE5F47F52BA04457BB1935A0 /* fonts */,
+				2CD40DEC4A67A98991CA9AB2 /* models */,
+				5CB36480FB34CA02A5A9DDD4 /* textures */,
+				4C160129E4752A804B1889EF /* RobotArm */,
+				EBB140AFBDC5519A6C8B9B9A /* shared */,
+				8CCEA42428D97EF0DB493A90 /* LotCADSwiftiOSTest */,
+				60E339B10DC3B7C08EDD69A6 /* Frameworks */,
+				04D8890DA44CA876D938119C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EBB140AFBDC5519A6C8B9B9A /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				35E55DE8697743CCF0004996 /* robot_demo.cpp */,
+				3E6412FCBB642EE33664DBB5 /* robot_demo.h */,
+			);
+			name = shared;
+			path = ../shared;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		506B1CF8BAACE7B3F51E1071 /* LotCADSwiftiOSTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E9FF344C56A6C82876E184BF /* Build configuration list for PBXNativeTarget "LotCADSwiftiOSTest" */;
+			buildPhases = (
+				0CBFC705B8B9672630DBE5E9 /* Sources */,
+				B8E9F1A5FA253A63A7214935 /* Resources */,
+				69D692A3EE799D93F8582CD4 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LotCADSwiftiOSTest;
+			packageProductDependencies = (
+			);
+			productName = LotCADSwiftiOSTest;
+			productReference = 97A60E215C3FB285B001989B /* LotCADSwiftiOSTest.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D7A173666FA46886CDAC17E3 /* RobotArmiOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1ACC92AB5A298355FA30F334 /* Build configuration list for PBXNativeTarget "RobotArmiOS" */;
+			buildPhases = (
+				26B17840C62C93BB91A29EE3 /* Sources */,
+				DC02C07161B6B4A5FFD50D3C /* Resources */,
+				5DB872F2E090BE4B2D629CF7 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RobotArmiOS;
+			packageProductDependencies = (
+			);
+			productName = RobotArmiOS;
+			productReference = 990D7EB8126DC7D54DDC9E46 /* RobotArmiOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B5B1805C0BE6F4680F692805 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					506B1CF8BAACE7B3F51E1071 = {
+						ProvisioningStyle = Automatic;
+					};
+					D7A173666FA46886CDAC17E3 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 20FD91CAFE21B012C424B907 /* Build configuration list for PBXProject "LotCADSwiftiOSTest" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E9568A0171C01A606D970137;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 04D8890DA44CA876D938119C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				506B1CF8BAACE7B3F51E1071 /* LotCADSwiftiOSTest */,
+				D7A173666FA46886CDAC17E3 /* RobotArmiOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B8E9F1A5FA253A63A7214935 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AE49CA76C39F6E45FFF5A8CC /* fonts in Resources */,
+				616F982DA9591D5AE489E6E8 /* models in Resources */,
+				8D3BC11374CA1CA984657499 /* textures in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC02C07161B6B4A5FFD50D3C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B19AA701E6AFEEC2F9E0494 /* fonts in Resources */,
+				ECA813B3D207A1735A243C6A /* models in Resources */,
+				AF40CB3C02E29C4DAB1D0B77 /* textures in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0CBFC705B8B9672630DBE5E9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01EC03993777D8BF8CB0DC85 /* ContentView.swift in Sources */,
+				32F7C3FF700D67B79D77DD42 /* LotCADApp.swift in Sources */,
+				FCC853ECC04D0D9494A6E6C2 /* LotCADEngine.swift in Sources */,
+				E4760A15DD948FFC5F878614 /* LotCADMetalView.swift in Sources */,
+				E3FB72A13E7F3192CAA4D3E2 /* LotCADMobileBridge.swift in Sources */,
+				D1D1D2F920B6F458AAF7F92E /* LotCADViewRepresentable.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		26B17840C62C93BB91A29EE3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				606E90158F5B31B160B2CED4 /* RobotArmApp.swift in Sources */,
+				CB6BB25720E8930A7065A778 /* RobotArmView.swift in Sources */,
+				D708002C184D4FA1F91C7B46 /* LotCADEngine.swift in Sources */,
+				209A73FB2EFE9B494BACDDA1 /* LotCADMetalView.swift in Sources */,
+				5E0E95972BE71EEEB19E123B /* LotCADViewRepresentable.swift in Sources */,
+				711451FC58384C25CC521CB7 /* robot_demo.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4C8FB707C4C52AAF19B80091 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../sdk/include",
+					"$(SRCROOT)/Sources/CLotCAD",
+				);
+				INFOPLIST_FILE = "Info-RobotArm.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-device",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-sim",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+				);
+				OTHER_LDFLAGS = (
+					"-lLotCADCoreStatic",
+					"-lmanifold",
+					"-lMoltenVK",
+					"-liconv",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-I$(SRCROOT)/Sources/CLotCAD",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lotcad.robotarm;
+				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = (
+					"$(SRCROOT)/Sources/CLotCAD",
+				);
+				SWIFT_OBJC_BRIDGING_HEADER = "Sources/RobotArm/RobotArm-Bridging-Header.h";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7BDDF31C35906B33C325A4A3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../sdk/include",
+					"$(SRCROOT)/Sources/CLotCAD",
+				);
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-device",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-sim",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+				);
+				OTHER_LDFLAGS = (
+					"-lLotCADCoreStatic",
+					"-lmanifold",
+					"-lMoltenVK",
+					"-liconv",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-I$(SRCROOT)/Sources/CLotCAD",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lotcad.iossample;
+				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = (
+					"$(SRCROOT)/Sources/CLotCAD",
+				);
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A8CEFC4C296814FC84B5B41F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		AA08E89BB4EE9142B30B42B7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		D5B1667A7629205C47483BC6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../sdk/include",
+					"$(SRCROOT)/Sources/CLotCAD",
+				);
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-device",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-sim",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+				);
+				OTHER_LDFLAGS = (
+					"-lLotCADCoreStatic",
+					"-lmanifold",
+					"-lMoltenVK",
+					"-liconv",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-I$(SRCROOT)/Sources/CLotCAD",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lotcad.iossample;
+				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = (
+					"$(SRCROOT)/Sources/CLotCAD",
+				);
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E0B19968C33C32289D005DB1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../sdk/include",
+					"$(SRCROOT)/Sources/CLotCAD",
+				);
+				INFOPLIST_FILE = "Info-RobotArm.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-device",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(SRCROOT)/../../sdk/lib-ios-sim",
+					"/usr/local/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+					"$(SRCROOT)/../../../VulkanSdk/Apple/lib/MoltenVK.xcframework/ios-arm64_x86_64-simulator",
+				);
+				OTHER_LDFLAGS = (
+					"-lLotCADCoreStatic",
+					"-lmanifold",
+					"-lMoltenVK",
+					"-liconv",
+					"-lc++",
+				);
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-I$(SRCROOT)/Sources/CLotCAD",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lotcad.robotarm;
+				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = (
+					"$(SRCROOT)/Sources/CLotCAD",
+				);
+				SWIFT_OBJC_BRIDGING_HEADER = "Sources/RobotArm/RobotArm-Bridging-Header.h";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1ACC92AB5A298355FA30F334 /* Build configuration list for PBXNativeTarget "RobotArmiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E0B19968C33C32289D005DB1 /* Debug */,
+				4C8FB707C4C52AAF19B80091 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		20FD91CAFE21B012C424B907 /* Build configuration list for PBXProject "LotCADSwiftiOSTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA08E89BB4EE9142B30B42B7 /* Debug */,
+				A8CEFC4C296814FC84B5B41F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E9FF344C56A6C82876E184BF /* Build configuration list for PBXNativeTarget "LotCADSwiftiOSTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D5B1667A7629205C47483BC6 /* Debug */,
+				7BDDF31C35906B33C325A4A3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B5B1805C0BE6F4680F692805 /* Project object */;
+}

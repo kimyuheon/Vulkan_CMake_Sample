@@ -2,7 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Media;
 
-namespace VulkanCadWpf
+namespace LotCadWpf
 {
     public partial class MainWindow : Window
     {

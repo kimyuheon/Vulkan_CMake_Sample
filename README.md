@@ -1,8 +1,8 @@
-# VulkanCAD 샘플
+# LotCAD 샘플
 
-VulkanCAD 엔진을 여러 UI 프레임워크에서 호스팅하는 예제 모음입니다.
-헤더·에셋은 `sdk/` 에 들어 있습니다. **데스크톱 라이브러리 — Windows(`VulkanCADCore.dll` + `.lib`) ·
-macOS(`libVulkanCADCore.dylib`) · Linux(`libVulkanCADCore.so`) — 도 들어 있어** clone 만 하면 데스크톱 샘플을
+LotCAD 엔진을 여러 UI 프레임워크에서 호스팅하는 예제 모음입니다.
+헤더·에셋은 `sdk/` 에 들어 있습니다. **데스크톱 라이브러리 — Windows(`LotCADCore.dll` + `.lib`) ·
+macOS(`libLotCADCore.dylib`) · Linux(`libLotCADCore.so`) — 도 들어 있어** clone 만 하면 데스크톱 샘플을
 바로 빌드·실행할 수 있습니다. **Vulkan SDK 는 필요 없습니다** — Windows·Linux 는 GPU 드라이버의 Vulkan 을 쓰고,
 macOS 라이브러리에는 MoltenVK 가 들어 있습니다(아래 [플랫폼별 준비물](#플랫폼별-준비물)).
 모바일(iOS 정적 라이브러리 · Android `.so`)은 GitHub Releases 에서 받아 `sdk/` 바로 아래에 둡니다.
@@ -13,11 +13,11 @@ macOS 라이브러리에는 MoltenVK 가 들어 있습니다(아래 [플랫폼�
 ```
 3dEngine_Sample/
 ├── sdk/                    ← 엔진 배포본 (빌드에 필요한 전부)
-│   ├── include/            VulkanCAD_API.h — 공개 C API
+│   ├── include/            LotCAD_API.h — 공개 C API
 │   ├── csharp/             C# 선언 (헤더에서 자동 생성, Windows) — C# 앱은 이 *.cs 를 포함
-│   ├── VulkanCADCore.dll/.lib  Windows 라이브러리 (동봉)
-│   ├── libVulkanCADCore.dylib  macOS 라이브러리 (동봉, arm64 · macOS 14+, MoltenVK 내장)
-│   ├── libVulkanCADCore.so     Linux 라이브러리 (동봉)
+│   ├── LotCADCore.dll/.lib  Windows 라이브러리 (동봉)
+│   ├── libLotCADCore.dylib  macOS 라이브러리 (동봉, arm64 · macOS 14+, MoltenVK 내장)
+│   ├── libLotCADCore.so     Linux 라이브러리 (동봉)
 │   ├── lib-ios-sim/        iOS 정적 라이브러리 (시뮬레이터) — Releases 에서 받음 (아래 참조)
 │   ├── lib-ios-device/     iOS 정적 라이브러리 (실기)       — Releases 에서 받음
 │   ├── lib-android/        Android 엔진 .so (arm64-v8a · x86_64) — Releases 에서 받음
@@ -34,7 +34,7 @@ macOS 라이브러리에는 MoltenVK 가 들어 있습니다(아래 [플랫폼�
 
 ## 엔진과의 계약
 
-샘플은 **`sdk/include/VulkanCAD_API.h` 하나만** 참조합니다. 엔진 내부 헤더는 쓰지 않습니다.
+샘플은 **`sdk/include/LotCAD_API.h` 하나만** 참조합니다. 엔진 내부 헤더는 쓰지 않습니다.
 API는 `extern "C"` 라 C# `DllImport`, Swift, Kotlin JNI 어디서든 그대로 부를 수 있습니다.
 
 ```cpp
@@ -50,8 +50,8 @@ CAD_ExecuteCommand("box");    // 명령행과 같은 입구 — 명령 200개 �
 
 | 샘플 | 빌드 | SDK 경로 변수 |
 |------|------|--------------|
-| cpp_api_test | `cmake -B build && cmake --build build` | `-DVULKANCAD_SDK=<경로>` |
-| qml_test | `cmake -B build && cmake --build build` | `-DVULKANCAD_ENGINE_BUILD=<경로>` |
+| cpp_api_test | `cmake -B build && cmake --build build` | `-DLOTCAD_SDK=<경로>` |
+| qml_test | `cmake -B build && cmake --build build` | `-DLOTCAD_ENGINE_BUILD=<경로>` |
 | mfc_dlg_test | Visual Studio | `EngineOut` (vcxproj) |
 | wpf_test | `dotnet build` | `CadCoreBuildDir` (csproj) |
 | swift_api_test | `swift build` | `Package.swift` 의 `buildDirectory` |
@@ -66,11 +66,11 @@ DLL 과 `models/` 를 같이 꺼내 실행 파일 옆으로 복사합니다).
 
 | OS | 파일 | 실행 시 라이브러리를 찾는 법 |
 |----|------|------------------------------|
-| Windows | `VulkanCADCore.dll` + `VulkanCADCore.lib` | rpath 가 없어 **exe 옆에 복사**해야 함 (샘플이 자동으로 함) |
-| Linux | `libVulkanCADCore.so` | rpath 로 `sdk/` 를 직접 참조 — 복사 불필요 |
-| macOS | `libVulkanCADCore.dylib` | rpath 로 `sdk/` 를 직접 참조 — MoltenVK 가 정적으로 들어 있어 Vulkan 로더·SDK 불필요 |
+| Windows | `LotCADCore.dll` + `LotCADCore.lib` | rpath 가 없어 **exe 옆에 복사**해야 함 (샘플이 자동으로 함) |
+| Linux | `libLotCADCore.so` | rpath 로 `sdk/` 를 직접 참조 — 복사 불필요 |
+| macOS | `libLotCADCore.dylib` | rpath 로 `sdk/` 를 직접 참조 — MoltenVK 가 정적으로 들어 있어 Vulkan 로더·SDK 불필요 |
 
-Windows 는 링크에 import library(`.lib`)가 따로 필요합니다. `sdk/VulkanCADCore.lib` 로 함께 들어 있습니다.
+Windows 는 링크에 import library(`.lib`)가 따로 필요합니다. `sdk/LotCADCore.lib` 로 함께 들어 있습니다.
 
 ### iOS 정적 라이브러리는 Releases 에서 내려받기
 
@@ -80,9 +80,9 @@ iOS 는 공유 라이브러리 대신 정적 라이브러리(시뮬레이터용�
 ```bash
 # 레포 루트에서 — zip 을 sdk/ 에 풀면 아래 두 폴더가 채워진다
 gh release download ios-sdk-2026.10.05 -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'
-unzip -o VulkanCAD-iOS-SDK-*.zip -d sdk/
-#   sdk/lib-ios-sim/      libVulkanCADCoreStatic.a  libmanifold.a  libMoltenVK.a   (Apple Silicon 맥의 시뮬레이터, arm64)
-#   sdk/lib-ios-device/   libVulkanCADCoreStatic.a  libmanifold.a  libMoltenVK.a   (iPhone·iPad, arm64)
+unzip -o LotCAD-iOS-SDK-*.zip -d sdk/
+#   sdk/lib-ios-sim/      libLotCADCoreStatic.a  libmanifold.a  libMoltenVK.a   (Apple Silicon 맥의 시뮬레이터, arm64)
+#   sdk/lib-ios-device/   libLotCADCoreStatic.a  libmanifold.a  libMoltenVK.a   (iPhone·iPad, arm64)
 ```
 
 `gh` 가 없으면 위 Releases 페이지에서 zip 을 받아 같은 곳에 풀면 됩니다.
@@ -94,9 +94,9 @@ iOS 샘플을 안 쓰신다면 받지 않아도 됩니다.
 ```bash
 # 레포 루트에서
 gh release download android-sdk-2026.10.05 -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'
-unzip -o VulkanCAD-Android-SDK-*.zip -d sdk/
-#   sdk/lib-android/arm64-v8a/libVulkanCADCore.so   (실기 · 애플 실리콘 에뮬레이터)
-#   sdk/lib-android/x86_64/libVulkanCADCore.so      (인텔·Windows 에뮬레이터)
+unzip -o LotCAD-Android-SDK-*.zip -d sdk/
+#   sdk/lib-android/arm64-v8a/libLotCADCore.so   (실기 · 애플 실리콘 에뮬레이터)
+#   sdk/lib-android/x86_64/libLotCADCore.so      (인텔·Windows 에뮬레이터)
 ```
 
 자세한 실행 방법은 [sample/android_test/README.md](sample/android_test/README.md).
@@ -134,16 +134,16 @@ Qt 샘플은 `qt6-base-dev qt6-declarative-dev` 가 추가로 필요합니다.
 ### macOS
 
 ```bash
-# clone 후 바로 — Vulkan SDK 설치 불필요 (sdk/libVulkanCADCore.dylib 에 MoltenVK 내장)
-cd sample/swift_api_test && swift run VulkanCADSamples
+# clone 후 바로 — Vulkan SDK 설치 불필요 (sdk/libLotCADCore.dylib 에 MoltenVK 내장)
+cd sample/swift_api_test && swift run LotCADSamples
 ```
 
-Xcode 로 열려면 `open sample/swift_api_test/Package.swift` → 스킴 `VulkanCADSamples` → ⌘R.
+Xcode 로 열려면 `open sample/swift_api_test/Package.swift` → 스킴 `LotCADSamples` → ⌘R.
 Xcode 에서 실행하면 Metal API Validation 이 MoltenVK 를 멈출 수 있습니다 — 스킴 Edit Scheme → Run → Diagnostics 에서 끄세요.
 
 ### Windows
 
-Visual Studio 에서 `sample/mfc_dlg_test/VulkanCAD_MFC/VulkanCAD_MFC.sln` 을 열고 **x64** 로 빌드합니다.
+Visual Studio 에서 `sample/mfc_dlg_test/LotCAD_MFC/LotCAD_MFC.sln` 을 열고 **x64** 로 빌드합니다.
 C# 은 `sample/wpf_test` · `sample/winforms_test` 에서 `dotnet build -c Release`.
 네이티브 라이브러리가 x64 라 프로세스도 x64 여야 합니다 (WPF 샘플도 x64 고정).
 DLL 과 에셋은 빌드 후 실행 파일 옆으로 자동 복사됩니다.
@@ -163,7 +163,7 @@ DLL 과 에셋은 빌드 후 실행 파일 옆으로 자동 복사됩니다.
 
 ## 라이선스
 
-이 저장소와 VulkanCAD SDK 는 **MIT 라이선스**입니다 ([LICENSE](LICENSE)). 무료로 사용·수정할 수 있고,
+이 저장소와 LotCAD SDK 는 **MIT 라이선스**입니다 ([LICENSE](LICENSE)). 무료로 사용·수정할 수 있고,
 커스텀해서 상업적으로 판매해도 됩니다. 저작권 고지만 유지하면 됩니다.
 
 `sdk/` 에 동봉된 서드파티 라이브러리와 에셋(MoltenVK, Manifold, ImGui, 폰트, 샘플 모델 등)은

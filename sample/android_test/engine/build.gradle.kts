@@ -22,13 +22,13 @@ fun installedNdkVersion(): String? {
 }
 
 // ── 엔진 모듈 ──
-// 엔진 C++ 전체를 libvulkancad.so 로 빌드하고, 렌더 뷰(VulkanSurfaceView)·JNI(CadNative)·
+// 엔진 C++ 전체를 liblotcad.so 로 빌드하고, 렌더 뷰(VulkanSurfaceView)·JNI(CadNative)·
 // 런타임 에셋(models/fonts/textures)을 담는다. 앱 모듈(app, robot …)은 이것만 참조하면 된다.
-// ⚠️ Kotlin 패키지는 com.vulkancad.androidtest 그대로 — JNI 함수 이름
-//    (Java_com_vulkancad_androidtest_CadNative_*)이 이 패키지에 묶여 있다.
+// ⚠️ Kotlin 패키지는 com.lotcad.androidtest 그대로 — JNI 함수 이름
+//    (Java_com_lotcad_androidtest_CadNative_*)이 이 패키지에 묶여 있다.
 //    namespace 만 다르게 둔다(앱 모듈과 같으면 R 클래스가 겹친다).
 android {
-    namespace = "com.vulkancad.engine"
+    namespace = "com.lotcad.engine"
     compileSdk = 34
     // 머신마다 설치된 NDK 버전이 달라도 되도록 <sdk>/ndk/ 중 가장 최신을 자동 선택.
     // 하나도 없으면 AGP 기본 버전(필요 시 자동 다운로드).

@@ -1,6 +1,6 @@
 // robot_demo — 로봇 팔 샘플 공용 로직. 설명은 robot_demo.h.
 #include "robot_demo.h"
-#include "VulkanCAD_API.h"
+#include "LotCAD_API.h"
 
 #include <algorithm>
 #include <cmath>

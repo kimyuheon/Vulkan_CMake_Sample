@@ -1,8 +1,8 @@
-<Window x:Class="VulkanCadWpf.MainWindow"
+<Window x:Class="LotCadWpf.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:VulkanCadWpf"
-        Title="VulkanCAD — WPF 호스트" Height="740" Width="1120"
+        xmlns:local="clr-namespace:LotCadWpf"
+        Title="LotCAD — WPF 호스트" Height="740" Width="1120"
         Background="#1E1F22">
 
     <Window.Resources>
@@ -133,7 +133,7 @@
 
             <Border Grid.Column="0" Background="#1E1F22" BorderBrush="#111214" BorderThickness="0,0,1,0">
                 <StackPanel Margin="14">
-                    <TextBlock Text="VulkanCAD" Foreground="#F0F0F0" FontWeight="Bold" FontSize="16"/>
+                    <TextBlock Text="LotCAD" Foreground="#F0F0F0" FontWeight="Bold" FontSize="16"/>
                     <TextBlock Text="WPF 호스트 샘플" Foreground="#7C818B" FontSize="11" Margin="0,1,0,0"/>
                     <Border Height="1" Background="#2E3136" Margin="0,12"/>
                     <TextBlock Text="조작" Foreground="#9AA0AA" FontSize="11" FontWeight="SemiBold"/>

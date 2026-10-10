@@ -1,13 +1,13 @@
-# VulkanCAD — WPF 호스트 샘플 (.NET 8)
+# LotCAD — WPF 호스트 샘플 (.NET 8)
 
-WPF 창 안에 VulkanCAD 엔진을 임베드하는 최소 샘플. `VulkanCADCore.dll` 의 C API 를
+WPF 창 안에 LotCAD 엔진을 임베드하는 최소 샘플. `LotCADCore.dll` 의 C API 를
 P/Invoke 로 호출하고, `HwndHost` 로 만든 자식 HWND 에 Vulkan 이 렌더한다.
 
 ## 구조
 
 | 파일 | 역할 |
 |------|------|
-| `CadApi.cs` | `VulkanCADCore.dll` 의 `CAD_*` P/Invoke 선언 |
+| `CadApi.cs` | `LotCADCore.dll` 의 `CAD_*` P/Invoke 선언 |
 | `VulkanHost.cs` | `HwndHost` — 자식 HWND 생성 → `CAD_AttachView` → `CAD_CreateEngine`, 마우스/키 라우팅 |
 | `MainWindow.xaml(.cs)` | 툴바(생성/편집/뷰) + 렌더 영역 + `CompositionTarget.Rendering` → `CAD_Tick` |
 
@@ -23,7 +23,7 @@ CAD_OnMouse* / CAD_OnKeyDownVK   // 입력 (VK 코드는 내부에서 GLFW 로 �
 
 ## 빌드 & 실행
 
-1. 준비물은 레포의 `sdk/` 에 다 있다 — `VulkanCADCore.dll` + `models/ textures/ fonts/`.
+1. 준비물은 레포의 `sdk/` 에 다 있다 — `LotCADCore.dll` + `models/ textures/ fonts/`.
    (셰이더는 라이브러리에 SPIR-V 로 내장돼 있어 별도 파일이 없다.)
 
 2. WPF 샘플 빌드 (post-build 이 DLL+에셋을 출력 폴더로 자동 복사):
@@ -31,13 +31,13 @@ CAD_OnMouse* / CAD_OnKeyDownVK   // 입력 (VK 코드는 내부에서 GLFW 로 �
    cd samples/wpf_test
    dotnet build -c Debug
    ```
-   - `VulkanCadWpf.csproj` 의 `CadCoreBuildDir` 가 `..\..\sdk` 를 가리킴. 경로 다르면 조정.
+   - `LotCadWpf.csproj` 의 `CadCoreBuildDir` 가 `..\..\sdk` 를 가리킴. 경로 다르면 조정.
 
 3. 실행:
    ```
    dotnet run -c Debug
    ```
-   또는 `bin/Debug/net8.0-windows/VulkanCadWpf.exe`.
+   또는 `bin/Debug/net8.0-windows/LotCadWpf.exe`.
 
 ## 주의
 

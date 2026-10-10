@@ -1,14 +1,14 @@
-// VulkanCAD — Qt6 QML 호스트 샘플 (Windows / Ubuntu X11 / macOS)
+// LotCAD — Qt6 QML 호스트 샘플 (Windows / Ubuntu X11 / macOS)
 //
 // QML 로 툴바/패널 UI 를 만들고, 3D 뷰 영역엔 엔진의 Vulkan 렌더를 네이티브 자식 창으로 얹는다.
 // WPF/MFC/iOS 호스트와 같은 C API 임베드 패턴 — 플랫폼 창/입력 코드만 Qt 로 다를 뿐.
 //
 // 런타임 에셋(models, fonts, textures)은 레포의 sdk/ 에 있으므로,
 // CMake 가 그 경로를 컴파일에 박아 둔다. 다른 위치의 에셋을 쓰려면:
-//   - 환경변수 VULKANCAD_ASSETS=/path/to/sdk
-//   - 또는 첫 인자로 경로 전달:  ./VulkanCadQml /path/to/sdk
+//   - 환경변수 LOTCAD_ASSETS=/path/to/sdk
+//   - 또는 첫 인자로 경로 전달:  ./LotCadQml /path/to/sdk
 
-#include "../../sdk/include/VulkanCAD_API.h"
+#include "../../sdk/include/LotCAD_API.h"
 
 // QFileDialog(파일 열기/저장)를 쓰므로 QGuiApplication 이 아니라 QApplication 이어야 한다.
 // QtQuick.Dialogs 는 배포처에 별도 QML 런타임 패키지를 요구해 쓰지 않는다.
@@ -58,12 +58,12 @@ int main(int argc, char* argv[]) {
     QString assets;
     if (argc > 1) {
         assets = QString::fromLocal8Bit(argv[1]);
-    } else if (const char* env = std::getenv("VULKANCAD_ASSETS")) {
+    } else if (const char* env = std::getenv("LOTCAD_ASSETS")) {
         assets = QString::fromLocal8Bit(env);
     } else {
-#ifdef VULKANCAD_DEFAULT_ASSET_PATH
+#ifdef LOTCAD_DEFAULT_ASSET_PATH
         // CMake가 엔진 build 경로를 심어주므로 Qt Creator 실행에도 별도 shell 설정이 필요 없다.
-        assets = QString::fromUtf8(VULKANCAD_DEFAULT_ASSET_PATH);
+        assets = QString::fromUtf8(LOTCAD_DEFAULT_ASSET_PATH);
 #else
         assets = QDir(QCoreApplication::applicationDirPath()).filePath("../../../build");
 #endif
@@ -73,14 +73,14 @@ int main(int argc, char* argv[]) {
         if (!CAD_SetRuntimeAssetPath(a.constData())) {
             qWarning("[qml] runtime asset path 설정 실패: %s\n"
                      "      모델/폰트를 못 찾으면 치수·문자 생성이 실패합니다.\n"
-                     "      VULKANCAD_ASSETS 로 엔진 build 폴더를 지정하세요.", a.constData());
+                     "      LOTCAD_ASSETS 로 엔진 build 폴더를 지정하세요.", a.constData());
         }
     }
 
     QQmlApplicationEngine engine;
     // Qt 6.4 엔 loadFromModule(6.5+) 이 없어 qt_add_qml_module 이 심는 리소스 URL 로 로드.
     // Qt 6.4 기본 리소스 접두사: qrc:/<URI>/Main.qml  (6.5+ 의 qrc:/qt/qml/... 와 다름)
-    engine.load(QUrl(QStringLiteral("qrc:/VulkanCadQml/Main.qml")));
+    engine.load(QUrl(QStringLiteral("qrc:/LotCadQml/Main.qml")));
     if (engine.rootObjects().isEmpty()) {
         return -1;
     }

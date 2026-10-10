@@ -11,43 +11,43 @@ let buildDirectory = projectRoot.appendingPathComponent("sdk").path
 // macOS 엔진 dylib 은 MoltenVK 를 정적으로 품고 있어(엔진 db9c21d) Vulkan 로더·SDK 경로가 필요 없다 — sdk/ 하나면 된다.
 
 let package = Package(
-    name: "VulkanCADSwiftApiTest",
+    name: "LotCADSwiftApiTest",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "VulkanCADSwiftApiTest", targets: ["VulkanCADSwiftApiTest"]),
-        .executable(name: "VulkanCADSwiftNativeViewTest", targets: ["VulkanCADSwiftNativeViewTest"]),
+        .executable(name: "LotCADSwiftApiTest", targets: ["LotCADSwiftApiTest"]),
+        .executable(name: "LotCADSwiftNativeViewTest", targets: ["LotCADSwiftNativeViewTest"]),
         .executable(name: "RobotArmMac", targets: ["RobotArmMac"]),
-        .executable(name: "VulkanCADSamples", targets: ["VulkanCADSamples"])
+        .executable(name: "LotCADSamples", targets: ["LotCADSamples"])
     ],
     targets: [
         .systemLibrary(
-            name: "CVulkanCAD",
-            path: "Sources/CVulkanCAD",
+            name: "CLotCAD",
+            path: "Sources/CLotCAD",
             pkgConfig: nil,
             providers: []
         ),
         .executableTarget(
-            name: "VulkanCADSwiftApiTest",
-            dependencies: ["CVulkanCAD"],
+            name: "LotCADSwiftApiTest",
+            dependencies: ["CLotCAD"],
             linkerSettings: [
                 .unsafeFlags([
                     "-L\(buildDirectory)",
-                    "-lVulkanCADCore",
+                    "-lLotCADCore",
                     "-Xlinker", "-rpath",
                     "-Xlinker", buildDirectory
                 ])
             ]
         ),
         .executableTarget(
-            name: "VulkanCADSwiftNativeViewTest",
-            dependencies: ["CVulkanCAD"],
+            name: "LotCADSwiftNativeViewTest",
+            dependencies: ["CLotCAD"],
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .unsafeFlags([
                     "-L\(buildDirectory)",
-                    "-lVulkanCADCore",
+                    "-lLotCADCore",
                     "-Xlinker", "-rpath",
                     "-Xlinker", buildDirectory
                 ])
@@ -60,15 +60,15 @@ let package = Package(
             path: "Sources/RobotDemo",
             cxxSettings: [.unsafeFlags(["-I\(projectRoot.appendingPathComponent("sdk/include").path)"])]
         ),
-        // 로봇 팔 샘플 앱. VulkanCADEngine/VulkanCADView 는 NativeViewTest 것을 링크로 같이 쓴다.
+        // 로봇 팔 샘플 앱. LotCADEngine/LotCADView 는 NativeViewTest 것을 링크로 같이 쓴다.
         .executableTarget(
             name: "RobotArmMac",
-            dependencies: ["CVulkanCAD", "RobotDemo"],
+            dependencies: ["CLotCAD", "RobotDemo"],
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .unsafeFlags([
                     "-L\(buildDirectory)",
-                    "-lVulkanCADCore",
+                    "-lLotCADCore",
                     "-Xlinker", "-rpath",
                     "-Xlinker", buildDirectory
                 ])
@@ -82,13 +82,13 @@ let package = Package(
         ),
         // 기능 샘플 앱 — 한 창에 메뉴 [샘플] 로 기능을 바꾼다. 조작 패널은 demo_kit 항목을 그대로 그리는 범용 패널.
         .executableTarget(
-            name: "VulkanCADSamples",
-            dependencies: ["CVulkanCAD", "DemoKit"],
+            name: "LotCADSamples",
+            dependencies: ["CLotCAD", "DemoKit"],
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .unsafeFlags([
                     "-L\(buildDirectory)",
-                    "-lVulkanCADCore",
+                    "-lLotCADCore",
                     "-Xlinker", "-rpath",
                     "-Xlinker", buildDirectory
                 ])

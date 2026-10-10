@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace VulkanCadWpf
+namespace LotCadWpf
 {
     public partial class App : Application { }
 }

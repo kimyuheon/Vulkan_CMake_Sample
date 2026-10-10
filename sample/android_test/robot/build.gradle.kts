@@ -7,11 +7,11 @@ plugins {
 // 엔진·렌더 뷰·에셋은 :engine 모듈에서 온다. 로봇 JNI(robot_jni.cpp)는 엔진 .so 에 같이 빌드된다
 // (:engine 의 CMakeLists.txt 참고 — .so 를 하나로 두어야 엔진 전역 상태를 공유한다).
 android {
-    namespace = "com.vulkancad.robotarm"
+    namespace = "com.lotcad.robotarm"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.vulkancad.robotarm"
+        applicationId = "com.lotcad.robotarm"
         minSdk = 28
         targetSdk = 34
         versionCode = 1

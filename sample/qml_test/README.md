@@ -1,6 +1,6 @@
-# VulkanCAD — Qt6 크로스플랫폼 호스트 샘플
+# LotCAD — Qt6 크로스플랫폼 호스트 샘플
 
-Qt6 QML 창에 VulkanCAD 엔진을 임베드하는 CMake 프로젝트입니다. Windows, Ubuntu(X11/XWayland), macOS에서 같은 Qt 소스를 사용하며 `VulkanCADCore` C API로 엔진을 연결합니다.
+Qt6 QML 창에 LotCAD 엔진을 임베드하는 CMake 프로젝트입니다. Windows, Ubuntu(X11/XWayland), macOS에서 같은 Qt 소스를 사용하며 `LotCADCore` C API로 엔진을 연결합니다.
 
 `run_qml.sh` 없이 Qt Creator에서 프로젝트를 열고 바로 구성·빌드·실행할 수 있습니다.
 
@@ -8,7 +8,7 @@ Qt6 QML 창에 VulkanCAD 엔진을 임베드하는 CMake 프로젝트입니다. 
 
 ```text
 ApplicationWindow (QML)
-├── 상단 ToolBar → CadCommands → VulkanCAD C API
+├── 상단 ToolBar → CadCommands → LotCAD C API
 ├── 좌측 도구 패널
 └── VulkanViewport (QQuickItem, C++)
     ├── 네이티브 자식 QWindow 생성
@@ -21,8 +21,8 @@ Qt 6.4에서도 동작하도록 Vulkan을 QML Scene Graph에 직접 합성하지
 
 ## 준비
 
-데스크톱 라이브러리(`sdk/libVulkanCADCore.so`)는 **레포에 동봉돼 있습니다.** clone 하면
-바로 빌드되고 CMake 설정도 따로 없습니다(`VULKANCAD_ENGINE_BUILD` 기본값이 `sdk/`).
+데스크톱 라이브러리(`sdk/libLotCADCore.so`)는 **레포에 동봉돼 있습니다.** clone 하면
+바로 빌드되고 CMake 설정도 따로 없습니다(`LOTCAD_ENGINE_BUILD` 기본값이 `sdk/`).
 아래 패키지만 갖추면 됩니다.
 
 1. Qt 6.4 이상 — Quick, QML, Controls 모듈
@@ -48,7 +48,7 @@ sudo apt install qt6-base-dev qt6-declarative-dev \
 2. Desktop Qt 6.4 이상 Kit를 선택합니다.
 3. `qml_host`를 시작 프로젝트로 선택하고 실행합니다.
 
-**별도 설정은 없습니다.** `VULKANCAD_ENGINE_BUILD` 기본값이 레포 안 `sdk/` 를 가리키고
+**별도 설정은 없습니다.** `LOTCAD_ENGINE_BUILD` 기본값이 레포 안 `sdk/` 를 가리키고
 라이브러리가 거기 동봉돼 있어, clone 한 그대로 구성·빌드·실행됩니다.
 
 다른 위치의 SDK 를 쓰려면 Qt Creator 의 CMake Configuration 에 추가합니다. 단 **그 폴더에
@@ -56,14 +56,14 @@ sudo apt install qt6-base-dev qt6-declarative-dev \
 런타임 에셋 경로가 되기 때문입니다.
 
 ```text
-VULKANCAD_ENGINE_BUILD=/절대/경로/sdk
+LOTCAD_ENGINE_BUILD=/절대/경로/sdk
 ```
 
 CMake가 다음 작업을 자동 처리합니다.
 
 - 실제 공유 라이브러리가 있는 폴더(Debug/Release 포함)를 엔진 에셋 경로로 기록
 - Linux/macOS의 공유 라이브러리 rpath 설정
-- Windows의 `VulkanCADCore.dll`을 Qt 실행파일 옆으로 복사
+- Windows의 `LotCADCore.dll`을 Qt 실행파일 옆으로 복사
 - Linux에서 Qt xcb 백엔드 선택
 - `VULKAN_SDK`가 설정돼 있으면 validation layer 경로 설정
 - macOS에서 MoltenVK ICD 경로 설정

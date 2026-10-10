@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace VulkanCadWinForms
+namespace LotCadWinForms
 {
-    // VulkanCADCore.dll 의 extern "C" CAD_* 함수 P/Invoke 선언.
-    // DLL 은 CMake 의 VulkanCADCoreShared 타겟(OUTPUT_NAME=VulkanCADCore) 산출물.
-    // 빌드 출력 폴더에 VulkanCADCore.dll + models/ textures/ fonts/ 가 있어야 함.
+    // LotCADCore.dll 의 extern "C" CAD_* 함수 P/Invoke 선언.
+    // DLL 은 CMake 의 LotCADCoreShared 타겟(OUTPUT_NAME=LotCADCore) 산출물.
+    // 빌드 출력 폴더에 LotCADCore.dll + models/ textures/ fonts/ 가 있어야 함.
     internal static class CadApi
     {
-        const string DLL = "VulkanCADCore.dll";
+        const string DLL = "LotCADCore.dll";
 
         // ── 생명주기 / 뷰 ──
         [DllImport(DLL)] public static extern bool CAD_CreateEngine();

@@ -1,20 +1,20 @@
 // JNI 브릿지 — Kotlin CadNative(object) 의 external fun ↔ C API(CAD_*).
-// 패키지: com.vulkancad.androidtest  → Java_com_vulkancad_androidtest_CadNative_<method>
+// 패키지: com.lotcad.androidtest  → Java_com_lotcad_androidtest_CadNative_<method>
 
 #include <jni.h>
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <android/log.h>
 
-#include "VulkanCAD_API.h"
+#include "LotCAD_API.h"
 
 #include <string>   // 클립보드 보관
 #include <cstdio>
 #include <thread>
 #include <unistd.h>  // pipe/dup2 — 엔진 stdout 을 logcat 으로
 
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,  "VulkanCAD", __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "VulkanCAD", __VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,  "LotCAD", __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "LotCAD", __VA_ARGS__)
 
 namespace {
     ANativeWindow* g_window = nullptr;
@@ -22,7 +22,7 @@ namespace {
     // 엔진 로그(std::cout/cerr) → logcat.
     // 안드로이드 앱의 stdout/stderr 는 /dev/null 이라 엔진이 찍는 실패 이유("[Model] …", "[Dim] …")가
     // 통째로 사라졌다 — "Fox.glb 가 안 열린다" 를 봐도 원인을 알 길이 없었다. 파이프로 가로채
-    // 줄 단위로 "VulkanCAD-stdout" 태그에 흘린다. 확인: adb logcat -s VulkanCAD-stdout
+    // 줄 단위로 "LotCAD-stdout" 태그에 흘린다. 확인: adb logcat -s LotCAD-stdout
     void startStdoutToLogcat() {
         static bool started = false;
         if (started) return;
@@ -41,7 +41,7 @@ namespace {
                 line.append(buf, static_cast<size_t>(n));
                 size_t pos;
                 while ((pos = line.find('\n')) != std::string::npos) {
-                    __android_log_print(ANDROID_LOG_INFO, "VulkanCAD-stdout", "%s", line.substr(0, pos).c_str());
+                    __android_log_print(ANDROID_LOG_INFO, "LotCAD-stdout", "%s", line.substr(0, pos).c_str());
                     line.erase(0, pos + 1);
                 }
             }
@@ -56,7 +56,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM*, void*) {
     return JNI_VERSION_1_6;
 }
 
-#define JNI(ret, name) JNIEXPORT ret JNICALL Java_com_vulkancad_androidtest_CadNative_##name
+#define JNI(ret, name) JNIEXPORT ret JNICALL Java_com_lotcad_androidtest_CadNative_##name
 
 JNI(void, nativeSetAssetPath)(JNIEnv* env, jobject, jstring path) {
     const char* c = env->GetStringUTFChars(path, nullptr);

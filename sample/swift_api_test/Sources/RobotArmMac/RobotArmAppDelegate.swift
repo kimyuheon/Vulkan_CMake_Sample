@@ -4,7 +4,7 @@ import RobotDemo
 // 로봇 팔 샘플 (macOS) — 왼쪽: Vulkan 뷰, 오른쪽: [재생] [홈] [맞춤] + 관절 슬라이더.
 // 무엇을 움직일지(관절 → 조작 항목, 자동 재생)는 공용 로직 robot_demo(sample/shared)가 정하고,
 // 여기는 그것을 슬라이더로 보여 주기만 한다. iOS RobotArmView · Android RobotActivity 와 같은 구성.
-// 엔진 래퍼(VulkanCADEngine)와 뷰(VulkanCADView)는 VulkanCADSwiftNativeViewTest 것을 그대로 쓴다(심볼릭 링크).
+// 엔진 래퍼(LotCADEngine)와 뷰(LotCADView)는 LotCADSwiftNativeViewTest 것을 그대로 쓴다(심볼릭 링크).
 // 마우스는 데스크톱 규약 그대로 — 좌=선택 · 우 드래그=궤도회전 · 가운데 드래그=이동 · 휠=줌.
 @MainActor
 final class RobotArmAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
@@ -14,9 +14,9 @@ final class RobotArmAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelega
         let unit: String
     }
 
-    private let engine = VulkanCADEngine()
+    private let engine = LotCADEngine()
     private var window: NSWindow!
-    private var hostView: VulkanCADView!
+    private var hostView: LotCADView!
     private var playButton: NSButton!
     private var rows: [Row] = []
     private var frameTimer: Timer?
@@ -35,7 +35,7 @@ final class RobotArmAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelega
             return
         }
 
-        let view = VulkanCADView(frame: NSRect(x: 0, y: 0, width: 900, height: 700))
+        let view = LotCADView(frame: NSRect(x: 0, y: 0, width: 900, height: 700))
         view.wantsLayer = true
         view.engine = engine
         view.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -51,7 +51,7 @@ final class RobotArmAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelega
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1220, height: 760),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable],
                           backing: .buffered, defer: false)
-        window.title = "로봇 팔 — VulkanCAD"
+        window.title = "로봇 팔 — LotCAD"
         window.contentView = split
         window.minSize = NSSize(width: 900, height: 560)
         window.delegate = self

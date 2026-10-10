@@ -11,7 +11,7 @@ struct RobotArmView: View {
     var body: some View {
         GeometryReader { geo in
             VStack(spacing: 0) {
-                VulkanCADViewRepresentable(engine: controller.engine) { view in
+                LotCADViewRepresentable(engine: controller.engine) { view in
                     controller.start(view: view)
                 }
                 .ignoresSafeArea(edges: .top)
@@ -70,7 +70,7 @@ final class RobotArmController: ObservableObject {
         let max: Float
     }
 
-    let engine = VulkanCADEngine()
+    let engine = LotCADEngine()
     @Published private(set) var controls: [Control] = []
     @Published private(set) var values: [Float] = []
     @Published private(set) var playing = false
@@ -82,7 +82,7 @@ final class RobotArmController: ObservableObject {
     private static let syncEveryFrames = 6   // 재생 중 슬라이더를 따라 움직이는 주기(≈10Hz)
 
     func start(view: UIView) {
-        (view as? VulkanCADMetalView)?.oneFingerOrbits = true   // 로봇은 돌려 보는 게 주목적
+        (view as? LotCADMetalView)?.oneFingerOrbits = true   // 로봇은 돌려 보는 게 주목적
         // 런타임 에셋(models/fonts/textures)은 .app 번들 Resources 에 들어 있다(project.yml).
         _ = engine.setRuntimeAssetPath(Bundle.main.resourcePath ?? "")
         engine.attach(to: view)
@@ -100,8 +100,8 @@ final class RobotArmController: ObservableObject {
                            max: RobotDemo_ControlMax(n))
         }
         syncValues()
-        // 시험용 — 탭 없이 재생부터 (테스트 앱 VULKANCAD_OPEN 과 같은 방식).
-        //   xcrun simctl launch <기기> com.vulkancad.robotarm 앞에 SIMCTL_CHILD_ROBOT_AUTOPLAY=1
+        // 시험용 — 탭 없이 재생부터 (테스트 앱 LOTCAD_OPEN 과 같은 방식).
+        //   xcrun simctl launch <기기> com.lotcad.robotarm 앞에 SIMCTL_CHILD_ROBOT_AUTOPLAY=1
         if ProcessInfo.processInfo.environment["ROBOT_AUTOPLAY"] != nil { togglePlay() }
 
         let link = CADisplayLink(target: self, selector: #selector(tick(_:)))

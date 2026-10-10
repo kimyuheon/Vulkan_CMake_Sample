@@ -2,9 +2,9 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
 
-namespace VulkanCadWpf
+namespace LotCadWpf
 {
-    // WPF 안에 Vulkan 렌더용 자식 HWND 를 만들고 엔진(VulkanCADCore.dll)에 붙이는 호스트.
+    // WPF 안에 Vulkan 렌더용 자식 HWND 를 만들고 엔진(LotCADCore.dll)에 붙이는 호스트.
     //  - BuildWindowCore: 자식 창 생성 → CAD_AttachView(hwnd) → CAD_CreateEngine()  (API 계약 순서)
     //  - 자식 창 WndProc 에서 마우스/키보드 → CAD_On* 로 라우팅
     //  - MainWindow 가 CompositionTarget.Rendering 마다 Tick() 호출
@@ -37,11 +37,11 @@ namespace VulkanCadWpf
                 lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProcKeepAlive),
                 hInstance = GetModuleHandle(null),
                 hCursor = LoadCursor(IntPtr.Zero, IDC_ARROW),
-                lpszClassName = "VulkanCadHostWnd",
+                lpszClassName = "LotCadHostWnd",
             };
             RegisterClassEx(ref wc);
 
-            _hwnd = CreateWindowEx(0, "VulkanCadHostWnd", "",
+            _hwnd = CreateWindowEx(0, "LotCadHostWnd", "",
                 WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN,
                 0, 0, 1, 1, hwndParent.Handle, IntPtr.Zero, GetModuleHandle(null), IntPtr.Zero);
 

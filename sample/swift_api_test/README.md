@@ -1,19 +1,19 @@
 # Swift (macOS) 샘플
 
-`sdk/libVulkanCADCore.dylib` 를 C API 로 부르는 macOS 샘플입니다. 실행 파일이 둘입니다.
+`sdk/libLotCADCore.dylib` 를 C API 로 부르는 macOS 샘플입니다. 실행 파일이 둘입니다.
 
 | 타깃 | 내용 |
 |------|------|
-| `VulkanCADSwiftApiTest` | 콘솔. 엔진이 자기 GLFW 창을 만들고, API 몇 개를 호출해 보는 최소 예제 |
-| `VulkanCADSwiftNativeViewTest` | AppKit 앱. `NSView` 를 `CAD_AttachView()` 로 엔진에 넘기고, **풀다운 메뉴 · 리본 · 도킹 도구모음 · 명령행**을 네이티브로 꾸민 CAD 스타일 창 |
-| `VulkanCADSamples` | 🆕 **기능 샘플 모음** — 한 창에 메뉴 [샘플](⌘1~⌘7)로 로봇 팔 · 파티클 · Jig · 단면도/도면 뷰 · 3D 평면도 · 내비 · AI 를 바꿔 본다. 로직·조작 항목은 [`../shared/demo_*.cpp`](../shared) (`Sources/DemoKit` 은 심볼릭 링크), 오른쪽 패널은 그 항목을 그대로 그리는 범용 패널(`DemoPanel.swift`) |
+| `LotCADSwiftApiTest` | 콘솔. 엔진이 자기 GLFW 창을 만들고, API 몇 개를 호출해 보는 최소 예제 |
+| `LotCADSwiftNativeViewTest` | AppKit 앱. `NSView` 를 `CAD_AttachView()` 로 엔진에 넘기고, **풀다운 메뉴 · 리본 · 도킹 도구모음 · 명령행**을 네이티브로 꾸민 CAD 스타일 창 |
+| `LotCADSamples` | 🆕 **기능 샘플 모음** — 한 창에 메뉴 [샘플](⌘1~⌘7)로 로봇 팔 · 파티클 · Jig · 단면도/도면 뷰 · 3D 평면도 · 내비 · AI 를 바꿔 본다. 로직·조작 항목은 [`../shared/demo_*.cpp`](../shared) (`Sources/DemoKit` 은 심볼릭 링크), 오른쪽 패널은 그 항목을 그대로 그리는 범용 패널(`DemoPanel.swift`) |
 | `RobotArmMac` | 🆕 로봇 팔 샘플. URDF 로봇 + 관절 슬라이더·자동 재생. 로직은 [`../shared/robot_demo`](../shared) (iOS·Android 와 공용, `Sources/RobotDemo` 는 심볼릭 링크) |
 
 ```bash
 cd sample/swift_api_test
-swift run VulkanCADSwiftNativeViewTest     # AppKit 앱
-swift run VulkanCADSwiftApiTest            # 콘솔
-swift run VulkanCADSamples                 # 기능 샘플 모음 (VULKANCAD_DEMO=nav 처럼 주면 그 샘플로 시작)
+swift run LotCADSwiftNativeViewTest     # AppKit 앱
+swift run LotCADSwiftApiTest            # 콘솔
+swift run LotCADSamples                 # 기능 샘플 모음 (LOTCAD_DEMO=nav 처럼 주면 그 샘플로 시작)
 swift run RobotArmMac                      # 로봇 팔 (ROBOT_AUTOPLAY=1 이면 재생부터)
 ```
 
@@ -42,8 +42,8 @@ swift run RobotArmMac                      # 로봇 팔 (ROBOT_AUTOPLAY=1 이면
 | `DockToolbarView.swift` | 도킹 도구모음. 표준·그리기·수정·솔리드·뷰·탐색·기즈모·재질 8개 띠가 **각각** 좌/우 도킹·숨김된다. 손잡이를 창 반대편으로 끌거나 우클릭, 또는 뷰 > 도구모음 메뉴. 배치는 UserDefaults 에 기억 |
 | `CommandBarView.swift` | 하단 명령행 + 프롬프트. ↑↓ 이전 명령, Esc 취소 |
 | `AppDelegate.swift` | 창 조립, 도구 실행 입구(`runTool`), 파일 대화상자, 메뉴 활성/체크 상태, 플러그인 UI 붙이기 |
-| `VulkanCADEngine.swift` | C API 래퍼. 콜백(프롬프트·선택·문서 변경)은 전역 보관소를 거쳐 Swift 클로저로 |
-| `VulkanCADView.swift` | 마우스·키보드를 엔진 좌표/키코드로 변환해 전달 |
+| `LotCADEngine.swift` | C API 래퍼. 콜백(프롬프트·선택·문서 변경)은 전역 보관소를 거쳐 Swift 클로저로 |
+| `LotCADView.swift` | 마우스·키보드를 엔진 좌표/키코드로 변환해 전달 |
 
 ### 버튼 하나가 엔진까지 가는 길
 

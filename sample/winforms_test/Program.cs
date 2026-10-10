@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace VulkanCadWinForms
+namespace LotCadWinForms
 {
     static class Program
     {

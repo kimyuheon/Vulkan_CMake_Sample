@@ -1,4 +1,4 @@
-# Third-Party Notices — VulkanCAD SDK 및 샘플
+# Third-Party Notices — LotCAD SDK 및 샘플
 
 이 저장소와 `sdk/` 배포본(공유 라이브러리, iOS 정적 라이브러리, 런타임 에셋)에는 아래의
 서드파티 소프트웨어와 에셋이 포함되어 있습니다. 각 항목의 저작권 고지와 라이선스 본문을
@@ -8,11 +8,11 @@
 > - 이 파일을 배포물(레포, Releases 압축 파일, 앱 번들)에 그대로 포함하세요.
 > - 앱으로 배포한다면 설정/정보 화면에 같은 내용을 볼 수 있는 항목을 두세요.
 > - `sdk/models/` 의 일부 모델은 배포 전 제거를 권장합니다. 아래 "런타임 에셋" 절 참조.
-> - 이 문서는 서드파티 고지이며, VulkanCAD 자체의 라이선스는 별도 `LICENSE` 파일로 정합니다.
+> - 이 문서는 서드파티 고지이며, LotCAD 자체의 라이선스는 별도 `LICENSE` 파일로 정합니다.
 
 ---
 
-## 1. 라이브러리 (libVulkanCADCore, libVulkanCADCoreStatic 에 링크됨)
+## 1. 라이브러리 (libLotCADCore, libLotCADCoreStatic 에 링크됨)
 
 | 구성요소 | 저작권 | 라이선스 | 비고 |
 |---|---|---|---|
@@ -55,7 +55,7 @@ glTF 모델은 Khronos Group 의 glTF-Sample-Assets / glTF-Sample-Models 저장�
 | `InterpolationTest.glb` | Khronos, (c) 2017 | CC0-1.0 | 의무 없음 |
 | `SheenChair.glb` | Eric Chadwick / Wayfair, LLC, (c) 2020 | CC0-1.0 | 의무 없음 |
 | `cube.obj`, `colored_cube.obj`, `quad.obj`, `flat_vase.obj`, `smooth_vase.obj` | Copyright (c) 2020 Brendan Galea (littleVulkanEngine 튜토리얼) | MIT | 저작권 고지 |
-| `demo_arm.urdf` | 자체 제작 | (VulkanCAD 라이선스 따름) | |
+| `demo_arm.urdf` | 자체 제작 | (LotCAD 라이선스 따름) | |
 
 > 2CylinderEngine 과 GearboxAssy 는 원저작자·라이선스가 명시되지 않았고, Khronos 도 새 저장소(glTF-Sample-Assets)로
 > 옮기면서 뺀 모델이라 이 저장소에는 넣지 않습니다(기록에서도 제거).

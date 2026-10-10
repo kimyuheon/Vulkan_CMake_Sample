@@ -1,9 +1,9 @@
-# VulkanCAD iOS Swift Sample
+# LotCAD iOS Swift Sample
 
-iOS Simulator / 실기에서 Vulkan CAD 엔진을 띄우는 SwiftUI 데모.
-macOS 의 `swift_api_test/VulkanCADSwiftNativeViewTest` 를 iOS 로 미러링.
+iOS Simulator / 실기에서 LotCAD 엔진을 띄우는 SwiftUI 데모.
+macOS 의 `swift_api_test/LotCADSwiftNativeViewTest` 를 iOS 로 미러링.
 
-엔진 코어는 CMake 로 정적 라이브러리(`libVulkanCADCoreStatic.a`) 로 빌드하고,
+엔진 코어는 CMake 로 정적 라이브러리(`libLotCADCoreStatic.a`) 로 빌드하고,
 이 Swift 앱이 그걸 링크해서 실행한다. Xcode 프로젝트(`.xcodeproj`) 는 `project.yml`
 기반으로 **xcodegen** 이 생성한다 (git 미포함 — 각 머신에서 재생성).
 
@@ -13,11 +13,11 @@ macOS 의 `swift_api_test/VulkanCADSwiftNativeViewTest` 를 iOS 로 미러링.
 
 | 타깃 | 내용 |
 |------|------|
-| `VulkanCADSwiftiOSTest` | 기본 테스트 앱 — 그리기·치수·파일 열기 |
-| `RobotArmiOS` | 🆕 로봇 팔 샘플 — URDF 로봇 + 관절 슬라이더·자동 재생 (`com.vulkancad.robotarm`). 화면은 `Sources/RobotArm`, 로직은 [`../shared/robot_demo`](../shared) (Android·macOS 와 공용). 엔진 연결 코드는 테스트 앱 것을 같이 쓴다 |
+| `LotCADSwiftiOSTest` | 기본 테스트 앱 — 그리기·치수·파일 열기 |
+| `RobotArmiOS` | 🆕 로봇 팔 샘플 — URDF 로봇 + 관절 슬라이더·자동 재생 (`com.lotcad.robotarm`). 화면은 `Sources/RobotArm`, 로직은 [`../shared/robot_demo`](../shared) (Android·macOS 와 공용). 엔진 연결 코드는 테스트 앱 것을 같이 쓴다 |
 
-두 타깃의 엔진 링크·에셋 설정은 `project.yml` 의 `targetTemplates: VulkanCADApp` 한 곳에 있다.
-시험용: `SIMCTL_CHILD_ROBOT_AUTOPLAY=1 xcrun simctl launch <기기> com.vulkancad.robotarm` 이면 재생부터.
+두 타깃의 엔진 링크·에셋 설정은 `project.yml` 의 `targetTemplates: LotCADApp` 한 곳에 있다.
+시험용: `SIMCTL_CHILD_ROBOT_AUTOPLAY=1 xcrun simctl launch <기기> com.lotcad.robotarm` 이면 재생부터.
 
 ## 1회 셋업
 
@@ -63,7 +63,7 @@ cmake -B build-ios-sim -G Xcode \
     -DCMAKE_OSX_SYSROOT=iphonesimulator \
     -DCMAKE_OSX_ARCHITECTURES=arm64 \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
-cmake --build build-ios-sim --target VulkanCADCore
+cmake --build build-ios-sim --target LotCADCore
 ```
 
 **실기용** (`build-ios-device`) — iPhone 에 올릴 때만:
@@ -74,7 +74,7 @@ cmake -B build-ios-device -G Xcode \
     -DCMAKE_OSX_SYSROOT=iphoneos \
     -DCMAKE_OSX_ARCHITECTURES=arm64 \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
-cmake --build build-ios-device --target VulkanCADCore
+cmake --build build-ios-device --target LotCADCore
 ```
 
 `project.yml` 이 SDK 별로 자동 분기한다:
@@ -86,7 +86,7 @@ cmake --build build-ios-device --target VulkanCADCore
 ```bash
 cd 3dEngine/samples/swift_ios_test
 xcodegen generate
-open VulkanCADSwiftiOSTest.xcodeproj
+open LotCADSwiftiOSTest.xcodeproj
 ```
 
 ---
@@ -102,16 +102,16 @@ open VulkanCADSwiftiOSTest.xcodeproj
 ```bash
 cd 3dEngine/samples/swift_ios_test
 DEV="iPhone 16 Pro"                       # xcrun simctl list devices available 로 확인
-BUNDLE="com.vulkancad.iossample"
+BUNDLE="com.lotcad.iossample"
 
 # 1) 앱 빌드
-xcodebuild -project VulkanCADSwiftiOSTest.xcodeproj -scheme VulkanCADSwiftiOSTest \
+xcodebuild -project LotCADSwiftiOSTest.xcodeproj -scheme LotCADSwiftiOSTest \
            -sdk iphonesimulator -configuration Debug \
            -destination "platform=iOS Simulator,name=$DEV" build
 
 # 2) 시뮬레이터 부팅 + 설치 + 실행
 xcrun simctl boot "$DEV"; open -a Simulator
-APP=$(find ~/Library/Developer/Xcode/DerivedData -name "VulkanCADSwiftiOSTest.app" \
+APP=$(find ~/Library/Developer/Xcode/DerivedData -name "LotCADSwiftiOSTest.app" \
       -path "*Build/Products/Debug-iphonesimulator*" | grep -v Index.noindex | head -1)
 xcrun simctl install "$DEV" "$APP"
 xcrun simctl launch --console "$DEV" "$BUNDLE"     # --console 로 엔진 로그까지 확인
@@ -134,10 +134,10 @@ xcrun simctl io "$DEV" screenshot /tmp/shot.png
    - Settings → Privacy & Security → **Developer Mode 켜기** → 재시작
 
 2. **Xcode 사인** (1회)
-   - 프로젝트 → TARGETS → VulkanCADSwiftiOSTest → **Signing & Capabilities**
+   - 프로젝트 → TARGETS → LotCADSwiftiOSTest → **Signing & Capabilities**
    - "Automatically manage signing" 체크
    - **Team** → 본인 Apple ID (Personal Team). 없으면 "Add an Account…" 로 로그인
-   - Bundle ID 충돌 시 `com.본인이름.vulkancad` 등 고유값으로 변경
+   - Bundle ID 충돌 시 `com.본인이름.lotcad` 등 고유값으로 변경
      (영구 반영하려면 `project.yml` 의 `PRODUCT_BUNDLE_IDENTIFIER` 수정 후 `xcodegen generate`)
 
 3. **실행**
@@ -152,9 +152,9 @@ xcrun simctl io "$DEV" screenshot /tmp/shot.png
 
 ```bash
 # 시뮬레이터로 작업 중이면
-cmake --build build-ios-sim --target VulkanCADCore
+cmake --build build-ios-sim --target LotCADCore
 # 실기로 작업 중이면
-cmake --build build-ios-device --target VulkanCADCore
+cmake --build build-ios-device --target LotCADCore
 ```
 
 > Swift 코드만 바꿀 땐 Xcode ⌘R 만 하면 됨 (lib 재빌드 불필요).
@@ -215,14 +215,14 @@ swift_ios_test/
 ├── project.yml                                     ← xcodegen 입력
 ├── Info.plist                                      ← xcodegen 이 생성/관리 (.gitignore)
 └── Sources/
-    ├── CVulkanCAD/module.modulemap                 ← Swift → C API 브릿지
-    └── VulkanCADSwiftiOSTest/
-        ├── VulkanCADApp.swift                       ← @main SwiftUI entry
+    ├── CLotCAD/module.modulemap                 ← Swift → C API 브릿지
+    └── LotCADSwiftiOSTest/
+        ├── LotCADApp.swift                       ← @main SwiftUI entry
         ├── ContentView.swift                        ← 본문 + CADisplayLink 렌더 루프 + scenePhase
-        ├── VulkanCADViewRepresentable.swift         ← SwiftUI ↔ UIKit 어댑터
-        ├── VulkanCADMetalView.swift                 ← UIView + CAMetalLayer + 제스처
-        └── VulkanCADEngine.swift                    ← C API Swift 래퍼
+        ├── LotCADViewRepresentable.swift         ← SwiftUI ↔ UIKit 어댑터
+        ├── LotCADMetalView.swift                 ← UIView + CAMetalLayer + 제스처
+        └── LotCADEngine.swift                    ← C API Swift 래퍼
 ```
 
-> `build-ios-sim/`, `build-ios-device/`, `VulkanCADSwiftiOSTest.xcodeproj/`, `Info.plist`,
+> `build-ios-sim/`, `build-ios-device/`, `LotCADSwiftiOSTest.xcodeproj/`, `Info.plist`,
 > `build_xcode/` 는 전부 .gitignore — 각 머신에서 cmake / xcodegen 으로 재생성.
