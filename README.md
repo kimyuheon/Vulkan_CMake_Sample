@@ -7,7 +7,7 @@ macOS(`libLotCADCore.dylib`) · Linux(`libLotCADCore.so`) — 도 들어 있어*
 macOS 라이브러리에는 MoltenVK 가 들어 있습니다(아래 [플랫폼별 준비물](#플랫폼별-준비물)).
 모바일(iOS 정적 라이브러리 · Android `.so`)은 GitHub Releases 에서 받아 `sdk/` 바로 아래에 둡니다.
 
-(동봉된 데스크톱 바이너리는 공개용 스냅숏(Release — Windows·Linux 는 엔진 0.1.0 Beta(LotCAD, Linux 는 e0c39bd), macOS 는 아직 db9c21d 를 이름만 바꾼 것 — 맥에서 다시 빌드 예정)으로, 평소 개발 중 빌드 결과는 git 이 추적하지 않습니다 — `.gitignore` 참고.
+(동봉된 데스크톱 바이너리는 공개용 스냅숏(Release — 세 OS 모두 엔진 0.1.0 Beta, 설치 앱 모드·사용자 설정 폴더 포함: macOS 0db3910 · Windows c142b56 · Linux 0c90c75 — 엔진 코드는 같은 내용)으로, 평소 개발 중 빌드 결과는 git 이 추적하지 않습니다 — `.gitignore` 참고.
 안드로이드는 엔진 `.so` 를 iOS 처럼 Releases 에서 받습니다.)
 
 ```
