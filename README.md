@@ -75,11 +75,11 @@ Windows 는 링크에 import library(`.lib`)가 따로 필요합니다. `sdk/Lot
 ### iOS 정적 라이브러리는 Releases 에서 내려받기
 
 iOS 는 공유 라이브러리 대신 정적 라이브러리(시뮬레이터용·실기용 각 약 20MB + MoltenVK)를 링크합니다.
-레포에는 넣지 않고 [Releases](https://github.com/kimyuheon/Vulkan_CMake_Sample/releases/tag/ios-sdk-2026.10.05) 에 올려 둡니다.
+레포에는 넣지 않고 [Releases](https://github.com/lotcad/Vulkan_CMake_Sample/releases/tag/ios-sdk-2026.10.05) 에 올려 둡니다.
 
 ```bash
 # 레포 루트에서 — zip 을 sdk/ 에 풀면 아래 두 폴더가 채워진다
-gh release download ios-sdk-2026.10.05 -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'
+gh release download ios-sdk-2026.10.05 -R lotcad/Vulkan_CMake_Sample -p '*.zip'
 unzip -o LotCAD-iOS-SDK-*.zip -d sdk/
 #   sdk/lib-ios-sim/      libLotCADCoreStatic.a  libmanifold.a  libMoltenVK.a   (Apple Silicon 맥의 시뮬레이터, arm64)
 #   sdk/lib-ios-device/   libLotCADCoreStatic.a  libmanifold.a  libMoltenVK.a   (iPhone·iPad, arm64)
@@ -93,7 +93,7 @@ iOS 샘플을 안 쓰신다면 받지 않아도 됩니다.
 
 ```bash
 # 레포 루트에서
-gh release download android-sdk-2026.10.05 -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'
+gh release download android-sdk-2026.10.05 -R lotcad/Vulkan_CMake_Sample -p '*.zip'
 unzip -o LotCAD-Android-SDK-*.zip -d sdk/
 #   sdk/lib-android/arm64-v8a/libLotCADCore.so   (실기 · 애플 실리콘 에뮬레이터)
 #   sdk/lib-android/x86_64/libLotCADCore.so      (인텔·Windows 에뮬레이터)

@@ -15,7 +15,7 @@ if(NOT EXISTS "${ENGINE_SO}")
     message(FATAL_ERROR
         "엔진 라이브러리가 없습니다: ${ENGINE_SO}\n"
         "  레포 루트에서 Releases 의 Android SDK 를 받아 sdk/ 에 푸세요:\n"
-        "    gh release download <android-sdk 태그> -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'\n"
+        "    gh release download <android-sdk 태그> -R lotcad/Vulkan_CMake_Sample -p '*.zip'\n"
         "    unzip -o LotCAD-Android-SDK-*.zip -d sdk/\n"
         "  (README.md 의 'Android' 절 참고)")
 endif()

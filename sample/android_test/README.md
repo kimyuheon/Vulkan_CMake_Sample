@@ -46,7 +46,7 @@ MainActivity.onCreate()          에셋 추출 → nativeSetAssetPath → 툴바
    - **NDK (Side by side)**, **CMake**, **Android Emulator**, SDK Platform (API 34+)
 2. **엔진 라이브러리** — 레포 루트에서 Releases 의 Android SDK 를 받아 `sdk/` 에 푼다:
    ```bash
-   gh release download android-sdk-2026.10.05 -R kimyuheon/Vulkan_CMake_Sample -p '*.zip'
+   gh release download android-sdk-2026.10.05 -R lotcad/Vulkan_CMake_Sample -p '*.zip'
    unzip -o LotCAD-Android-SDK-*.zip -d sdk/      # → sdk/lib-android/{arm64-v8a,x86_64}/libLotCADCore.so
    ```
    Vulkan 은 Android 7.0+ 기기에 기본 포함 — 따로 설치할 것이 없다.
